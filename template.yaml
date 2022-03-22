@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Sets up lambda, api and base path mapping for OAI provider
+Parameters:
+  CustomDomain:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: '/api/domainName'
+    Description: (Optional) Custom domain name for the API endpoint
+  CustomDomainBasePath:
+    Type: String
+    Default: 'oai'
+    Description: (Optional) Base path mapping in CustomDomain
+    AllowedPattern: "^[a-zA-Z0-9$\\-_.+!*'(),]*$"
+    ConstraintDescription: "May contain only letters, numbers and one of $-_.+!*'(),"
+  Stage:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: 'environment'
+    Description: dev/test/prod
+
+Conditions:
+  HasDomainName: !Not [!Equals [!Ref CustomDomain, '']]
+  HasCustomDomainBasePath: !Not [!Equals [!Ref CustomDomainBasePath, '']]
+
+Globals:
+  Function:
+    Timeout: 20
+#    Architecures:
+#      - arm64
+  Api:
+    Cors:
+      AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+      AllowMethods: '''OPTIONS, GET'''
+      AllowOrigin: '''*'''
+    EndpointConfiguration: REGIONAL
+
+Resources:
+  OaiProviderApi:
+    Type: AWS::Serverless::Api
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W64
+            reason: "Skip access logging for artifacts bucket"
+          - id: W68
+            reason: "Skip encryption for artifacts bucket"
+          - id: W69
+            reason: "Skip bucket policy for artifacts bucket"
+          - id: W89
+            reason: "Lambda functions should be deployed inside a VPC"
+          - id: W92
+            reason: "Lambda functions should define ReservedConcurrentExecutions to reserve simultaneous executions"
+    Properties:
+      Name: !Sub "${AWS::StackName}"
+      StageName: v1
+      EndpointConfiguration:
+        Type: REGIONAL
+      MethodSettings:
+        - ResourcePath: /oai
+          HttpMethod: GET
+      DefinitionBody:
+        openapi: 3.0.3
+        info:
+          title: OAI Provider
+          version: '1.0'
+        x-amazon-apigateway-request-validators:
+          params-only:
+            validateRequestBody: false
+            validateRequestParameters: true
+        paths:
+          /oai:
+            get:
+              summary: text text text
+              description: text text text
+              produces:
+                - application/xml
+              parameters:
+                - in: query
+                  name: verb
+                  required: true
+                  type: string
+                  description: text text text
+              x-amazon-apigateway-request-validator : params-only
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OaiProviderFunction.Arn}/invocations
+                responses: {}
+                httpMethod: POST
+                type: AWS_PROXY
+              responses:
+                '200':
+                  description: text text text
+                  content:
+                    application/xml:
+                      schema:
+                        $ref: '#/components/schemas/oairesponse'
+                '400':
+                  description: Bad request.
+                  content:
+                    application/json:
+                      schema:
+                        title: 400 Bad request
+                        type: object
+                        properties:
+                          error:
+                            type: string
+                            description: error message
+                '500':
+                  description: Internal server error.
+                  content:
+                    application/json:
+                      schema:
+                        title: 500 internal server error
+                        type: object
+                        properties:
+                          error:
+                            type: string
+                            description: error message
+  OaiProviderFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Handler: no.sikt.oai.OaiProviderHandler::handleRequest
+      Runtime: java11
+      MemorySize: 1024
+      Events:
+        OaiProviderEvent:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            RestApiId: !Ref OaiProviderApi
+            Method: get
+            Path: /libcheck
+
+  OaiProviderBasePathMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Condition: HasDomainName
+    Properties:
+      BasePath: !If
+        - HasCustomDomainBasePath
+        - !Ref CustomDomainBasePath
+        - !Ref 'AWS::NoValue'
+      DomainName: !Ref CustomDomain
+      RestApiId: !Ref OaiProviderApi
+      Stage: !Ref OaiProviderApi.Stage
+
+Outputs:
+  ApiEndpoint:
+    Description: "Endpoint base URL for the API"
+    Value: !If
+      - HasDomainName
+      - !Sub "https://${CustomDomain}/${CustomDomainBasePath}"
+      - !Sub "https://${OaiProviderApi}.execute-api.${AWS::Region}.amazonaws.com/${OaiProviderApi.Stage}/"

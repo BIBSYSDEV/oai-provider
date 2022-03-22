@@ -1,0 +1,104 @@
+plugins {
+    id 'java'
+    id 'checkstyle'
+    id 'pmd'
+    id 'jacoco'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id "org.owasp.dependencycheck" version "7.0.0"
+}
+
+group 'no.sikt'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = JavaVersion.VERSION_11  // source-code version and must be <= targetCompatibility
+targetCompatibility = JavaVersion.VERSION_11 // bytecode target version
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+wrapper {
+    distributionType = Wrapper.DistributionType.ALL
+    gradleVersion = "7.3.1"
+}
+
+dependencies {
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
+    implementation group: 'com.github.bibsysdev', name: 'core', version: '1.20.22'
+    implementation group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.1'
+    testImplementation group: 'com.github.bibsysdev', name: 'nvatestutils', version: '1.20.22'
+    testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.1.0'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.8.2'
+
+    shadowJar {
+        archiveClassifier.set('')
+        zip64 true
+    }
+}
+
+test {
+    useJUnitPlatform()
+    failFast = true
+    finalizedBy jacocoTestReport
+}
+
+// We don't want a jar, just a fatJar
+jar.enabled = false
+project.tasks.build.dependsOn project.tasks.shadowJar
+
+pmd {
+    ruleSetConfig = rootProject.resources.text.fromFile('config/pmd/ruleset.xml')
+    ruleSets = []
+    ignoreFailures = false
+}
+
+checkstyle {
+    configFile = rootProject.resources.text.fromFile('config/checkstyle/checkstyle.xml').asFile()
+    showViolations = true
+    toolVersion '8.41'
+}
+
+tasks.withType(Checkstyle) {
+    reports {
+        xml.enabled false
+        html.enabled true
+        html.stylesheet rootProject.resources.text.fromFile('config/checkstyle/checkstyle-simple.xsl')
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.destination file("${buildDir}/reports/jacoco")
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.5"
+}
+
+check.dependsOn jacocoTestCoverageVerification
+jacocoTestCoverageVerification.dependsOn(jacocoTestReport)
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                counter = 'METHOD'
+                value = 'COVEREDRATIO'
+                minimum = 0.20
+            }
+        }
+
+        rule {
+            limit {
+                counter = 'CLASS'
+                value = 'COVEREDRATIO'
+                minimum = 0.20
+            }
+        }
+    }
+}
+

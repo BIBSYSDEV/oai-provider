@@ -1,7 +1,7 @@
 package no.sikt.oai;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import no.sikt.oai.model.OaiResponse;
+import com.google.common.net.MediaType;
 import nva.commons.apigateway.ApiGatewayHandler;
 import nva.commons.apigateway.RequestInfo;
 import nva.commons.apigateway.exceptions.ApiGatewayException;
@@ -9,8 +9,11 @@ import nva.commons.core.Environment;
 import nva.commons.core.JacocoGenerated;
 
 import java.net.HttpURLConnection;
+import java.util.List;
 
-public class OaiProviderHandler extends ApiGatewayHandler<Void, OaiResponse> {
+import static com.google.common.net.MediaType.APPLICATION_XML_UTF_8;
+
+public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     @JacocoGenerated
     public OaiProviderHandler() {
@@ -22,14 +25,19 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, OaiResponse> {
     }
 
     @Override
-    protected OaiResponse processInput(Void input, RequestInfo requestInfo, Context context)
+    protected String processInput(Void input, RequestInfo requestInfo, Context context)
             throws ApiGatewayException {
-        final String verb = requestInfo.getQueryParameter("Verb");
-        return new OaiResponse(verb);
+        return requestInfo.getQueryParameter("Verb");
     }
 
     @Override
-    protected Integer getSuccessStatusCode(Void input, OaiResponse output) {
+    protected Integer getSuccessStatusCode(Void input, String output) {
         return HttpURLConnection.HTTP_OK;
     }
+
+    @Override
+    protected List<MediaType> listSupportedMediaTypes() {
+        return List.of(APPLICATION_XML_UTF_8);
+    }
+
 }

@@ -1,10 +1,8 @@
 package no.sikt.oai;
 
-import com.amazonaws.services.lambda.runtime.CognitoIdentity;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
-import no.sikt.oai.model.OaiResponse;
 import no.unit.nva.testutils.HandlerRequestBuilder;
 import nva.commons.apigateway.GatewayResponse;
 import nva.commons.core.Environment;
@@ -20,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static no.sikt.oai.RestApiConfig.restServiceObjectMapper;
+import static nva.commons.apigateway.ApiGatewayHandler.ALLOWED_ORIGIN_ENV;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -33,6 +32,7 @@ public class OaiProviderHandlerTest {
     @BeforeEach
     public void init() {
         environment = mock(Environment.class);
+        when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
         context = getMockContext();
         handler = new OaiProviderHandler(environment);
     }
@@ -52,10 +52,10 @@ public class OaiProviderHandlerTest {
     public void handleRequestReturnsOaiResponse() throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         handler.handleRequest(handlerInputStream(), output, context);
-        GatewayResponse<OaiResponse> gatewayResponse = parseSuccessResponse(output.toString());
+        GatewayResponse<String> gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
-        OaiResponse oaiResponse = gatewayResponse.getBodyObject(OaiResponse.class);
-        assertEquals("ListRecords", oaiResponse.getResponseXml());
+        String responseBody = gatewayResponse.getBody();
+        assertEquals("ListRecords", responseBody);
     }
 
     private InputStream handlerInputStream() throws JsonProcessingException {
@@ -73,14 +73,9 @@ public class OaiProviderHandlerTest {
                 .build();
     }
 
-    private GatewayResponse<OaiResponse> parseSuccessResponse(String output) throws JsonProcessingException {
-        return parseGatewayResponse(output, OaiResponse.class);
-    }
-
-    private <T> GatewayResponse<T> parseGatewayResponse(String output, Class<T> responseObjectClass)
-            throws JsonProcessingException {
+    private GatewayResponse<String> parseSuccessResponse(String output) throws JsonProcessingException {
         JavaType typeRef = restServiceObjectMapper.getTypeFactory()
-                .constructParametricType(GatewayResponse.class, responseObjectClass);
+                .constructParametricType(GatewayResponse.class, String.class);
         return restServiceObjectMapper.readValue(output, typeRef);
     }
 

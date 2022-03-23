@@ -3,6 +3,7 @@ package no.sikt.oai;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
+import no.sikt.oai.temp.Verb;
 import no.unit.nva.testutils.HandlerRequestBuilder;
 import nva.commons.apigateway.GatewayResponse;
 import nva.commons.core.Environment;
@@ -33,14 +34,8 @@ public class OaiProviderHandlerTest {
     public void init() {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
-        context = getMockContext();
+        context = mock(Context.class);
         handler = new OaiProviderHandler(environment);
-    }
-
-    private Context getMockContext() {
-        Context context = mock(Context.class);
-        when(context.getAwsRequestId()).thenReturn("1234");
-        return context;
     }
 
     @AfterEach
@@ -51,25 +46,19 @@ public class OaiProviderHandlerTest {
     @Test
     public void handleRequestReturnsOaiResponse() throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        handler.handleRequest(handlerInputStream(), output, context);
+        handler.handleRequest(handlerInputStreamWithQueryParameters(Verb.Identify), output, context);
         GatewayResponse<String> gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         String responseBody = gatewayResponse.getBody();
-        assertEquals("ListRecords", responseBody);
+        assertEquals(Verb.Identify.name(), responseBody);
     }
 
-    private InputStream handlerInputStream() throws JsonProcessingException {
-
-        Map<String, String> requestHeaders = new HashMap<>();
-        requestHeaders.put("Accept", "application/xml");
-
+    private InputStream handlerInputStreamWithQueryParameters(Verb verb) throws JsonProcessingException {
         Map<String, String> queryParameters = new HashMap<>();
-        queryParameters.put("Verb", "ListRecords");
-
+        queryParameters.put("verb", verb.name());
         return new HandlerRequestBuilder<Void>(restServiceObjectMapper)
                 .withHttpMethod("GET")
                 .withQueryParameters(queryParameters)
-                .withHeaders(requestHeaders)
                 .build();
     }
 

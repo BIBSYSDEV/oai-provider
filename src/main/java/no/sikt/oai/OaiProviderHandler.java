@@ -18,6 +18,10 @@ import static no.sikt.oai.Verb.Identify;
 
 public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
+    public static final String ILLEGAL_ARGUMENT = "Illegal argument";
+    public static final String BAD_ARGUMENT = "badArgument";
+    public static final String VERB_IS_MISSING = "'verb' is missing";
+
     @JacocoGenerated
     public OaiProviderHandler() {
         this(new Environment());
@@ -46,9 +50,8 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
             case ListMetadataFormats:
             case ListRecords:
             case ListSets:
-                return verb;
             default:
-                throw new OaiException(verb, "badVerb", "Illegal OAI verb");
+                return verb;
         }
     }
 
@@ -65,19 +68,24 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     protected void validateAllParameters(Map<String, String> queryParameters, String verb) throws OaiException {
         for (String paramKey : queryParameters.keySet()) {
             if (!ValidParameterKey.isValidParameterkey(paramKey)) {
-                throw new OaiException(verb, "badArgument", "Not a legal parameter: " + paramKey);
+                throw new OaiException(verb, BAD_ARGUMENT, "Not a legal parameter: " + paramKey);
             }
         }
     }
 
     protected void validateVerbAndRequiredParameters(String verb, String resumptionToken, String metadataPrefix) throws OaiException {
-        if (verb == null || verb.trim().isEmpty()) {
-            throw new OaiException(verb, "badArgument", "'verb' is missing");
+        if (verb.trim().isEmpty()) {
+            throw new OaiException(verb, BAD_ARGUMENT, VERB_IS_MISSING);
         }
         if (verb.equalsIgnoreCase("listrecords") || verb.equalsIgnoreCase("getrecord")) {
             if ("".equals(resumptionToken) && "".equals(metadataPrefix)) {
-                throw new OaiException(verb, "badArgument", "metadataPrefix is a required argument for the verb " + verb);
+                throw new OaiException(verb, BAD_ARGUMENT, "metadataPrefix is a required argument for the verb " + verb);
             }
+        }
+        try {
+            Verb.valueOf(verb);
+        } catch (IllegalArgumentException e) {
+            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_ARGUMENT);
         }
     }
 

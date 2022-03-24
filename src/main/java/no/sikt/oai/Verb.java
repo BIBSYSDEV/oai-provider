@@ -1,4 +1,4 @@
-package no.sikt.oai.temp;
+package no.sikt.oai;
 
 public enum Verb {
     Identify,

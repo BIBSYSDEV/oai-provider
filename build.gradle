@@ -65,11 +65,16 @@ checkstyle {
 }
 
 tasks.withType(Checkstyle) {
+    exclude { 'no/sikt/oai/temp/*' }
     reports {
         xml.enabled false
         html.enabled true
         html.stylesheet rootProject.resources.text.fromFile('config/checkstyle/checkstyle-simple.xsl')
     }
+}
+
+tasks.withType(Pmd) {
+    exclude { 'no/sikt/oai/temp/*' }
 }
 
 jacocoTestReport {
@@ -88,12 +93,19 @@ check.dependsOn jacocoTestCoverageVerification
 jacocoTestCoverageVerification.dependsOn(jacocoTestReport)
 
 jacocoTestCoverageVerification {
+    afterEvaluate {
+        getClassDirectories().setFrom(classDirectories.files.collect {
+            fileTree(dir: it, exclude:  [
+                    'no/sikt/oai/temp/*'
+            ])
+        })
+    }
     violationRules {
         rule {
             limit {
                 counter = 'METHOD'
                 value = 'COVEREDRATIO'
-                minimum = 0.20
+                minimum = 1.00
             }
         }
 
@@ -101,7 +113,7 @@ jacocoTestCoverageVerification {
             limit {
                 counter = 'CLASS'
                 value = 'COVEREDRATIO'
-                minimum = 0.20
+                minimum = 1.00
             }
         }
     }

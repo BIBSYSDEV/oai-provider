@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.net.MediaType.APPLICATION_XML_UTF_8;
+import static no.sikt.oai.Verb.Identify;
 
 public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
@@ -38,13 +39,13 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         validateVerbAndRequiredParameters(verb, resumptionToken, metadataPrefix);
 //        validateFromAndUntilParameters(verb, from, until);
 
-        switch (verb) {
-            case "Identify":
-            case "GetRecord":
-            case "ListIdentifiers":
-            case "ListMetadataFormats":
-            case "ListRecords":
-            case "ListSets":
+        switch (Verb.valueOf(verb)) {
+            case Identify:
+            case GetRecord:
+            case ListIdentifiers:
+            case ListMetadataFormats:
+            case ListRecords:
+            case ListSets:
                 return verb;
             default:
                 throw new OaiException(verb, "badVerb", "Illegal OAI verb");

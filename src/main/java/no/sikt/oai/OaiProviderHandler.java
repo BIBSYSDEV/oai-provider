@@ -23,9 +23,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public static final String VERB_IS_MISSING = "'verb' is missing";
     public static final String METADATA_PREFIX_IS_A_REQUIRED = "metadataPrefix is a required argument for the verb ";
     public static final String EMPTY_STRING = "";
-    public static final String QUERY_PARAM_VERB = "verb";
-    public static final String QUERY_PARAM_RESUMPTION_TOKEN = "resumptionToken";
-    public static final String QUERY_PARAM_METADATA_PREFIX = "metadataPrefix";
+    public static final String NOT_A_LEGAL_PARAMETER = "Not a legal parameter: ";
 
     @JacocoGenerated
     public OaiProviderHandler() {
@@ -40,9 +38,9 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     protected String processInput(Void input, RequestInfo requestInfo, Context context)
             throws ApiGatewayException {
 
-        String verb = requestInfo.getQueryParameter(QUERY_PARAM_VERB);
-        String resumptionToken = requestInfo.getQueryParameterOpt(QUERY_PARAM_RESUMPTION_TOKEN).orElse(EMPTY_STRING);
-        String metadataPrefix = requestInfo.getQueryParameterOpt(QUERY_PARAM_METADATA_PREFIX).orElse(EMPTY_STRING);
+        String verb = requestInfo.getQueryParameter(ValidParameterKey.VERB.key);
+        String resumptionToken = requestInfo.getQueryParameterOpt(ValidParameterKey.RESUMPTIONTOKEN.key).orElse(EMPTY_STRING);
+        String metadataPrefix = requestInfo.getQueryParameterOpt(ValidParameterKey.METADATAPREFIX.key).orElse(EMPTY_STRING);
 
         validateAllParameters(requestInfo.getQueryParameters(), verb);
         validateVerbAndRequiredParameters(verb, resumptionToken, metadataPrefix);
@@ -73,7 +71,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     protected void validateAllParameters(Map<String, String> queryParameters, String verb) throws OaiException {
         for (String paramKey : queryParameters.keySet()) {
             if (!ValidParameterKey.isValidParameterkey(paramKey)) {
-                throw new OaiException(verb, BAD_ARGUMENT, "Not a legal parameter: " + paramKey);
+                throw new OaiException(verb, BAD_ARGUMENT, NOT_A_LEGAL_PARAMETER + paramKey);
             }
         }
     }

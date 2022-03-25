@@ -17,9 +17,6 @@ import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static no.sikt.oai.OaiProviderHandler.QUERY_PARAM_METADATA_PREFIX;
-import static no.sikt.oai.OaiProviderHandler.QUERY_PARAM_RESUMPTION_TOKEN;
-import static no.sikt.oai.OaiProviderHandler.QUERY_PARAM_VERB;
 import static no.sikt.oai.RestApiConfig.restServiceObjectMapper;
 import static no.unit.nva.testutils.RandomDataGenerator.randomString;
 import static nva.commons.apigateway.ApiGatewayHandler.ALLOWED_ORIGIN_ENV;
@@ -101,10 +98,22 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
+    public void shouldReturnBadRequestWhenRequestWithInvalidQueryParam() throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        InputStream inputStream = handlerInputStreamWithQueryParameters(Verb.GetRecord.name(),
+                randomString(), randomString());
+        handler.handleRequest(inputStream, output, context);
+        GatewayResponse<String> gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, gatewayResponse.getStatusCode());
+        String responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(OaiProviderHandler.NOT_A_LEGAL_PARAMETER)));
+    }
+
+    @Test
     public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefix() throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         InputStream inputStream = handlerInputStreamWithQueryParameters(Verb.GetRecord.name(),
-                QUERY_PARAM_METADATA_PREFIX,  randomString() );
+                ValidParameterKey.METADATAPREFIX.key,  randomString() );
         handler.handleRequest(inputStream, output, context);
         GatewayResponse<String> gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
@@ -116,7 +125,7 @@ public class OaiProviderHandlerTest {
     public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithResumptionToken() throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         InputStream inputStream = handlerInputStreamWithQueryParameters(Verb.GetRecord.name(),
-                QUERY_PARAM_RESUMPTION_TOKEN,  randomString() );
+                ValidParameterKey.RESUMPTIONTOKEN.key,  randomString() );
         handler.handleRequest(inputStream, output, context);
         GatewayResponse<String> gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
@@ -126,7 +135,7 @@ public class OaiProviderHandlerTest {
 
     private InputStream handlerInputStreamWithVerbQueryParameters(String verb) throws JsonProcessingException {
         Map<String, String> queryParameters = new HashMap<>();
-        queryParameters.put(QUERY_PARAM_VERB, verb);
+        queryParameters.put(ValidParameterKey.VERB.key, verb);
         return new HandlerRequestBuilder<Void>(restServiceObjectMapper)
                 .withHttpMethod("GET")
                 .withQueryParameters(queryParameters)
@@ -135,7 +144,7 @@ public class OaiProviderHandlerTest {
 
     private InputStream handlerInputStreamWithQueryParameters(String verb, String key, String value) throws JsonProcessingException {
         Map<String, String> queryParameters = new HashMap<>();
-        queryParameters.put(QUERY_PARAM_VERB, verb);
+        queryParameters.put(ValidParameterKey.VERB.key, verb);
         queryParameters.put(key, value);
         return new HandlerRequestBuilder<Void>(restServiceObjectMapper)
                 .withHttpMethod("GET")

@@ -21,6 +21,11 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public static final String ILLEGAL_ARGUMENT = "Illegal argument";
     public static final String BAD_ARGUMENT = "badArgument";
     public static final String VERB_IS_MISSING = "'verb' is missing";
+    public static final String METADATA_PREFIX_IS_A_REQUIRED = "metadataPrefix is a required argument for the verb ";
+    public static final String EMPTY_STRING = "";
+    public static final String QUERY_PARAM_VERB = "verb";
+    public static final String QUERY_PARAM_RESUMPTION_TOKEN = "resumptionToken";
+    public static final String QUERY_PARAM_METADATA_PREFIX = "metadataPrefix";
 
     @JacocoGenerated
     public OaiProviderHandler() {
@@ -35,9 +40,9 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     protected String processInput(Void input, RequestInfo requestInfo, Context context)
             throws ApiGatewayException {
 
-        String verb = requestInfo.getQueryParameter("verb");
-        String resumptionToken = requestInfo.getQueryParameterOpt("resumptionToken").orElse("");
-        String metadataPrefix = requestInfo.getQueryParameterOpt("metadataPrefix").orElse("");
+        String verb = requestInfo.getQueryParameter(QUERY_PARAM_VERB);
+        String resumptionToken = requestInfo.getQueryParameterOpt(QUERY_PARAM_RESUMPTION_TOKEN).orElse(EMPTY_STRING);
+        String metadataPrefix = requestInfo.getQueryParameterOpt(QUERY_PARAM_METADATA_PREFIX).orElse(EMPTY_STRING);
 
         validateAllParameters(requestInfo.getQueryParameters(), verb);
         validateVerbAndRequiredParameters(verb, resumptionToken, metadataPrefix);
@@ -77,9 +82,9 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         if (verb.trim().isEmpty()) {
             throw new OaiException(verb, BAD_ARGUMENT, VERB_IS_MISSING);
         }
-        if (verb.equalsIgnoreCase("listrecords") || verb.equalsIgnoreCase("getrecord")) {
-            if ("".equals(resumptionToken) && "".equals(metadataPrefix)) {
-                throw new OaiException(verb, BAD_ARGUMENT, "metadataPrefix is a required argument for the verb " + verb);
+        if (verb.equalsIgnoreCase(Verb.ListRecords.name()) || verb.equalsIgnoreCase(Verb.GetRecord.name())) {
+            if (EMPTY_STRING.equals(resumptionToken) && EMPTY_STRING.equals(metadataPrefix)) {
+                throw new OaiException(verb, BAD_ARGUMENT, METADATA_PREFIX_IS_A_REQUIRED + verb);
             }
         }
         try {

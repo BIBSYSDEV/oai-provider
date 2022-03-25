@@ -84,6 +84,11 @@ jacocoTestReport {
         csv.enabled false
         html.destination file("${buildDir}/reports/jacoco")
     }
+    afterEvaluate {
+        getClassDirectories().setFrom(classDirectories.files.collect {
+            fileTree(dir: it, exclude:  'no/sikt/oai/temp/*')
+        })
+    }
 }
 
 jacoco {
@@ -94,13 +99,6 @@ check.dependsOn jacocoTestCoverageVerification
 jacocoTestCoverageVerification.dependsOn(jacocoTestReport)
 
 jacocoTestCoverageVerification {
-    afterEvaluate {
-        getClassDirectories().setFrom(classDirectories.files.collect {
-            fileTree(dir: it, exclude:  [
-                    'no/sikt/oai/temp/*'
-            ])
-        })
-    }
     violationRules {
         rule {
             limit {
@@ -117,6 +115,11 @@ jacocoTestCoverageVerification {
                 minimum = 1.00
             }
         }
+    }
+    afterEvaluate {
+        getClassDirectories().setFrom(classDirectories.files.collect {
+            fileTree(dir: it, exclude: 'no/sikt/oai/temp/*')
+        })
     }
 }
 

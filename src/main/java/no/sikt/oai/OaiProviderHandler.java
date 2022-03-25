@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.net.MediaType.APPLICATION_XML_UTF_8;
-import static no.sikt.oai.Verb.Identify;
 
 public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
@@ -24,6 +23,9 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public static final String METADATA_PREFIX_IS_A_REQUIRED = "metadataPrefix is a required argument for the verb ";
     public static final String EMPTY_STRING = "";
     public static final String NOT_A_LEGAL_PARAMETER = "Not a legal parameter: ";
+    public static final String ILLEGAL_DATE_FROM = "Not a legal date FROM, use YYYY-MM-DD or ";
+    public static final String ILLEGAL_DATE_UNTIL = "Not a legal date UNTIL, use YYYY-MM-DD or ";
+    private final OaiConfig oaiConfig;
 
     @JacocoGenerated
     public OaiProviderHandler() {
@@ -32,6 +34,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     public OaiProviderHandler(Environment environment) {
         super(Void.class, environment);
+        this.oaiConfig = OaiConfig.getInstance(environment.readEnv("oaiFilename"));
     }
 
     @Override
@@ -39,12 +42,18 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
             throws ApiGatewayException {
 
         String verb = requestInfo.getQueryParameter(ValidParameterKey.VERB.key);
-        String resumptionToken = requestInfo.getQueryParameterOpt(ValidParameterKey.RESUMPTIONTOKEN.key).orElse(EMPTY_STRING);
-        String metadataPrefix = requestInfo.getQueryParameterOpt(ValidParameterKey.METADATAPREFIX.key).orElse(EMPTY_STRING);
+        String resumptionToken = requestInfo.getQueryParameterOpt(ValidParameterKey.RESUMPTIONTOKEN.key)
+                .orElse(EMPTY_STRING);
+        String metadataPrefix = requestInfo.getQueryParameterOpt(ValidParameterKey.METADATAPREFIX.key)
+                .orElse(EMPTY_STRING);
+        String from = requestInfo.getQueryParameterOpt(ValidParameterKey.FROM.key)
+                .orElse(EMPTY_STRING);
+        String until = requestInfo.getQueryParameterOpt(ValidParameterKey.UNTIL.key)
+                .orElse(EMPTY_STRING);
 
         validateAllParameters(requestInfo.getQueryParameters(), verb);
         validateVerbAndRequiredParameters(verb, resumptionToken, metadataPrefix);
-//        validateFromAndUntilParameters(verb, from, until);
+        validateFromAndUntilParameters(verb, from, until);
 
         switch (Verb.valueOf(verb)) {
             case Identify:
@@ -92,20 +101,23 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         }
     }
 
-//    protected void validateFromAndUntilParameters(String verb, String from, String until) throws OaiException {
-//        if (from != null && from.length() > 0 && !TimeUtils.verifyUTCdate(from)) {
-//            throw new OAIException(verb, "badArgument", "Not a legal date FROM, use YYYY-MM-DD or " + oaiConfig.getDateGranularity());
-//        }
-//        if (until != null && until.length() > 0 && !TimeUtils.verifyUTCdate(until)) {
-//            throw new OAIException(verb, "badArgument", "Not a legal date UNTIL, use YYYY-MM-DD or " + oaiConfig.getDateGranularity());
-//        }
-//        if (from != null && until != null && from.length() > 0 && until.length() > 0) {
-//            if (from.length() != until.length()) {
-//                throw new OaiException(verb, "badArgument", "The request has different granularities for the from and until parameters.");
-//            }
-//        }
-//    }
-//
+    protected void validateFromAndUntilParameters(String verb, String from, String until) throws OaiException {
+        if (from != null && from.length() > 0 && !TimeUtils.verifyUTCdate(from)) {
+            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_FROM
+                    + oaiConfig.getDateGranularity());
+        }
+        if (until != null && until.length() > 0 && !TimeUtils.verifyUTCdate(until)) {
+            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_UNTIL
+                    + oaiConfig.getDateGranularity());
+        }
+        if (from != null && until != null && from.length() > 0 && until.length() > 0) {
+            if (from.length() != until.length()) {
+                throw new OaiException(verb, BAD_ARGUMENT,
+                        "The request has different granularities for the from and until parameters.");
+            }
+        }
+    }
+
 //    protected void validateSetAndMetadataPrefix(String verb, String setSpec, String metadataPrefix) throws OaiException {
 //        if (!metadataFormatValidator.isValid(metadataPrefix)) {
 //            throw new OaiException(verb, "cannotDisseminateFormat",

@@ -1,5 +1,6 @@
 package no.sikt.oai.temp;
 
+import no.sikt.oai.OaiConfig;
 import no.sikt.oai.temp.data.Record;
 import no.sikt.oai.temp.data.RecordsList;
 import org.slf4j.Logger;
@@ -16,12 +17,12 @@ public abstract class AbstractOai implements Oai {
 	private static final Logger logger = LoggerFactory.getLogger(AbstractOai.class);
 	
 	protected final String prefix;
-	protected final OAIConfig oaiConfig;
+	protected final OaiConfig oaiConfig;
 	protected final MetadataFormatValidator metadataFormatValidator;
 	protected final ResumptionTokenValidator resumptionTokenValidator;
 
 	
-	public AbstractOai(OAIConfig oaiConfig, String prefix) {
+	public AbstractOai(OaiConfig oaiConfig, String prefix) {
 		this.oaiConfig = oaiConfig;
 		this.prefix = prefix;
 		this.metadataFormatValidator = new MetadataFormatValidator(oaiConfig);

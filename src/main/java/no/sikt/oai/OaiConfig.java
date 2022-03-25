@@ -1,5 +1,6 @@
-package no.sikt.oai.temp;
+package no.sikt.oai;
 
+import no.sikt.oai.temp.OAIDatasetDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +14,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Properties;
 
-public class OAIConfig {
+public class OaiConfig {
 
 	/*
 	 * Definisjon av data sett, består av setSpec - ID for settet setNavn - er
@@ -25,7 +26,7 @@ public class OAIConfig {
 	 * ikke er gitt !!!! 
 	 *  
 	 */
-	transient static final Logger LOG = LoggerFactory.getLogger(OAIConfig.class);
+	transient static final Logger LOG = LoggerFactory.getLogger(OaiConfig.class);
 
 	private int MAXIMUM_REQUEST_RETRY = 1;
 	private int PAGE_SIZE = 50;
@@ -43,21 +44,21 @@ public class OAIConfig {
 	private String[] setNames;
 
 	private String configFilename;
-	private static OAIConfig oaiConfig;
-	
-	public OAIConfig(String configFilename) {
+	private static OaiConfig oaiConfig;
+
+	public OaiConfig(String configFilename) {
 		this.configFilename = configFilename;
-		initier();
+		init();
 	}
 
-	public static final OAIConfig getInstance(String applicationId, String configFilename) {
+	public static final OaiConfig getInstance(String configFilename) {
 		if (oaiConfig != null) {
 			return oaiConfig;
 		}
-		return new OAIConfig(configFilename);
+		return new OaiConfig(configFilename);
 	}
 	
-	public final void initier() {
+	public final void init() {
 		dataSets = new Hashtable<>();
 		LOG.info(applicationId, "OAIConfig.init() laster fra " + configFilename);
 		

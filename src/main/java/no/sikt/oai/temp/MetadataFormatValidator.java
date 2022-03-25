@@ -1,8 +1,10 @@
 package no.sikt.oai.temp;
 
+import no.sikt.oai.OaiConfig;
+
 public class MetadataFormatValidator {
 	
-	private final OAIConfig oaiConfig;
+	private final OaiConfig oaiConfig;
 	
 	public boolean isValid(String metadataFormat) {
 		
@@ -14,7 +16,7 @@ public class MetadataFormatValidator {
 		return false;
 	}
 
-	public MetadataFormatValidator(OAIConfig oaiConfig) {
+	public MetadataFormatValidator(OaiConfig oaiConfig) {
 		this.oaiConfig = oaiConfig;
 	}
 

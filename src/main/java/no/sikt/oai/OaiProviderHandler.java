@@ -25,6 +25,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public static final String NOT_A_LEGAL_PARAMETER = "Not a legal parameter: ";
     public static final String ILLEGAL_DATE_FROM = "Not a legal date FROM, use YYYY-MM-DD or ";
     public static final String ILLEGAL_DATE_UNTIL = "Not a legal date UNTIL, use YYYY-MM-DD or ";
+    public static final String DIFFERENT_DATE_GRANULARITIES = "The request has different granularities for the from and until parameters.";
     private final OaiConfig oaiConfig;
 
     @JacocoGenerated
@@ -103,17 +104,14 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     protected void validateFromAndUntilParameters(String verb, String from, String until) throws OaiException {
         if (from != null && from.length() > 0 && !TimeUtils.verifyUTCdate(from)) {
-            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_FROM
-                    + oaiConfig.getDateGranularity());
+            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_FROM + oaiConfig.getDateGranularity());
         }
         if (until != null && until.length() > 0 && !TimeUtils.verifyUTCdate(until)) {
-            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_UNTIL
-                    + oaiConfig.getDateGranularity());
+            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_UNTIL + oaiConfig.getDateGranularity());
         }
         if (from != null && until != null && from.length() > 0 && until.length() > 0) {
             if (from.length() != until.length()) {
-                throw new OaiException(verb, BAD_ARGUMENT,
-                        "The request has different granularities for the from and until parameters.");
+                throw new OaiException(verb, BAD_ARGUMENT, DIFFERENT_DATE_GRANULARITIES);
             }
         }
     }

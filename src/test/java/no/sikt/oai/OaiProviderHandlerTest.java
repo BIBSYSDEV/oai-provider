@@ -13,10 +13,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
 import static no.sikt.oai.RestApiConfig.restServiceObjectMapper;
+import static no.unit.nva.testutils.RandomDataGenerator.randomLocalDate;
+import static no.unit.nva.testutils.RandomDataGenerator.randomLocalDateTime;
 import static no.unit.nva.testutils.RandomDataGenerator.randomString;
 import static nva.commons.apigateway.ApiGatewayHandler.ALLOWED_ORIGIN_ENV;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -160,6 +165,37 @@ public class OaiProviderHandlerTest {
         assertThat(responseBody, is(containsString(OaiProviderHandler.ILLEGAL_DATE_FROM)));
     }
 
+    @Test
+    public void shouldReturnBadRequestWhenAskedWithInvalidUntilParam() throws IOException {
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  randomString());
+        queryParameters.put(ValidParameterKey.UNTIL.key,  randomString());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(OaiProviderHandler.ILLEGAL_DATE_UNTIL)));
+    }
+
+    @Test
+    public void shouldReturnBadRequestWhenAskedWithDifferentLengthFromUntilParam() throws IOException {
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  randomString());
+        queryParameters.put(ValidParameterKey.FROM.key, "2006-06-06");
+        queryParameters.put(ValidParameterKey.UNTIL.key, "2007-06-06T00:00:00Z");
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(OaiProviderHandler.DIFFERENT_DATE_GRANULARITIES)));
+    }
+
     private InputStream handlerInputStream(Map<String, String> queryParameters) throws JsonProcessingException {
         return new HandlerRequestBuilder<Void>(restServiceObjectMapper)
                 .withHttpMethod("GET")
@@ -168,7 +204,7 @@ public class OaiProviderHandlerTest {
     }
 
     private GatewayResponse<String> parseSuccessResponse(String output) throws JsonProcessingException {
-        JavaType typeRef = restServiceObjectMapper.getTypeFactory()
+        var typeRef = restServiceObjectMapper.getTypeFactory()
                 .constructParametricType(GatewayResponse.class, String.class);
         return restServiceObjectMapper.readValue(output, typeRef);
     }

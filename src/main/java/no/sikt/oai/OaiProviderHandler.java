@@ -103,16 +103,14 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     }
 
     protected void validateFromAndUntilParameters(String verb, String from, String until) throws OaiException {
-        if (from != null && from.length() > 0 && !TimeUtils.verifyUTCdate(from)) {
+        if (from.length() > 0 && !TimeUtils.verifyUTCdate(from)) {
             throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_FROM + oaiConfig.getDateGranularity());
         }
-        if (until != null && until.length() > 0 && !TimeUtils.verifyUTCdate(until)) {
+        if (until.length() > 0 && !TimeUtils.verifyUTCdate(until)) {
             throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_UNTIL + oaiConfig.getDateGranularity());
         }
-        if (from != null && until != null && from.length() > 0 && until.length() > 0) {
-            if (from.length() != until.length()) {
-                throw new OaiException(verb, BAD_ARGUMENT, DIFFERENT_DATE_GRANULARITIES);
-            }
+        if (from.length() != until.length()) {
+            throw new OaiException(verb, BAD_ARGUMENT, DIFFERENT_DATE_GRANULARITIES);
         }
     }
 

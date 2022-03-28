@@ -166,6 +166,21 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
+    public void shouldReturnBadRequestWhenAskedWithNullFromParam() throws IOException {
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, randomString());
+        queryParameters.put(ValidParameterKey.FROM.key, BLANK);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(OaiProviderHandler.ILLEGAL_DATE_FROM)));
+    }
+
+    @Test
     public void shouldReturnBadRequestWhenAskedWithInvalidUntilParam() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();

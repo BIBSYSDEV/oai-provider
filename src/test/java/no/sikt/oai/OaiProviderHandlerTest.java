@@ -196,6 +196,22 @@ public class OaiProviderHandlerTest {
         assertThat(responseBody, is(containsString(OaiProviderHandler.DIFFERENT_DATE_GRANULARITIES)));
     }
 
+    @Test
+    public void shouldReturnListRecordsResponseWhenAskedWithSameLengthFromUntilParam() throws IOException {
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  randomString());
+        queryParameters.put(ValidParameterKey.FROM.key, "2006-06-06T00:00:00Z");
+        queryParameters.put(ValidParameterKey.UNTIL.key, "2007-06-06T00:00:00Z");
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertEquals(Verb.ListRecords.name(), responseBody);
+    }
+
     private InputStream handlerInputStream(Map<String, String> queryParameters) throws JsonProcessingException {
         return new HandlerRequestBuilder<Void>(restServiceObjectMapper)
                 .withHttpMethod("GET")

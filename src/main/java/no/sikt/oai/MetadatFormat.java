@@ -1,5 +1,7 @@
 package no.sikt.oai;
 
+import java.util.Locale;
+
 public enum MetadatFormat {
 
     /** qualified dublin core */
@@ -9,7 +11,7 @@ public enum MetadatFormat {
 
     public static boolean isValid(String value) {
         for (MetadatFormat metadatFormat : values()) {
-            if (metadatFormat.name().equals(value)) {
+            if (metadatFormat.name().equals(value.toUpperCase(Locale.getDefault()))) {
                 return true;
             }
         }

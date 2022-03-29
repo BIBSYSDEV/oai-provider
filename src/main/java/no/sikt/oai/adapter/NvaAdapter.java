@@ -1,5 +1,7 @@
 package no.sikt.oai.adapter;
 
+import java.util.Locale;
+
 public class NvaAdapter implements Adapter {
 
 
@@ -20,7 +22,7 @@ public class NvaAdapter implements Adapter {
 
         public static boolean isValid(String value) {
             for (NvaAdapter.SetName set : values()) {
-                if (set.name().equals(value)) {
+                if (set.name().equals(value.toUpperCase(Locale.getDefault()))) {
                     return true;
                 }
             }

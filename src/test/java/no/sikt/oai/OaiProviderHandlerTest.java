@@ -131,6 +131,50 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
+    public void shouldReturnBadRequestWhenAskedForListRecordsWithNonExistingMetadataFormat() throws IOException {
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, randomString());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(OaiProviderHandler.METADATA_FORMAT_NOT_SUPPORTED)));
+    }
+
+    @Test
+    public void shouldReturnBadRequestWhenAskedForListRecordsWithNonExistingSetSpec() throws IOException {
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.OAI_DATACITE.name());
+        queryParameters.put(ValidParameterKey.SET.key, randomString());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(OaiProviderHandler.UNKNOWN_SET_NAME)));
+    }
+
+    @Test
+    public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingSetSpec() throws IOException {
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.OAI_DATACITE.name());
+        queryParameters.put(ValidParameterKey.SET.key, "NTNU");
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertEquals(Verb.ListRecords.name(), responseBody);
+    }
+
+    @Test
     public void shouldReturnListRecordsResponseWhenAskedForListRecordsWithResumptionToken() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();

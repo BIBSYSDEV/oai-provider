@@ -29,8 +29,8 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public static final String ILLEGAL_DATE_UNTIL = "Not a legal date UNTIL, use YYYY-MM-DD";
     public static final String DIFFERENT_DATE_GRANULARITIES = "The request has different granularities for the from " +
             "and until parameters.";
-    public static final String METADATA_FORMAT_NOT_SUPPORTED = "--The metadata format identified by the value given " +
-            "for the \nmetadataPrefix argument is not supported by the item or by the repository.";
+    public static final String METADATA_FORMAT_NOT_SUPPORTED = "The metadata format identified by the value given " +
+            "for the metadataPrefix argument is not supported by the item or by the repository.";
     public static final String UNKNOWN_SET_NAME = "unknown set name: ";
     private Adapter adapter;
 
@@ -118,16 +118,14 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     protected void validateRequiredParameters(String verb, String resumptionToken, String metadataPrefix)
             throws OaiException {
-        if (verb.equalsIgnoreCase(Verb.ListRecords.name()) || verb.equalsIgnoreCase(Verb.GetRecord.name())) {
-            if (EMPTY_STRING.equals(resumptionToken) && EMPTY_STRING.equals(metadataPrefix)) {
-                throw new OaiException(verb, BAD_ARGUMENT, METADATA_PREFIX_IS_A_REQUIRED + verb);
-            }
+        if (EMPTY_STRING.equals(resumptionToken) && EMPTY_STRING.equals(metadataPrefix)) {
+            throw new OaiException(verb, BAD_ARGUMENT, METADATA_PREFIX_IS_A_REQUIRED + verb);
         }
     }
 
     protected void validateFromAndUntilParameters(String verb, String from, String until) throws OaiException {
         if (from.length() > 0 && !TimeUtils.verifyUTCdate(from)) {
-            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_FROM );
+            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_FROM);
         }
         if (until.length() > 0 && !TimeUtils.verifyUTCdate(until)) {
             throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_UNTIL);
@@ -139,7 +137,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     protected void validateSet(String verb, String setSpec)
             throws OaiException {
-        if (setSpec.length() > 0 && adapter.isValidSetName(setSpec)) {
+        if (setSpec.length() > 0 && !adapter.isValidSetName(setSpec)) {
             throw new OaiException(verb, BAD_ARGUMENT, UNKNOWN_SET_NAME + setSpec);
         }
     }

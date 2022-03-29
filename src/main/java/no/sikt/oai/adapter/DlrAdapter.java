@@ -1,6 +1,8 @@
 package no.sikt.oai.adapter;
 
 
+import java.util.Locale;
+
 public class DlrAdapter implements Adapter{
 
 
@@ -20,7 +22,7 @@ public class DlrAdapter implements Adapter{
 
         public static boolean isValid(String value) {
             for (SetName set : values()) {
-                if (set.name().equals(value)) {
+                if (set.name().equals(value.toUpperCase(Locale.getDefault()))) {
                     return true;
                 }
             }

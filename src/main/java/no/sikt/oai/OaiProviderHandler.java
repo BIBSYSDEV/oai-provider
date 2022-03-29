@@ -64,23 +64,35 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         validateAllParameters(requestInfo.getQueryParameters(), verb);
         validateVerb(verb);
 
+        long startTime = System.currentTimeMillis();
+
         String response;
+
         switch (Verb.valueOf(verb)) {
             case GetRecord:
                 validateRequiredParameters(verb, resumptionToken, metadataPrefix);
                 validateMetadataPrefix(verb, metadataPrefix);
-                response = verb;
+                response = OaiResponse.GetRecord(null, null, metadataPrefix, null,
+                        startTime);
                 break;
             case ListRecords:
+                response = OaiResponse.ListRecords(null, null, resumptionToken, metadataPrefix,
+                        null, 0, setSpec, null, startTime);
             case ListIdentifiers:
                 validateRequiredParameters(verb, resumptionToken, metadataPrefix);
                 validateFromAndUntilParameters(verb, from, until);
                 validateSet(verb, setSpec);
-                response = verb;
+                response = OaiResponse.ListIdentifiers(null, null, metadataPrefix, resumptionToken,
+                        null, setSpec, 0, null, startTime);
                 break;
             case Identify:
+                response = OaiResponse.Identify(null, null, null, null,
+                        null, null, null, null, startTime);
             case ListMetadataFormats:
+                response = OaiResponse.ListMetadataFormats(null, metadataPrefix, null, null,
+                        startTime);
             case ListSets:
+                response = OaiResponse.ListSets(null, setSpec, null, startTime);
             default:
                 response = verb;
                 break;

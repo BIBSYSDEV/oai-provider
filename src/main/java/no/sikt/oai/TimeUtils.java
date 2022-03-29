@@ -49,24 +49,24 @@ public class TimeUtils {
 //        }
 //    }
 
-//    public static String Date2String(Date date, String format) {
-//        if (date != null) {
-//            SimpleDateFormat sf = new SimpleDateFormat(format);
-//            return sf.format(date);
-//        } else {
-//            return "";
-//        }
-//    }
+    public static String Date2String(Date date, String format) {
+        if (date != null) {
+            SimpleDateFormat sf = new SimpleDateFormat(format);
+            return sf.format(date);
+        } else {
+            return "";
+        }
+    }
 
-//    public static String utcDateTime() {
-//        Date myDate = new Date();
-//        SimpleDateFormat sf = new SimpleDateFormat(FORMAT_ZULU_LONG);
-//        return sf.format(myDate);
-//    }
+    public static String utcDateTime() {
+        Date myDate = new Date();
+        SimpleDateFormat sf = new SimpleDateFormat(FORMAT_ZULU_LONG);
+        return sf.format(myDate);
+    }
 
-//    public static String getResponseTime() {
-//        return utcDateTime();
-//    }
+    public static String getResponseTime() {
+        return utcDateTime();
+    }
 
 //    public static boolean verifyDate(String s) {
 //        SimpleDateFormat sf = new SimpleDateFormat(FORMAT_BIBSYS_DATO);

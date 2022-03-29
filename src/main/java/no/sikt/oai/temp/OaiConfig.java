@@ -1,6 +1,5 @@
-package no.sikt.oai;
+package no.sikt.oai.temp;
 
-import no.sikt.oai.temp.OAIDatasetDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,7 +1,5 @@
 package no.sikt.oai.temp;
 
-import no.sikt.oai.OaiConfig;
-
 public class ResumptionTokenValidator {
 	
 	private final OaiConfig oaiConfig;

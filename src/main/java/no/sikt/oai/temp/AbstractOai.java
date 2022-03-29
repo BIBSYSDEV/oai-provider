@@ -1,6 +1,5 @@
 package no.sikt.oai.temp;
 
-import no.sikt.oai.OaiConfig;
 import no.sikt.oai.temp.data.Record;
 import no.sikt.oai.temp.data.RecordsList;
 import org.slf4j.Logger;

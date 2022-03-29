@@ -2,6 +2,8 @@ package no.sikt.oai;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.google.common.net.MediaType;
+import no.sikt.oai.adapter.Adapter;
+import no.sikt.oai.adapter.DlrAdapter;
 import no.sikt.oai.exception.OaiException;
 import nva.commons.apigateway.ApiGatewayHandler;
 import nva.commons.apigateway.RequestInfo;
@@ -23,21 +25,24 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public static final String METADATA_PREFIX_IS_A_REQUIRED = "metadataPrefix is a required argument for the verb ";
     public static final String EMPTY_STRING = "";
     public static final String NOT_A_LEGAL_PARAMETER = "Not a legal parameter: ";
-    public static final String ILLEGAL_DATE_FROM = "Not a legal date FROM, use YYYY-MM-DD or ";
-    public static final String ILLEGAL_DATE_UNTIL = "Not a legal date UNTIL, use YYYY-MM-DD or ";
-    public static final String DIFFERENT_DATE_GRANULARITIES = "The request has different granularities for the from and until parameters.";
-    public static final String METADATA_FORMAT_NOT_SUPPORTED = "--The metadata format identified by the value given for the \nmetadataPrefix argument is not supported by the item or by the repository.";
+    public static final String ILLEGAL_DATE_FROM = "Not a legal date FROM, use YYYY-MM-DD";
+    public static final String ILLEGAL_DATE_UNTIL = "Not a legal date UNTIL, use YYYY-MM-DD";
+    public static final String DIFFERENT_DATE_GRANULARITIES = "The request has different granularities for the from " +
+            "and until parameters.";
+    public static final String METADATA_FORMAT_NOT_SUPPORTED = "--The metadata format identified by the value given " +
+            "for the \nmetadataPrefix argument is not supported by the item or by the repository.";
     public static final String UNKNOWN_SET_NAME = "unknown set name: ";
-    private final OaiConfig oaiConfig;
+    private Adapter adapter;
 
     @JacocoGenerated
     public OaiProviderHandler() {
         this(new Environment());
+        this.adapter = new DlrAdapter();
     }
 
     public OaiProviderHandler(Environment environment) {
         super(Void.class, environment);
-        this.oaiConfig = OaiConfig.getInstance(environment.readEnv("oaiFilename"));
+        this.adapter = new DlrAdapter();
     }
 
     @Override
@@ -122,10 +127,10 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     protected void validateFromAndUntilParameters(String verb, String from, String until) throws OaiException {
         if (from.length() > 0 && !TimeUtils.verifyUTCdate(from)) {
-            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_FROM + oaiConfig.getDateGranularity());
+            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_FROM );
         }
         if (until.length() > 0 && !TimeUtils.verifyUTCdate(until)) {
-            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_UNTIL + oaiConfig.getDateGranularity());
+            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_DATE_UNTIL);
         }
         if (from.length() != until.length()) {
             throw new OaiException(verb, BAD_ARGUMENT, DIFFERENT_DATE_GRANULARITIES);
@@ -134,7 +139,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     protected void validateSet(String verb, String setSpec)
             throws OaiException {
-        if (setSpec.length() > 0 && !oaiConfig.isValidSetName(setSpec)) {
+        if (setSpec.length() > 0 && adapter.isValidSetName(setSpec)) {
             throw new OaiException(verb, BAD_ARGUMENT, UNKNOWN_SET_NAME + setSpec);
         }
     }

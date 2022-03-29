@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.google.common.net.MediaType;
 import no.sikt.oai.adapter.Adapter;
 import no.sikt.oai.adapter.DlrAdapter;
+import no.sikt.oai.adapter.NvaAdapter;
 import no.sikt.oai.exception.OaiException;
 import nva.commons.apigateway.ApiGatewayHandler;
 import nva.commons.apigateway.RequestInfo;
@@ -32,17 +33,19 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public static final String METADATA_FORMAT_NOT_SUPPORTED = "The metadata format identified by the value given " +
             "for the metadataPrefix argument is not supported by the item or by the repository.";
     public static final String UNKNOWN_SET_NAME = "unknown set name: ";
+    public static final String UNKNOWN_CLIENT_NAME = "Could not find clientName %s to initiate adapter.";
+    public static final String CLIENT_NAME_ENV = "CLIENT_NAME";
     private Adapter adapter;
 
     @JacocoGenerated
     public OaiProviderHandler() {
         this(new Environment());
-        this.adapter = new DlrAdapter();
+        initAdapter();
     }
 
     public OaiProviderHandler(Environment environment) {
         super(Void.class, environment);
-        this.adapter = new DlrAdapter();
+        initAdapter();
     }
 
     @Override
@@ -86,6 +89,20 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                 break;
         }
         return response;
+    }
+
+    private void initAdapter() {
+        String clientName = environment.readEnv(CLIENT_NAME_ENV);
+        switch (clientName) {
+            case "DLR":
+                this.adapter = new DlrAdapter();
+                break;
+            case "NVA":
+                this.adapter = new NvaAdapter();
+                break;
+            default:
+                throw new RuntimeException(String.format(UNKNOWN_CLIENT_NAME, clientName));
+        }
     }
 
     @Override

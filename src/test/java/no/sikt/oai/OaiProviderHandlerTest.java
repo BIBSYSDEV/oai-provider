@@ -22,12 +22,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class OaiProviderHandlerTest {
 
     public static final String BLANK = " ";
+    public static final String UNKNOWN_CLIENT_NAME = "unknown client name";
+    public static final String UNKNOWN_VERB = "UnknownVerb";
     private OaiProviderHandler handler;
     private Environment environment;
     private Context context;
@@ -36,12 +39,14 @@ public class OaiProviderHandlerTest {
     public void init() {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
+        when(environment.readEnv(OaiProviderHandler.CLIENT_NAME_ENV)).thenReturn("DLR");
         context = mock(Context.class);
         handler = new OaiProviderHandler(environment);
     }
 
     @Test
     public void handleRequestReturnsOaiResponse() throws IOException {
+        TimeUtils timeUtils = new TimeUtils();
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.Identify.name());
@@ -56,7 +61,7 @@ public class OaiProviderHandlerTest {
     public void shouldReturnBadRequestWithUnknownVerb() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
-        queryParameters.put(ValidParameterKey.VERB.key, "UnknownVerb");
+        queryParameters.put(ValidParameterKey.VERB.key, UNKNOWN_VERB);
         handler.handleRequest(handlerInputStream(queryParameters), output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, gatewayResponse.getStatusCode());
@@ -172,6 +177,55 @@ public class OaiProviderHandlerTest {
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
         assertEquals(Verb.ListRecords.name(), responseBody);
+    }
+
+    @Test
+    public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingNVASetSpec() throws IOException {
+        environment = mock(Environment.class);
+        when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
+        when(environment.readEnv(OaiProviderHandler.CLIENT_NAME_ENV)).thenReturn("NVA");
+        context = mock(Context.class);
+        handler = new OaiProviderHandler(environment);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.OAI_DATACITE.name());
+        queryParameters.put(ValidParameterKey.SET.key, "BI");
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertEquals(Verb.ListRecords.name(), responseBody);
+    }
+
+    @Test
+    public void shouldReturnBadRequestWhenAskedForListRecordsWithNonExistingNVASetSpec() throws IOException {
+        environment = mock(Environment.class);
+        when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
+        when(environment.readEnv(OaiProviderHandler.CLIENT_NAME_ENV)).thenReturn("NVA");
+        context = mock(Context.class);
+        handler = new OaiProviderHandler(environment);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.OAI_DATACITE.name());
+        queryParameters.put(ValidParameterKey.SET.key, randomString());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(OaiProviderHandler.UNKNOWN_SET_NAME)));
+    }
+
+    @Test
+    public void shouldReturnBadRequestWhenClientNameFromEnvironmentIsUnknown() throws IOException {
+        environment = mock(Environment.class);
+        when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
+        when(environment.readEnv(OaiProviderHandler.CLIENT_NAME_ENV)).thenReturn(UNKNOWN_CLIENT_NAME);
+        context = mock(Context.class);
+        assertThrows(RuntimeException.class, () ->  handler = new OaiProviderHandler(environment));
     }
 
     @Test

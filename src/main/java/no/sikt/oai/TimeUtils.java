@@ -5,10 +5,11 @@ import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
+//import java.util.Date;
+//import java.util.concurrent.TimeUnit;
 
 public class TimeUtils {
+
     private static final Logger LOG = LoggerFactory.getLogger(TimeUtils.class);
 //    public static String AUTHORITY_TIMESTAMP = "yyyyMMddHHmmss";
 //    public static String FORMAT_ISO8601 = "yyyyMMddHHmmss'.0'";
@@ -17,9 +18,6 @@ public class TimeUtils {
 //    public static String FORMAT_BIBSYS_DATO = "yyyy-MM-dd";
 //    public static String FORMAT_MARC21_008_DATO = "yyyyMMdd";
 //    public static String FORMAT_MARC21_008_DATO_SHORT = "yyMMdd";
-
-//    public TimeUtils() {
-//    }
 
 //    public static Date BibsysDato2Date(String bibsysdato) {
 //        SimpleDateFormat sf = new SimpleDateFormat(FORMAT_BIBSYS_DATO);

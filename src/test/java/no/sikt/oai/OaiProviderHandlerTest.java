@@ -2,7 +2,6 @@ package no.sikt.oai;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JavaType;
 import no.unit.nva.testutils.HandlerRequestBuilder;
 import nva.commons.apigateway.GatewayResponse;
 import nva.commons.core.Environment;
@@ -13,15 +12,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
 import static no.sikt.oai.RestApiConfig.restServiceObjectMapper;
-import static no.unit.nva.testutils.RandomDataGenerator.randomLocalDate;
-import static no.unit.nva.testutils.RandomDataGenerator.randomLocalDateTime;
 import static no.unit.nva.testutils.RandomDataGenerator.randomString;
 import static nva.commons.apigateway.ApiGatewayHandler.ALLOWED_ORIGIN_ENV;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -127,7 +121,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  randomString());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.QDC.name());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -137,17 +131,18 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithResumptionToken() throws IOException {
+    public void shouldReturnListRecordsResponseWhenAskedForListRecordsWithResumptionToken() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
-        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
-        queryParameters.put(ValidParameterKey.RESUMPTIONTOKEN.key,  randomString());
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.RESUMPTIONTOKEN.key, randomString());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.OAI_DATACITE.name());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertEquals(Verb.GetRecord.name(), responseBody);
+        assertEquals(Verb.ListRecords.name(), responseBody);
     }
 
     @Test
@@ -216,7 +211,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  randomString());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  MetadatFormat.QDC.name());
         queryParameters.put(ValidParameterKey.FROM.key, "2006-06-06T00:00:00Z");
         queryParameters.put(ValidParameterKey.UNTIL.key, "2007-06-06T00:00:00Z");
         var inputStream = handlerInputStream(queryParameters);

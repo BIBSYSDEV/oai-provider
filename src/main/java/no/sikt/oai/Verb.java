@@ -6,5 +6,15 @@ public enum Verb {
     ListIdentifiers,
     ListMetadataFormats,
     ListRecords,
-    ListSets
+    ListSets;
+
+
+    public static boolean isValid(String value) {
+        for (Verb verb : values()) {
+            if (verb.name().equals(value)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

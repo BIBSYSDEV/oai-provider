@@ -26,6 +26,8 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public static final String ILLEGAL_DATE_FROM = "Not a legal date FROM, use YYYY-MM-DD or ";
     public static final String ILLEGAL_DATE_UNTIL = "Not a legal date UNTIL, use YYYY-MM-DD or ";
     public static final String DIFFERENT_DATE_GRANULARITIES = "The request has different granularities for the from and until parameters.";
+    public static final String METADATA_FORMAT_NOT_SUPPORTED = "--The metadata format identified by the value given for the \nmetadataPrefix argument is not supported by the item or by the repository.";
+    public static final String UNKNOWN_SET_NAME = "unknown set name: ";
     private final OaiConfig oaiConfig;
 
     @JacocoGenerated
@@ -47,6 +49,8 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                 .orElse(EMPTY_STRING);
         String metadataPrefix = requestInfo.getQueryParameterOpt(ValidParameterKey.METADATAPREFIX.key)
                 .orElse(EMPTY_STRING);
+        String setSpec = requestInfo.getQueryParameterOpt(ValidParameterKey.SET.key)
+                .orElse(EMPTY_STRING);
         String from = requestInfo.getQueryParameterOpt(ValidParameterKey.FROM.key)
                 .orElse(EMPTY_STRING);
         String until = requestInfo.getQueryParameterOpt(ValidParameterKey.UNTIL.key)
@@ -54,18 +58,38 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
         validateAllParameters(requestInfo.getQueryParameters(), verb);
         validateVerbAndRequiredParameters(verb, resumptionToken, metadataPrefix);
-        validateFromAndUntilParameters(verb, from, until);
 
+        String response;
         switch (Verb.valueOf(verb)) {
             case Identify:
+                response = verb;
+                break;
             case GetRecord:
+                validateMetadataPrefix(verb, metadataPrefix);
+                response = verb;
+                break;
             case ListIdentifiers:
+                validateFromAndUntilParameters(verb, from, until);
+                validateSet(verb, setSpec);
+                response = verb;
+                break;
             case ListMetadataFormats:
+                response = verb;
+                break;
             case ListRecords:
+                validateFromAndUntilParameters(verb, from, until);
+                validateMetadataPrefix(verb, metadataPrefix);
+                validateSet(verb, setSpec);
+                response = verb;
+                break;
             case ListSets:
+                response = verb;
+                break;
             default:
-                return verb;
+                response = verb;
+                break;
         }
+        return response;
     }
 
     @Override
@@ -86,19 +110,18 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         }
     }
 
-    protected void validateVerbAndRequiredParameters(String verb, String resumptionToken, String metadataPrefix) throws OaiException {
+    protected void validateVerbAndRequiredParameters(String verb, String resumptionToken, String metadataPrefix)
+            throws OaiException {
         if (verb.trim().isEmpty()) {
             throw new OaiException(verb, BAD_ARGUMENT, VERB_IS_MISSING);
+        }
+        if (!Verb.isValid(verb)) {
+            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_ARGUMENT);
         }
         if (verb.equalsIgnoreCase(Verb.ListRecords.name()) || verb.equalsIgnoreCase(Verb.GetRecord.name())) {
             if (EMPTY_STRING.equals(resumptionToken) && EMPTY_STRING.equals(metadataPrefix)) {
                 throw new OaiException(verb, BAD_ARGUMENT, METADATA_PREFIX_IS_A_REQUIRED + verb);
             }
-        }
-        try {
-            Verb.valueOf(verb);
-        } catch (IllegalArgumentException e) {
-            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_ARGUMENT);
         }
     }
 
@@ -114,13 +137,17 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         }
     }
 
-//    protected void validateSetAndMetadataPrefix(String verb, String setSpec, String metadataPrefix) throws OaiException {
-//        if (!metadataFormatValidator.isValid(metadataPrefix)) {
-//            throw new OaiException(verb, "cannotDisseminateFormat",
-//                    "--The metadata format identified by the value given for the \nmetadataPrefix argument is not supported by the item or by the repository.");
-//        }
-//        if (setSpec != null && setSpec.length() > 0 && !oaiConfig.isValidSetName(setSpec)) {
-//            throw new OaiException(verb, "badArgument", "unknown set name: " + setSpec);
-//        }
-//    }
+    protected void validateSet(String verb, String setSpec)
+            throws OaiException {
+        if (setSpec.length() > 0 && !oaiConfig.isValidSetName(setSpec)) {
+            throw new OaiException(verb, BAD_ARGUMENT, UNKNOWN_SET_NAME + setSpec);
+        }
+    }
+
+    protected void validateMetadataPrefix(String verb, String metadataPrefix)
+            throws OaiException {
+        if (!MetadatFormat.isValid(metadataPrefix)) {
+            throw new OaiException(verb, BAD_ARGUMENT, METADATA_FORMAT_NOT_SUPPORTED);
+        }
+    }
 }

@@ -57,34 +57,25 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                 .orElse(EMPTY_STRING);
 
         validateAllParameters(requestInfo.getQueryParameters(), verb);
-        validateVerbAndRequiredParameters(verb, resumptionToken, metadataPrefix);
+        validateVerb(verb);
 
         String response;
         switch (Verb.valueOf(verb)) {
-            case Identify:
-                response = verb;
-                break;
             case GetRecord:
+                validateRequiredParameters(verb, resumptionToken, metadataPrefix);
                 validateMetadataPrefix(verb, metadataPrefix);
-                response = verb;
-                break;
-            case ListIdentifiers:
-                validateFromAndUntilParameters(verb, from, until);
-                validateSet(verb, setSpec);
-                response = verb;
-                break;
-            case ListMetadataFormats:
                 response = verb;
                 break;
             case ListRecords:
+            case ListIdentifiers:
+                validateRequiredParameters(verb, resumptionToken, metadataPrefix);
                 validateFromAndUntilParameters(verb, from, until);
-                validateMetadataPrefix(verb, metadataPrefix);
                 validateSet(verb, setSpec);
                 response = verb;
                 break;
+            case Identify:
+            case ListMetadataFormats:
             case ListSets:
-                response = verb;
-                break;
             default:
                 response = verb;
                 break;
@@ -110,7 +101,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         }
     }
 
-    protected void validateVerbAndRequiredParameters(String verb, String resumptionToken, String metadataPrefix)
+    protected void validateVerb(String verb)
             throws OaiException {
         if (verb.trim().isEmpty()) {
             throw new OaiException(verb, BAD_ARGUMENT, VERB_IS_MISSING);
@@ -118,6 +109,10 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         if (!Verb.isValid(verb)) {
             throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_ARGUMENT);
         }
+    }
+
+    protected void validateRequiredParameters(String verb, String resumptionToken, String metadataPrefix)
+            throws OaiException {
         if (verb.equalsIgnoreCase(Verb.ListRecords.name()) || verb.equalsIgnoreCase(Verb.GetRecord.name())) {
             if (EMPTY_STRING.equals(resumptionToken) && EMPTY_STRING.equals(metadataPrefix)) {
                 throw new OaiException(verb, BAD_ARGUMENT, METADATA_PREFIX_IS_A_REQUIRED + verb);

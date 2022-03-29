@@ -79,8 +79,12 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                         startTime);
                 break;
             case ListRecords:
+                validateRequiredParameters(verb, resumptionToken, metadataPrefix);
+                validateFromAndUntilParameters(verb, from, until);
+                validateSet(verb, setSpec);
                 response = OaiResponse.ListRecords(null, null, resumptionToken, metadataPrefix,
                         null, 0, setSpec, null, startTime);
+                break;
             case ListIdentifiers:
                 validateRequiredParameters(verb, resumptionToken, metadataPrefix);
                 validateFromAndUntilParameters(verb, from, until);
@@ -91,11 +95,14 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
             case Identify:
                 response = OaiResponse.Identify(null, null, null, null,
                         null, null, null, null, startTime);
+                break;
             case ListMetadataFormats:
                 response = OaiResponse.ListMetadataFormats(null, metadataPrefix, null, null,
                         startTime);
+                break;
             case ListSets:
                 response = OaiResponse.ListSets(null, setSpec, null, startTime);
+                break;
             default:
                 response = verb;
                 break;

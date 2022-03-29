@@ -195,7 +195,7 @@ public class OaiResponse {
             buffer.append("        <header>\n");
         }
         buffer.append("            <identifier>").append(identifier).append("</identifier>\n");
-        buffer.append("            <datestamp>").append(no.sikt.oai.TimeUtils.Date2String(lastUpdateDate, no.sikt.oai.temp.TimeUtils.FORMAT_ZULU_LONG)).append("</datestamp>\n");
+        buffer.append("            <datestamp>").append(no.sikt.oai.TimeUtils.Date2String(lastUpdateDate, no.sikt.oai.TimeUtils.FORMAT_ZULU_LONG)).append("</datestamp>\n");
         if (set != null && set.length() > 0 && !set.equalsIgnoreCase("default")) {
             buffer.append("            <setSpec>").append(set).append("</setSpec>\n");
         }

@@ -54,7 +54,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertEquals(Verb.Identify.name(), responseBody);
+        assertThat(responseBody, is(containsString(Verb.Identify.name())));
     }
 
     @Test

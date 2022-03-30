@@ -109,7 +109,6 @@ Resources:
     Properties:
       Description: DLR/NVA defines which adapter for oai-data-mapping is choosen
       Name: OAI_CLIENT_NAME
-      Policies: String
       Type: String
       Value: !Ref OaiClientName
 

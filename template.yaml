@@ -13,10 +13,10 @@ Parameters:
     Description: (Optional) Base path mapping in CustomDomain
     AllowedPattern: "^[a-zA-Z0-9$\\-_.+!*'(),]*$"
     ConstraintDescription: "May contain only letters, numbers and one of $-_.+!*'(),"
-  Stage:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: 'environment'
-    Description: dev/test/prod
+#  Stage:
+#    Type: AWS::SSM::Parameter::Value<String>
+#    Default: 'environment'
+#    Description: dev/test/prod
 
 Conditions:
   HasDomainName: !Not [!Equals [!Ref CustomDomain, '']]

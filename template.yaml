@@ -134,7 +134,7 @@ Resources:
           Properties:
             RestApiId: !Ref OaiProviderApi
             Method: get
-            Path: /oai
+            Path: /
 
   OaiProviderBasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping

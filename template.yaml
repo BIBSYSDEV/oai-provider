@@ -15,7 +15,7 @@ Parameters:
     ConstraintDescription: "May contain only letters, numbers and one of $-_.+!*'(),"
   OaiClientName:
     Type: AWS::SSM::Parameter::Value<String>
-    Default: '/api/domainName'
+    Default: 'OAI_CLIENT_NAME'
     Description: DLR/NVA defines adapter for oai-data-mapping
 #  Stage:
 #    Type: AWS::SSM::Parameter::Value<String>

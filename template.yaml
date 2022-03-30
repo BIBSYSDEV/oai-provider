@@ -13,6 +13,10 @@ Parameters:
     Description: (Optional) Base path mapping in CustomDomain
     AllowedPattern: "^[a-zA-Z0-9$\\-_.+!*'(),]*$"
     ConstraintDescription: "May contain only letters, numbers and one of $-_.+!*'(),"
+  OaiClientName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: '/api/domainName'
+    Description: DLR/NVA defines adapter for oai-data-mapping
 #  Stage:
 #    Type: AWS::SSM::Parameter::Value<String>
 #    Default: 'environment'
@@ -120,6 +124,9 @@ Resources:
       Handler: no.sikt.oai.OaiProviderHandler::handleRequest
       Runtime: java11
       MemorySize: 1024
+      Environment:
+        Variables:
+          OAI_CLIENT_NAME: !Ref OaiClientName
       Events:
         OaiProviderEvent:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api

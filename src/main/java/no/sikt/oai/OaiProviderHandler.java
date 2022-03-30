@@ -34,7 +34,8 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
             "for the metadataPrefix argument is not supported by the item or by the repository.";
     public static final String UNKNOWN_SET_NAME = "unknown set name: ";
     public static final String UNKNOWN_CLIENT_NAME = "Could not find clientName %s to initiate adapter.";
-    public static final String CLIENT_NAME_ENV = "CLIENT_NAME";
+    public static final String CLIENT_NAME_ENV = "OAI_CLIENT_NAME";
+
     private Adapter adapter;
 
     @JacocoGenerated

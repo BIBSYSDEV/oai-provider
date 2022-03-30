@@ -126,6 +126,7 @@ Resources:
       MemorySize: 1024
       Environment:
         Variables:
+          ALLOWED_ORIGIN: '*'
           OAI_CLIENT_NAME: !Ref OaiClientName
       Events:
         OaiProviderEvent:

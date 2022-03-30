@@ -24,7 +24,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     public static final String ILLEGAL_ARGUMENT = "Illegal argument";
     public static final String BAD_ARGUMENT = "badArgument";
-    public static final String BAD_VERB = "BadVerb";
+    public static final String BAD_VERB = "badVerb";
     public static final String CANNOT_DISSEMINATE_FORMAT = "cannotDisseminateFormat";
     public static final String VERB_IS_MISSING = "'verb' is missing";
     public static final String ID_DOES_NOT_EXIST = "idDoesNotExist";

@@ -24,6 +24,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     public static final String ILLEGAL_ARGUMENT = "Illegal argument";
     public static final String BAD_ARGUMENT = "badArgument";
+    public static final String CANNOT_DISSEMINATE_FORMAT = "cannotDisseminateFormat";
     public static final String VERB_IS_MISSING = "'verb' is missing";
     public static final String ID_DOES_NOT_EXIST = "idDoesNotExist";
     public static final String METADATA_PREFIX_IS_A_REQUIRED = "metadataPrefix is a required argument for the verb ";
@@ -191,7 +192,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     protected void validateMetadataPrefix(String verb, String metadataPrefix)
             throws OaiException {
         if (!MetadatFormat.isValid(metadataPrefix)) {
-            throw new OaiException(verb, BAD_ARGUMENT, METADATA_FORMAT_NOT_SUPPORTED);
+            throw new OaiException(verb, CANNOT_DISSEMINATE_FORMAT, METADATA_FORMAT_NOT_SUPPORTED);
         }
     }
 

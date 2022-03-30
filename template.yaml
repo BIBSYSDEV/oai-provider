@@ -17,10 +17,6 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<String>
     Default: 'OAI_CLIENT_NAME'
     Description: DLR/NVA defines adapter for oai-data-mapping
-#  Stage:
-#    Type: AWS::SSM::Parameter::Value<String>
-#    Default: 'environment'
-#    Description: dev/test/prod
 
 Conditions:
   HasDomainName: !Not [!Equals [!Ref CustomDomain, '']]

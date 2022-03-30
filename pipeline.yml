@@ -104,13 +104,14 @@ Conditions:
   HasAlertTopic: !Not [!Equals [!Ref AlertTopicArn, '']]
 
 Resources:
-  Type: AWS::SSM::Parameter
-  Properties:
-    Description: DLR/NVA defines which adapter for oai-data-mapping is choosen
-    Name: OAI_CLIENT_NAME
-    Policies: String
-    Type: String
-    Value: !Ref OaiClientName
+  OaiParameters:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: DLR/NVA defines which adapter for oai-data-mapping is choosen
+      Name: OAI_CLIENT_NAME
+      Policies: String
+      Type: String
+      Value: !Ref OaiClientName
 
   ArtifactsBucket:
     Type: 'AWS::S3::Bucket'

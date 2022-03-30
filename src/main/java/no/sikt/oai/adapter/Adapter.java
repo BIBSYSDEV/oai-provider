@@ -11,6 +11,18 @@ public interface Adapter {
 
     public boolean isValidIdentifier(String identifier);
 
+    public String getDescription();
+
+    public String getDateGranularity();
+
+    public String getEarliestTimestamp();
+
+    public String getDeletedRecord();
+
+    public String getProtocolVersion();
+
+    public String getAdminEmail();
+
     public String getRepositoryName();
 
     public String getBaseUrl();

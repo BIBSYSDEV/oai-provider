@@ -15,12 +15,42 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public boolean isValidIdentifier(String identifier) {
-        return identifier != null && identifier.length() > 0;
+        return identifier.length() == 36;
+    }
+
+    @Override
+    public String getDescription() {
+        return "Repository for NVA resources";
+    }
+
+    @Override
+    public String getDateGranularity() {
+        return "YYYY-MM-DD";
+    }
+
+    @Override
+    public String getEarliestTimestamp() {
+        return "1976-01-01T00:00:01Z";
+    }
+
+    @Override
+    public String getDeletedRecord() {
+        return "yes";
+    }
+
+    @Override
+    public String getProtocolVersion() {
+        return "2.0";
+    }
+
+    @Override
+    public String getAdminEmail() {
+        return "nvaadmin@unit.no";
     }
 
     @Override
     public String getRepositoryName() {
-        return "DLR Repository";
+        return "NVA Repository";
     }
 
     @Override

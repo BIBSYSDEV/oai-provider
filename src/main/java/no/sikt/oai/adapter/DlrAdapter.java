@@ -1,6 +1,5 @@
 package no.sikt.oai.adapter;
 
-
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
 
@@ -8,8 +7,6 @@ import java.util.Date;
 import java.util.Locale;
 
 public class DlrAdapter implements Adapter{
-
-
 
     @Override
     public boolean isValidSetName(String setSpec) {
@@ -19,6 +16,36 @@ public class DlrAdapter implements Adapter{
     @Override
     public boolean isValidIdentifier(String identifier) {
         return identifier.length() == 36;
+    }
+
+    @Override
+    public String getDescription() {
+        return "Repository for DLR resources";
+    }
+
+    @Override
+    public String getDateGranularity() {
+        return "YYYY-MM-DD";
+    }
+
+    @Override
+    public String getEarliestTimestamp() {
+        return "1976-01-01T00:00:01Z";
+    }
+
+    @Override
+    public String getDeletedRecord() {
+        return "yes";
+    }
+
+    @Override
+    public String getProtocolVersion() {
+        return "2.0";
+    }
+
+    @Override
+    public String getAdminEmail() {
+        return "dlradmin@unit.no";
     }
 
     @Override

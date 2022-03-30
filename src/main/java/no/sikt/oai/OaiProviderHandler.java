@@ -112,8 +112,9 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                 break;
             case Identify:
             default:
-                response = OaiResponse.Identify(adapter.getRepositoryName(), adapter.getBaseUrl(), null, null,
-                        null, null, null, null, startTime);
+                response = OaiResponse.Identify(adapter.getRepositoryName(), adapter.getBaseUrl(),
+                        adapter.getProtocolVersion(), adapter.getAdminEmail(), adapter.getEarliestTimestamp(),
+                        adapter.getDeletedRecord(), adapter.getDateGranularity(), adapter.getDescription(), startTime);
                 break;
         }
         return response;

@@ -58,7 +58,7 @@ Resources:
       EndpointConfiguration:
         Type: REGIONAL
       MethodSettings:
-        - ResourcePath: /oai
+        - ResourcePath: /
           HttpMethod: GET
       DefinitionBody:
         openapi: 3.0.3

@@ -24,6 +24,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     public static final String ILLEGAL_ARGUMENT = "Illegal argument";
     public static final String BAD_ARGUMENT = "badArgument";
+    public static final String BAD_VERB = "BadVerb";
     public static final String CANNOT_DISSEMINATE_FORMAT = "cannotDisseminateFormat";
     public static final String VERB_IS_MISSING = "'verb' is missing";
     public static final String ID_DOES_NOT_EXIST = "idDoesNotExist";
@@ -72,53 +73,57 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         String identifier = requestInfo.getQueryParameterOpt(ValidParameterKey.IDENTIFIER.key)
                 .orElse(EMPTY_STRING);
 
-        validateAllParameters(requestInfo.getQueryParameters(), verb);
-        validateVerb(verb);
-
-        long startTime = System.currentTimeMillis();
-
-        RecordsList recordsList;
         String response;
 
-        switch (Verb.valueOf(verb)) {
-            case GetRecord:
-                validateMetadataPrefix(verb, metadataPrefix);
-                validateIdentifier(verb, identifier, adapter.getRepositoryName());
-                Record record = adapter.getRecord(identifier);
-                response = OaiResponse.GetRecord(record, identifier, metadataPrefix, setSpec, adapter.getBaseUrl(),
-                        startTime);
-                break;
-            case ListRecords:
-                validateRequiredParameters(verb, resumptionToken, metadataPrefix);
-                validateMetadataPrefix(verb, metadataPrefix);
-                validateFromAndUntilParameters(verb, from, until);
-                validateSet(verb, setSpec);
-                recordsList = adapter.getRecords(from, until, setSpec, 0);
-                response = OaiResponse.ListRecords(from, until, resumptionToken, metadataPrefix,
-                        adapter.getBaseUrl(), 0, setSpec, recordsList, startTime);
-                break;
-            case ListIdentifiers:
-                validateRequiredParameters(verb, resumptionToken, metadataPrefix);
-                validateMetadataPrefix(verb, metadataPrefix);
-                validateFromAndUntilParameters(verb, from, until);
-                validateSet(verb, setSpec);
-                recordsList = adapter.getRecords(from, until, setSpec, 0);
-                response = OaiResponse.ListIdentifiers(from, until, metadataPrefix, resumptionToken,
-                        adapter.getBaseUrl(), setSpec, 0, recordsList, startTime);
-                break;
-            case ListMetadataFormats:
-                response = OaiResponse.ListMetadataFormats(adapter.getBaseUrl(), metadataPrefix, null, null,
-                        startTime);
-                break;
-            case ListSets:
-                response = OaiResponse.ListSets(adapter.getBaseUrl(), setSpec, null, startTime);
-                break;
-            case Identify:
-            default:
-                response = OaiResponse.Identify(adapter.getRepositoryName(), adapter.getBaseUrl(),
-                        adapter.getProtocolVersion(), adapter.getAdminEmail(), adapter.getEarliestTimestamp(),
-                        adapter.getDeletedRecord(), adapter.getDateGranularity(), adapter.getDescription(), startTime);
-                break;
+        try {
+            validateAllParameters(requestInfo.getQueryParameters(), verb);
+            validateVerb(verb);
+
+            long startTime = System.currentTimeMillis();
+
+            RecordsList recordsList;
+            switch (Verb.valueOf(verb)) {
+                case GetRecord:
+                    validateMetadataPrefix(verb, metadataPrefix);
+                    validateIdentifier(verb, identifier, adapter.getRepositoryName());
+                    Record record = adapter.getRecord(identifier);
+                    response = OaiResponse.GetRecord(record, identifier, metadataPrefix, setSpec, adapter.getBaseUrl(),
+                            startTime);
+                    break;
+                case ListRecords:
+                    validateRequiredParameters(verb, resumptionToken, metadataPrefix);
+                    validateMetadataPrefix(verb, metadataPrefix);
+                    validateFromAndUntilParameters(verb, from, until);
+                    validateSet(verb, setSpec);
+                    recordsList = adapter.getRecords(from, until, setSpec, 0);
+                    response = OaiResponse.ListRecords(from, until, resumptionToken, metadataPrefix,
+                            adapter.getBaseUrl(), 0, setSpec, recordsList, startTime);
+                    break;
+                case ListIdentifiers:
+                    validateRequiredParameters(verb, resumptionToken, metadataPrefix);
+                    validateMetadataPrefix(verb, metadataPrefix);
+                    validateFromAndUntilParameters(verb, from, until);
+                    validateSet(verb, setSpec);
+                    recordsList = adapter.getRecords(from, until, setSpec, 0);
+                    response = OaiResponse.ListIdentifiers(from, until, metadataPrefix, resumptionToken,
+                            adapter.getBaseUrl(), setSpec, 0, recordsList, startTime);
+                    break;
+                case ListMetadataFormats:
+                    response = OaiResponse.ListMetadataFormats(adapter.getBaseUrl(), metadataPrefix, null, null,
+                            startTime);
+                    break;
+                case ListSets:
+                    response = OaiResponse.ListSets(adapter.getBaseUrl(), setSpec, null, startTime);
+                    break;
+                case Identify:
+                default:
+                    response = OaiResponse.Identify(adapter.getRepositoryName(), adapter.getBaseUrl(),
+                            adapter.getProtocolVersion(), adapter.getAdminEmail(), adapter.getEarliestTimestamp(),
+                            adapter.getDeletedRecord(), adapter.getDateGranularity(), adapter.getDescription(), startTime);
+                    break;
+            }
+        } catch (OaiException e) {
+            response = OaiResponse.oaiError(adapter.getBaseUrl(), e.getMessage());
         }
         return response;
     }
@@ -158,10 +163,10 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     protected void validateVerb(String verb)
             throws OaiException {
         if (verb.trim().isEmpty()) {
-            throw new OaiException(verb, BAD_ARGUMENT, VERB_IS_MISSING);
+            throw new OaiException(verb, BAD_VERB, VERB_IS_MISSING);
         }
         if (!Verb.isValid(verb)) {
-            throw new OaiException(verb, BAD_ARGUMENT, ILLEGAL_ARGUMENT);
+            throw new OaiException(verb, BAD_VERB, ILLEGAL_ARGUMENT);
         }
     }
 

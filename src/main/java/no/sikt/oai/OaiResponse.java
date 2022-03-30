@@ -131,6 +131,15 @@ public class OaiResponse {
         return buffer.toString();
     }
 
+    public static String oaiError(String baseUrl,String errorMessage) {
+        StringBuilder stringBuilder = new StringBuilder();
+        makeHeader(stringBuilder, false);
+        makeHeaderRequest(baseUrl, stringBuilder);
+        stringBuilder.append(errorMessage).append("\n");
+        makeFooter(stringBuilder);
+        return stringBuilder.toString();
+    }
+
     // OAI Helpers
 
     protected static void makeHeader(StringBuilder buffer, boolean withMarcxchange) {
@@ -161,6 +170,10 @@ public class OaiResponse {
 
     protected static void makeHeaderRequest(String verb, String baseUrl, StringBuilder buffer) {
         buffer.append("    <request verb=\"" + verb + "\">").append(baseUrl).append("</request>\n");
+    }
+
+    protected static void makeHeaderRequest(String baseUrl, StringBuilder stringBuilder) {
+        stringBuilder.append("    <request>").append(baseUrl).append("</request>\n");
     }
 
     protected static void makeRecord(boolean isDeleted, String identifier, Date lastUpdateDate, String xmlContent, String setSpec, StringBuilder buffer) {

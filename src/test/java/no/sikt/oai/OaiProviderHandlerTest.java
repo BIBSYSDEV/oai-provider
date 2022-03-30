@@ -15,6 +15,7 @@ import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static no.sikt.oai.MetadatFormat.QDC;
 import static no.sikt.oai.RestApiConfig.restServiceObjectMapper;
 import static no.unit.nva.testutils.RandomDataGenerator.randomString;
 import static nva.commons.apigateway.ApiGatewayHandler.ALLOWED_ORIGIN_ENV;
@@ -101,7 +102,7 @@ public class OaiProviderHandlerTest {
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
         queryParameters.put(ValidParameterKey.IDENTIFIER.key, "1234");
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.QDC.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -143,7 +144,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.QDC.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
         queryParameters.put(ValidParameterKey.IDENTIFIER.key, VALID_IDENTIFIER);
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
@@ -158,7 +159,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListMetadataFormats.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.QDC.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -172,7 +173,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListSets.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.QDC.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -186,7 +187,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.QDC.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -321,7 +322,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  randomString());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
         queryParameters.put(ValidParameterKey.FROM.key,  randomString());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
@@ -336,7 +337,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, randomString());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
         queryParameters.put(ValidParameterKey.FROM.key, BLANK);
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
@@ -351,7 +352,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  randomString());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
         queryParameters.put(ValidParameterKey.UNTIL.key,  randomString());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
@@ -366,7 +367,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  randomString());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
         queryParameters.put(ValidParameterKey.FROM.key, "2006-06-06");
         queryParameters.put(ValidParameterKey.UNTIL.key, "2007-06-06T00:00:00Z");
         var inputStream = handlerInputStream(queryParameters);
@@ -382,7 +383,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  MetadatFormat.QDC.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  QDC.name());
         queryParameters.put(ValidParameterKey.FROM.key, "2006-06-06T00:00:00Z");
         queryParameters.put(ValidParameterKey.UNTIL.key, "2007-06-06T00:00:00Z");
         var inputStream = handlerInputStream(queryParameters);

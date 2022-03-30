@@ -90,6 +90,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                 break;
             case ListRecords:
                 validateRequiredParameters(verb, resumptionToken, metadataPrefix);
+                validateMetadataPrefix(verb, metadataPrefix);
                 validateFromAndUntilParameters(verb, from, until);
                 validateSet(verb, setSpec);
                 recordsList = adapter.getRecords(from, until, setSpec, 0);
@@ -98,6 +99,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                 break;
             case ListIdentifiers:
                 validateRequiredParameters(verb, resumptionToken, metadataPrefix);
+                validateMetadataPrefix(verb, metadataPrefix);
                 validateFromAndUntilParameters(verb, from, until);
                 validateSet(verb, setSpec);
                 recordsList = adapter.getRecords(from, until, setSpec, 0);

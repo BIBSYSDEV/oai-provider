@@ -5,6 +5,8 @@ import com.google.common.net.MediaType;
 import no.sikt.oai.adapter.Adapter;
 import no.sikt.oai.adapter.DlrAdapter;
 import no.sikt.oai.adapter.NvaAdapter;
+import no.sikt.oai.data.Record;
+import no.sikt.oai.data.RecordsList;
 import no.sikt.oai.exception.OaiException;
 import nva.commons.apigateway.ApiGatewayHandler;
 import nva.commons.apigateway.RequestInfo;
@@ -23,6 +25,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public static final String ILLEGAL_ARGUMENT = "Illegal argument";
     public static final String BAD_ARGUMENT = "badArgument";
     public static final String VERB_IS_MISSING = "'verb' is missing";
+    public static final String ID_DOES_NOT_EXIST = "idDoesNotExist";
     public static final String METADATA_PREFIX_IS_A_REQUIRED = "metadataPrefix is a required argument for the verb ";
     public static final String EMPTY_STRING = "";
     public static final String NOT_A_LEGAL_PARAMETER = "Not a legal parameter: ";
@@ -35,12 +38,12 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public static final String UNKNOWN_SET_NAME = "unknown set name: ";
     public static final String UNKNOWN_CLIENT_NAME = "Could not find clientName %s to initiate adapter.";
     public static final String CLIENT_NAME_ENV = "CLIENT_NAME";
+    public static final String NO_MATCHING_IDENTIFIER = "No matching identifier in: ";
     private Adapter adapter;
 
     @JacocoGenerated
     public OaiProviderHandler() {
         this(new Environment());
-        initAdapter();
     }
 
     public OaiProviderHandler(Environment environment) {
@@ -63,48 +66,52 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                 .orElse(EMPTY_STRING);
         String until = requestInfo.getQueryParameterOpt(ValidParameterKey.UNTIL.key)
                 .orElse(EMPTY_STRING);
+        String identifier = requestInfo.getQueryParameterOpt(ValidParameterKey.IDENTIFIER.key)
+                .orElse(EMPTY_STRING);
 
         validateAllParameters(requestInfo.getQueryParameters(), verb);
         validateVerb(verb);
 
         long startTime = System.currentTimeMillis();
 
+        RecordsList recordsList;
         String response;
 
         switch (Verb.valueOf(verb)) {
             case GetRecord:
-                validateRequiredParameters(verb, resumptionToken, metadataPrefix);
                 validateMetadataPrefix(verb, metadataPrefix);
-                response = OaiResponse.GetRecord(null, null, metadataPrefix, null,
+                validateIdentifier(verb, identifier, adapter.getRepositoryName());
+                Record record = adapter.getRecord(identifier);
+                response = OaiResponse.GetRecord(record, identifier, metadataPrefix, setSpec, adapter.getBaseUrl(),
                         startTime);
                 break;
             case ListRecords:
                 validateRequiredParameters(verb, resumptionToken, metadataPrefix);
                 validateFromAndUntilParameters(verb, from, until);
                 validateSet(verb, setSpec);
-                response = OaiResponse.ListRecords(null, null, resumptionToken, metadataPrefix,
-                        null, 0, setSpec, null, startTime);
+                recordsList = adapter.getRecords(from, until, setSpec, 0);
+                response = OaiResponse.ListRecords(from, until, resumptionToken, metadataPrefix,
+                        adapter.getBaseUrl(), 0, setSpec, recordsList, startTime);
                 break;
             case ListIdentifiers:
                 validateRequiredParameters(verb, resumptionToken, metadataPrefix);
                 validateFromAndUntilParameters(verb, from, until);
                 validateSet(verb, setSpec);
-                response = OaiResponse.ListIdentifiers(null, null, metadataPrefix, resumptionToken,
-                        null, setSpec, 0, null, startTime);
-                break;
-            case Identify:
-                response = OaiResponse.Identify(null, null, null, null,
-                        null, null, null, null, startTime);
+                recordsList = adapter.getRecords(from, until, setSpec, 0);
+                response = OaiResponse.ListIdentifiers(from, until, metadataPrefix, resumptionToken,
+                        adapter.getBaseUrl(), setSpec, 0, recordsList, startTime);
                 break;
             case ListMetadataFormats:
-                response = OaiResponse.ListMetadataFormats(null, metadataPrefix, null, null,
+                response = OaiResponse.ListMetadataFormats(adapter.getBaseUrl(), metadataPrefix, null, null,
                         startTime);
                 break;
             case ListSets:
-                response = OaiResponse.ListSets(null, setSpec, null, startTime);
+                response = OaiResponse.ListSets(adapter.getBaseUrl(), setSpec, null, startTime);
                 break;
+            case Identify:
             default:
-                response = verb;
+                response = OaiResponse.Identify(adapter.getRepositoryName(), adapter.getBaseUrl(), null, null,
+                        null, null, null, null, startTime);
                 break;
         }
         return response;
@@ -182,6 +189,13 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
             throws OaiException {
         if (!MetadatFormat.isValid(metadataPrefix)) {
             throw new OaiException(verb, BAD_ARGUMENT, METADATA_FORMAT_NOT_SUPPORTED);
+        }
+    }
+
+    protected void validateIdentifier(String verb, String identifier, String repositoryName)
+            throws OaiException {
+        if (!adapter.isValidIdentifier(identifier)) {
+            throw new OaiException(verb, ID_DOES_NOT_EXIST, NO_MATCHING_IDENTIFIER + repositoryName);
         }
     }
 }

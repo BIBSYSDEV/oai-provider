@@ -4,7 +4,6 @@ import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
 
 import java.util.Date;
-import java.util.Optional;
 
 import static no.sikt.oai.Verb.GetRecord;
 import static no.sikt.oai.Verb.Identify;
@@ -43,13 +42,14 @@ public class OaiResponse {
         return buffer.toString();
     }
 
-    public static String GetRecord(Record record, String identifier, String metadataPrefix, String baseUrl, long startTime) {
+    public static String GetRecord(Record record, String identifier, String metadataPrefix, String setSpec,
+                                   String baseUrl, long startTime) {
         StringBuilder buffer = new StringBuilder(1000);
 
         makeHeader(buffer, true);
         makeHeaderRequestGetRecord(GetRecord.name(), metadataPrefix, identifier, baseUrl, buffer);
         makeVerbStart(GetRecord.name(), buffer);
-        makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, "", buffer);
+        makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer);
         makeVerbEnd(GetRecord.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(GetRecord.name(), startTime, buffer);
@@ -163,7 +163,7 @@ public class OaiResponse {
         buffer.append("    <request verb=\"" + verb + "\">").append(baseUrl).append("</request>\n");
     }
 
-    protected static void makeRecord(boolean isDeleted, String identifier, Date lastUpdateDate, String xmlContent, String set, StringBuilder buffer) {
+    protected static void makeRecord(boolean isDeleted, String identifier, Date lastUpdateDate, String xmlContent, String setSpec, StringBuilder buffer) {
         buffer.append("        <record>\n");
         if (isDeleted) {
             buffer.append("            <header status=\"deleted\">\n");
@@ -171,9 +171,9 @@ public class OaiResponse {
             buffer.append("            <header>\n");
         }
         buffer.append("                <identifier>").append(identifier).append("</identifier>\n");
-        buffer.append("                <datestamp>").append(no.sikt.oai.temp.TimeUtils.Date2String(lastUpdateDate, no.sikt.oai.temp.TimeUtils.FORMAT_ZULU_LONG)).append("</datestamp>\n");
-        if (set != null && set.length() > 0 && !set.equalsIgnoreCase("default")) {
-            buffer.append("                <setSpec>").append(set).append("</setSpec>\n");
+        buffer.append("                <datestamp>").append(no.sikt.oai.TimeUtils.Date2String(lastUpdateDate, no.sikt.oai.TimeUtils.FORMAT_ZULU_LONG)).append("</datestamp>\n");
+        if (setSpec != null && setSpec.length() > 0 && !setSpec.equalsIgnoreCase("default")) {
+            buffer.append("                <setSpec>").append(setSpec).append("</setSpec>\n");
         }
         buffer.append("            </header>\n");
         buffer.append("            <metadata>\n");

@@ -29,8 +29,9 @@ import static org.mockito.Mockito.when;
 public class OaiProviderHandlerTest {
 
     public static final String BLANK = " ";
-    public static final String UNKNOWN_CLIENT_NAME = "unknown client name";
+    public static final String UNKNOWN_CLIENT_NAME = "Unknown client name";
     public static final String UNKNOWN_VERB = "UnknownVerb";
+    public static final String VALID_IDENTIFIER = "00000000-0000-0000-0000-000000000000";
     private OaiProviderHandler handler;
     private Environment environment;
     private Context context;
@@ -45,7 +46,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void handleRequestReturnsOaiResponse() throws IOException {
+    public void handleRequestReturnsIdentifyOaiResponse() throws IOException {
         TimeUtils timeUtils = new TimeUtils();
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
@@ -95,16 +96,32 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenGetRecordWithoutResumptionToken() throws IOException {
+    public void shouldReturnBadRequestWhenGetRecordWithInvalidIdentifier() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, "1234");
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.QDC.name());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiProviderHandler.METADATA_PREFIX_IS_A_REQUIRED)));
+        assertThat(responseBody, is(containsString(OaiProviderHandler.ID_DOES_NOT_EXIST)));
+    }
+
+    @Test
+    public void shouldReturnBadRequestWhenGetRecordWithoutMetadataPrefix() throws IOException {
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, VALID_IDENTIFIER);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(OaiProviderHandler.METADATA_FORMAT_NOT_SUPPORTED)));
     }
 
     @Test
@@ -122,17 +139,73 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefix() throws IOException {
+    public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefixAndIdentifier() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.QDC.name());
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, VALID_IDENTIFIER);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
+    }
+
+    @Test
+    public void shouldReturnListMetadataFormatsResponseWhenAskedForListMetadataFormats() throws IOException {
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListMetadataFormats.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.QDC.name());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertEquals(Verb.GetRecord.name(), responseBody);
+        assertThat(responseBody, is(containsString(Verb.ListMetadataFormats.name())));
+    }
+
+    @Test
+    public void shouldReturnListSetsResponseWhenAskedForListSets() throws IOException {
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListSets.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.QDC.name());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.ListSets.name())));
+    }
+
+    @Test
+    public void shouldReturnListIdentifiersResponseWhenAskedForListIdentifiers() throws IOException {
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadatFormat.QDC.name());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.ListIdentifiers.name())));
+    }
+
+    @Test
+    public void shouldReturnBadRequestWhenAskedForListIdentifiersWithoutMetadataPrefix() throws IOException {
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(OaiProviderHandler.METADATA_PREFIX_IS_A_REQUIRED)));
     }
 
     @Test
@@ -176,7 +249,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertEquals(Verb.ListRecords.name(), responseBody);
+        assertThat(responseBody, is(containsString(Verb.ListRecords.name())));
     }
 
     @Test
@@ -196,7 +269,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertEquals(Verb.ListRecords.name(), responseBody);
+        assertThat(responseBody, is(containsString(Verb.ListRecords.name())));
     }
 
     @Test
@@ -240,7 +313,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertEquals(Verb.ListRecords.name(), responseBody);
+        assertThat(responseBody, is(containsString(Verb.ListRecords.name())));
     }
 
     @Test
@@ -317,7 +390,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertEquals(Verb.ListRecords.name(), responseBody);
+        assertThat(responseBody, is(containsString(Verb.ListRecords.name())));
     }
 
     private InputStream handlerInputStream(Map<String, String> queryParameters) throws JsonProcessingException {

@@ -5,6 +5,7 @@ import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
 
 import java.util.Date;
+import java.util.List;
 
 import static no.sikt.oai.TimeUtils.Date2String;
 import static no.sikt.oai.TimeUtils.FORMAT_ZULU_LONG;
@@ -113,12 +114,14 @@ public class OaiResponse {
         return buffer.toString();
     }
 
-    public static String listSets(String baseUrl, String setSpec, String setName, long startTime) {
+    public static String listSets(String baseUrl, List<String> setList, long startTime) {
         StringBuilder buffer = new StringBuilder(1000);
         makeHeader(buffer, false);
         makeHeaderRequest(ListSets.name(), baseUrl, buffer);
         makeVerbStart(ListSets.name(), buffer);
-        makeListSets(setSpec, setName, buffer);
+        for (String set : setList) {
+            makeListSets(set, set, buffer);
+        }
         makeVerbEnd(ListSets.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(ListSets.name(), startTime, buffer);

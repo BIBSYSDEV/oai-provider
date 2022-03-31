@@ -8,13 +8,18 @@ import no.sikt.oai.adapter.NvaAdapter;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
 import no.sikt.oai.exception.OaiException;
+import no.sikt.oai.service.DataProvider;
 import nva.commons.apigateway.ApiGatewayHandler;
 import nva.commons.apigateway.RequestInfo;
 import nva.commons.apigateway.exceptions.ApiGatewayException;
 import nva.commons.core.Environment;
 import nva.commons.core.JacocoGenerated;
 
+import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +49,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public static final String CLIENT_NAME_ENV = "OAI_CLIENT_NAME";
 
     private Adapter adapter;
+    private DataProvider dataProvider;
 
     @JacocoGenerated
     public OaiProviderHandler() {
@@ -53,6 +59,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public OaiProviderHandler(Environment environment) {
         super(Void.class, environment);
         initAdapter();
+        initDataProvider();
     }
 
     @Override
@@ -113,7 +120,12 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                             startTime);
                     break;
                 case ListSets:
-                    response = OaiResponse.listSets(adapter.getBaseUrl(), setSpec, null, startTime);
+                    try {
+                        List<String> institutionList = dataProvider.getInstitutionList();
+                        response = OaiResponse.listSets(adapter.getBaseUrl(), institutionList, startTime);
+                    } catch (OaiException e) {
+                        response = OaiResponse.oaiError(adapter.getBaseUrl(), e.getErrorCode(), e.getErrorText());
+                    }
                     break;
                 case Identify:
                 default:
@@ -138,6 +150,19 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
             default:
                 throw new RuntimeException(String.format(UNKNOWN_CLIENT_NAME, clientName));
         }
+    }
+
+    private void initDataProvider() {
+        //Todo: noen environment stuff vi må lese fra avhengig fra DLR eller NVA
+        this.dataProvider = new DataProvider();
+
+        URI uri = null;
+        try {
+            uri = new URI("https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/institutions");
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        dataProvider.setInstitutionUrl(uri);
     }
 
     @Override

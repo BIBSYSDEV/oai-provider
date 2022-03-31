@@ -10,6 +10,7 @@ package no.sikt.oai.temp;
  * 2003-08-15 SG: Opprettet<br>
  * <p>
  */
+@Deprecated
 public class OAIException
 extends Exception {
 	/**

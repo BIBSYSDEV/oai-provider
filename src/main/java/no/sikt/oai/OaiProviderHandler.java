@@ -87,7 +87,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                     validateMetadataPrefix(verb, metadataPrefix);
                     validateIdentifier(verb, identifier, adapter.getRepositoryName());
                     Record record = adapter.getRecord(identifier);
-                    response = OaiResponse.GetRecord(record, identifier, metadataPrefix, setSpec, adapter.getBaseUrl(),
+                    response = OaiResponse.getRecord(record, identifier, metadataPrefix, setSpec, adapter.getBaseUrl(),
                             startTime);
                     break;
                 case ListRecords:
@@ -96,7 +96,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                     validateFromAndUntilParameters(verb, from, until);
                     validateSet(verb, setSpec);
                     recordsList = adapter.getRecords(from, until, setSpec, 0);
-                    response = OaiResponse.ListRecords(from, until, resumptionToken, metadataPrefix,
+                    response = OaiResponse.listRecords(from, until, resumptionToken, metadataPrefix,
                             adapter.getBaseUrl(), 0, setSpec, recordsList, startTime);
                     break;
                 case ListIdentifiers:
@@ -105,21 +105,19 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                     validateFromAndUntilParameters(verb, from, until);
                     validateSet(verb, setSpec);
                     recordsList = adapter.getRecords(from, until, setSpec, 0);
-                    response = OaiResponse.ListIdentifiers(from, until, metadataPrefix, resumptionToken,
+                    response = OaiResponse.listIdentifiers(from, until, metadataPrefix, resumptionToken,
                             adapter.getBaseUrl(), setSpec, 0, recordsList, startTime);
                     break;
                 case ListMetadataFormats:
-                    response = OaiResponse.ListMetadataFormats(adapter.getBaseUrl(), metadataPrefix, null, null,
+                    response = OaiResponse.listMetadataFormats(adapter.getBaseUrl(), metadataPrefix, null, null,
                             startTime);
                     break;
                 case ListSets:
-                    response = OaiResponse.ListSets(adapter.getBaseUrl(), setSpec, null, startTime);
+                    response = OaiResponse.listSets(adapter.getBaseUrl(), setSpec, null, startTime);
                     break;
                 case Identify:
                 default:
-                    response = OaiResponse.Identify(adapter.getRepositoryName(), adapter.getBaseUrl(),
-                            adapter.getProtocolVersion(), adapter.getAdminEmail(), adapter.getEarliestTimestamp(),
-                            adapter.getDeletedRecord(), adapter.getDateGranularity(), adapter.getDescription(), startTime);
+                    response = OaiResponse.identify(adapter, startTime);
                     break;
             }
         } catch (OaiException e) {

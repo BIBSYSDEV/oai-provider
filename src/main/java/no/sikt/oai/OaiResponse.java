@@ -1,5 +1,6 @@
 package no.sikt.oai;
 
+import no.sikt.oai.adapter.Adapter;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
 
@@ -16,24 +17,21 @@ import static no.sikt.oai.Verb.ListSets;
 
 public class OaiResponse {
 
-    public static String Identify(String repositoryName, String baseUrl, String protocolVersion, String adminEmail, String earliestTimestamp, String deletedRecord, String granularity, String description, long startTime) {
+    public static String identify(Adapter adapter, long startTime) {
         StringBuilder buffer = new StringBuilder();
-
         makeHeader(buffer, false);
-        makeHeaderRequest(Identify.name(), baseUrl, buffer);
+        makeHeaderRequest(Identify.name(), adapter.getBaseUrl(), buffer);
         makeVerbStart(Identify.name(), buffer);
-        makeIdentify(repositoryName, baseUrl, protocolVersion, adminEmail, earliestTimestamp, deletedRecord, granularity, description, buffer);
+        makeIdentify(adapter, buffer);
         makeVerbEnd(Identify.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(Identify.name(), startTime, buffer);
-
         return buffer.toString();
     }
 
-    public static String ListMetadataFormats(String baseUrl, String metadataPrefix, String schema,
+    public static String listMetadataFormats(String baseUrl, String metadataPrefix, String schema,
                                              String metadataNamespace, long startTime) {
         StringBuilder buffer = new StringBuilder();
-
         makeHeader(buffer, false);
         makeHeaderRequest(ListMetadataFormats.name(), baseUrl, buffer);
         makeVerbStart(ListMetadataFormats.name(), buffer);
@@ -44,10 +42,9 @@ public class OaiResponse {
         return buffer.toString();
     }
 
-    public static String GetRecord(Record record, String identifier, String metadataPrefix, String setSpec,
+    public static String getRecord(Record record, String identifier, String metadataPrefix, String setSpec,
                                    String baseUrl, long startTime) {
         StringBuilder buffer = new StringBuilder(1000);
-
         makeHeader(buffer, true);
         makeHeaderRequestGetRecord(GetRecord.name(), metadataPrefix, identifier, baseUrl, buffer);
         makeVerbStart(GetRecord.name(), buffer);
@@ -55,17 +52,16 @@ public class OaiResponse {
         makeVerbEnd(GetRecord.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(GetRecord.name(), startTime, buffer);
-
         return buffer.toString();
     }
 
-    public static String ListIdentifiers(String from, String until, String metadataPrefix,
+    public static String listIdentifiers(String from, String until, String metadataPrefix,
                                          String resumptionToken, String baseUrl, String setSpec,
                                          int startPosition, RecordsList records, long startTime) {
         StringBuilder buffer = new StringBuilder();
-
         makeHeader(buffer, true);
-        makeHeaderRequestListRecordsIdentifiers(ListIdentifiers.name(), resumptionToken, from, until, metadataPrefix, baseUrl, buffer);
+        makeHeaderRequestListRecordsIdentifiers(ListIdentifiers.name(), resumptionToken, from, until, metadataPrefix,
+                baseUrl, buffer);
         makeVerbStart(ListIdentifiers.name(), buffer);
 
         for (Record record : records) {
@@ -76,27 +72,26 @@ public class OaiResponse {
         long recordsRemaining = records.numFound() - startPosition + records.size();
 
         if (recordsRemaining > 0) {
-            ResumptionToken nyTok = new ResumptionToken("lr", System.currentTimeMillis(), setSpec, ((from == null) ? "" : from), ((until == null) ? "" : until), metadataPrefix, startPosition + records.size() + "");
+            ResumptionToken nyTok = new ResumptionToken("lr", System.currentTimeMillis(), setSpec,
+                    ((from == null) ? "" : from), ((until == null) ? "" : until), metadataPrefix,
+                    startPosition + records.size() + "");
             newResumptionToken = nyTok.asString();
         }
-
         makeFooterListIdentifiers(records.numFound() + "", newResumptionToken, buffer);
         makeVerbEnd(ListIdentifiers.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(ListIdentifiers.name(), startTime, buffer);
-
         return buffer.toString();
     }
 
-    public static String ListRecords(String from, String until, String resumptionToken, String metadataPrefix,
+    public static String listRecords(String from, String until, String resumptionToken, String metadataPrefix,
                                      String baseUrl, int startPosition, String setSpec, RecordsList records,
                                      long startTime) {
         StringBuilder buffer = new StringBuilder();
         String newResumptionToken = "";
-
         makeHeader(buffer, true);
-        makeHeaderRequestListRecordsIdentifiers(ListRecords.name(), resumptionToken, from, until, metadataPrefix, baseUrl, buffer);
-
+        makeHeaderRequestListRecordsIdentifiers(ListRecords.name(), resumptionToken, from, until, metadataPrefix,
+                baseUrl, buffer);
         makeVerbStart(ListRecords.name(), buffer);
 
         for (Record record : records) {
@@ -106,22 +101,20 @@ public class OaiResponse {
         long recordsRemaining = records.numFound() - (startPosition + records.size());
 
         if (recordsRemaining > 0) {
-            ResumptionToken nyTok = new ResumptionToken("lr", System.currentTimeMillis(), setSpec, ((from == null) ? "" : from), ((until == null) ? "" : until), metadataPrefix, startPosition + records.size() + "");
+            ResumptionToken nyTok = new ResumptionToken("lr", System.currentTimeMillis(), setSpec,
+                    ((from == null) ? "" : from), ((until == null) ? "" : until), metadataPrefix, startPosition + records.size() + "");
             newResumptionToken = nyTok.asString();
         }
-
-        makeFooterListRecords(records.numFound() + "", newResumptionToken, startPosition + records.size() + "", buffer);
-
+        makeFooterListRecords(records.numFound() + "", newResumptionToken, startPosition + records.size()
+                + "", buffer);
         makeVerbEnd(ListRecords.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(ListRecords.name(), startTime, buffer);
-
         return buffer.toString();
     }
 
-    public static String ListSets(String baseUrl, String setSpec, String setName, long startTime) {
+    public static String listSets(String baseUrl, String setSpec, String setName, long startTime) {
         StringBuilder buffer = new StringBuilder(1000);
-
         makeHeader(buffer, false);
         makeHeaderRequest(ListSets.name(), baseUrl, buffer);
         makeVerbStart(ListSets.name(), buffer);
@@ -129,7 +122,6 @@ public class OaiResponse {
         makeVerbEnd(ListSets.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(ListSets.name(), startTime, buffer);
-
         return buffer.toString();
     }
 
@@ -207,7 +199,6 @@ public class OaiResponse {
         for (String recordXmlPart : recordXml) {
             buffer.append("                " + recordXmlPart + "\n");
         }
-
         buffer.append("            </metadata>\n");
         buffer.append("        </record>\n");
     }
@@ -268,7 +259,6 @@ public class OaiResponse {
     protected static void makeHeaderRequestListRecordsIdentifiers(String verb, String oldResumptionToken, String from,
                                                                   String until, String metadataPrefix, String baseUrl,
                                                                   StringBuilder buffer) {
-
         boolean writeParams = true;
 
         buffer.append("    <request verb=\"").append(verb).append("\" ");
@@ -300,22 +290,20 @@ public class OaiResponse {
 
     // OAI helpers: Identify
 
-    protected static void makeIdentify(String repositoryName, String baseUrl, String protocolVersion, String adminEmail,
-                                       String earliestTimestamp, String deletedRecord, String granularity,
-                                       String description, StringBuilder buffer) {
-        buffer.append("        <repositoryName>").append(repositoryName).append("</repositoryName>\n");
-        buffer.append("        <baseURL>").append(baseUrl).append("</baseURL>\n");
-        buffer.append("        <protocolVersion>").append(protocolVersion).append("</protocolVersion>\n");
-        buffer.append("        <adminEmail>").append(adminEmail).append("</adminEmail>\n");
-        buffer.append("        <earliestDatestamp>").append(earliestTimestamp).append("</earliestDatestamp>\n");
-        buffer.append("        <deletedRecord>").append(deletedRecord).append("</deletedRecord>\n");
-        buffer.append("        <granularity>").append(granularity).append("</granularity>\n");
-        buffer.append("        <description>").append(description).append("</description>\n");
+    protected static void makeIdentify(Adapter adapter, StringBuilder buffer) {
+        buffer.append("        <repositoryName>").append(adapter.getRepositoryName()).append("</repositoryName>\n");
+        buffer.append("        <baseURL>").append(adapter.getBaseUrl()).append("</baseURL>\n");
+        buffer.append("        <protocolVersion>").append(adapter.getProtocolVersion()).append("</protocolVersion>\n");
+        buffer.append("        <adminEmail>").append(adapter.getAdminEmail()).append("</adminEmail>\n");
+        buffer.append("        <earliestDatestamp>").append(adapter.getEarliestTimestamp())
+                .append("</earliestDatestamp>\n");
+        buffer.append("        <deletedRecord>").append(adapter.getDeletedRecord()).append("</deletedRecord>\n");
+        buffer.append("        <granularity>").append(adapter.getDateGranularity()).append("</granularity>\n");
+        buffer.append("        <description>").append(adapter.getDescription()).append("</description>\n");
     }
 
 
     // OAI helpers: ListMetadataFormats
-
 
     protected static void makeListMetadataFormats(String metadataPrefix, String schema, String metadataNamespace,
                                                   StringBuilder buffer) {

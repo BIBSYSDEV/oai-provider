@@ -123,7 +123,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                     break;
             }
         } catch (OaiException e) {
-            response = OaiResponse.oaiError(adapter.getBaseUrl(), e.getMessage());
+            response = OaiResponse.oaiError(adapter.getBaseUrl(), e.getErrorCode(), e.getErrorText());
         }
         return response;
     }

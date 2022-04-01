@@ -1,13 +1,12 @@
 package no.sikt.oai.service;
 
-import no.sikt.oai.OaiConstants;
 import no.sikt.oai.Verb;
 import no.sikt.oai.adapter.Adapter;
 import no.sikt.oai.exception.OaiException;
 import nva.commons.core.JacocoGenerated;
+import org.apache.http.HttpStatus;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -17,12 +16,11 @@ import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 
-public class DataProvider extends RestClient{
+public class DataProvider {
 
 
     private final HttpClient client;
     private final Adapter adapter;
-    private URI institutionUri;
 
     public DataProvider(HttpClient client, Adapter adapter) {
         this.client = client;
@@ -49,11 +47,12 @@ public class DataProvider extends RestClient{
         } catch (IOException | InterruptedException e) {
             throw new OaiException(Verb.ListSets.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
         }
-
     }
 
-    public void setInstitutionUrl(URI institutionUri) {
-        this.institutionUri = institutionUri;
+    protected boolean responseIsSuccessful(HttpResponse<String> response) {
+        int status = response.statusCode();
+        // status should be in the range [200,300)
+        return status >= HttpStatus.SC_OK && status < HttpStatus.SC_MULTIPLE_CHOICES;
     }
 
 }

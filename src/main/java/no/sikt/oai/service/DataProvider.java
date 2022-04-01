@@ -1,9 +1,8 @@
 package no.sikt.oai.service;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import no.sikt.oai.OaiConstants;
 import no.sikt.oai.Verb;
+import no.sikt.oai.adapter.Adapter;
 import no.sikt.oai.exception.OaiException;
 import nva.commons.core.JacocoGenerated;
 
@@ -12,52 +11,49 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.List;
 
+import static no.sikt.oai.OaiConstants.NO_SETS_FOUND;
+import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 
 public class DataProvider extends RestClient{
 
+
     private final HttpClient client;
-    private ObjectMapper mapper = new ObjectMapper();
+    private final Adapter adapter;
     private URI institutionUri;
 
-    public DataProvider(HttpClient client) {
+    public DataProvider(HttpClient client, Adapter adapter) {
         this.client = client;
+        this.adapter = adapter;
     }
 
     @JacocoGenerated
-    public DataProvider() {
-        this(HttpClient.newBuilder().build());
+    public DataProvider(Adapter adapter) {
+        this(HttpClient.newBuilder().build(), adapter);
     }
 
-    public List<String> getInstitutionList() throws OaiException {
+    public String getInstitutionList() throws OaiException {
         try {
             HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(institutionUri)
+                    .uri(adapter.getInstitutionsUri())
                     .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
                     .GET()
                     .build();
             HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             if (!responseIsSuccessful(response)) {
-                throw new OaiException(Verb.ListSets.name(), "noSetHierarchy", "no sets found");
+                throw new OaiException(Verb.ListSets.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
             }
-            mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-            return mapper.readValue(response.body(), Institutions.class).institutions;
+            return response.body();
         } catch (IOException | InterruptedException e) {
-            throw new OaiException(Verb.ListSets.name(), "noSetHierarchy", "no sets found");
+            throw new OaiException(Verb.ListSets.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
         }
 
     }
 
     public void setInstitutionUrl(URI institutionUri) {
         this.institutionUri = institutionUri;
-    }
-
-    private static class Institutions {
-        @JsonProperty("institutions")
-        List<String> institutions;
     }
 
 }

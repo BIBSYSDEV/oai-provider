@@ -1,17 +1,25 @@
 package no.sikt.oai.adapter;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import no.sikt.oai.Verb;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
+import no.sikt.oai.exception.OaiException;
+import nva.commons.core.paths.UriWrapper;
 
+import java.net.URI;
 import java.util.Date;
-import java.util.Locale;
+import java.util.List;
+
+import static no.sikt.oai.OaiConstants.NO_SETS_FOUND;
+import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
 
 public class DlrAdapter implements Adapter{
 
-    @Override
-    public boolean isValidSetName(String setSpec) {
-        return SetName.isValid(setSpec);
-    }
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public boolean isValidIdentifier(String identifier) {
@@ -71,21 +79,30 @@ public class DlrAdapter implements Adapter{
         return records;
     }
 
-    /**
-     * TODO! has to be replaced with call to the backend to list all institutions/customers
-     */
-    enum SetName {
-        NTNU,
-        VID,
-        SIKT;
-
-        public static boolean isValid(String value) {
-            for (SetName set : values()) {
-                if (set.name().equals(value.toUpperCase(Locale.getDefault()))) {
-                    return true;
-                }
-            }
-            return false;
+    @Override
+    public List<String> parseInstitutionResponse(String json) throws OaiException {
+        mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+        try {
+            return mapper.readValue(json, Institutions.class).institutions;
+        } catch (JsonProcessingException e) {
+            throw new OaiException(Verb.ListSets.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
         }
+    }
+
+    @Override
+    public URI getInstitutionsUri() {
+        return UriWrapper
+                .fromUri("https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/institutions")
+                .getUri();
+//        try {
+//            return new URI("https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/institutions");
+//        } catch (URISyntaxException e) {
+//            e.printStackTrace();
+//        }
+    }
+
+    private static class Institutions {
+        @JsonProperty("institutions")
+        List<String> institutions;
     }
 }

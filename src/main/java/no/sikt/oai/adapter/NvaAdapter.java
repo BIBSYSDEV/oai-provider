@@ -2,16 +2,15 @@ package no.sikt.oai.adapter;
 
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
+import no.sikt.oai.exception.OaiException;
+import nva.commons.core.paths.UriWrapper;
 
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Locale;
+import java.util.List;
 
 public class NvaAdapter implements Adapter {
-
-    @Override
-    public boolean isValidSetName(String setSpec) {
-        return SetName.isValid(setSpec);
-    }
 
     @Override
     public boolean isValidIdentifier(String identifier) {
@@ -71,23 +70,20 @@ public class NvaAdapter implements Adapter {
         return records;
     }
 
-    /**
-     * TODO! has to be replaced with call to the backend to list all institutions/customers
-     */
-    enum SetName {
-        NTNU,
-        VID,
-        BI,
-        UIT,
-        SIKT;
-
-        public static boolean isValid(String value) {
-            for (NvaAdapter.SetName set : values()) {
-                if (set.name().equals(value.toUpperCase(Locale.getDefault()))) {
-                    return true;
-                }
-            }
-            return false;
-        }
+    @Override
+    public List<String> parseInstitutionResponse(String json) throws OaiException {
+        List<String> list = new ArrayList<>();
+        list.add("ntnu");
+        list.add("vid");
+        list.add("bi");
+        return list;
     }
+
+    @Override
+    public URI getInstitutionsUri() {
+        return UriWrapper
+                .fromUri("https://api.dev.nva.aws.unit.no/customer/")
+                .getUri();
+    }
+
 }

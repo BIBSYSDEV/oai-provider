@@ -1,13 +1,15 @@
 package no.sikt.oai.adapter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
+import no.sikt.oai.exception.OaiException;
 
+import java.net.URI;
 import java.net.URL;
+import java.util.List;
 
 public interface Adapter {
-
-    public boolean isValidSetName(String setSpec);
 
     public boolean isValidIdentifier(String identifier);
 
@@ -31,4 +33,7 @@ public interface Adapter {
 
     public RecordsList getRecords(String from, String until, String institution, int startPosition);
 
+    public List<String> parseInstitutionResponse(String json) throws OaiException;
+
+    public URI getInstitutionsUri();
 }

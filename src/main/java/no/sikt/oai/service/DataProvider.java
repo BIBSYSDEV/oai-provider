@@ -49,6 +49,40 @@ public class DataProvider {
         }
     }
 
+    public String getRecord(String identifier) throws OaiException {
+        try {
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(adapter.getRecordUri(identifier))
+                    .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                    .GET()
+                    .build();
+            HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            if (!responseIsSuccessful(response)) {
+                throw new OaiException(Verb.ListSets.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
+            }
+            return response.body();
+        } catch (IOException | InterruptedException e) {
+            throw new OaiException(Verb.ListSets.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
+        }
+    }
+
+    public String getRecordsList(String from, String until, String setSpec, int startPosition) throws OaiException {
+        try {
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(adapter.getRecordsListUri(from, until, setSpec, startPosition))
+                    .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                    .GET()
+                    .build();
+            HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            if (!responseIsSuccessful(response)) {
+                throw new OaiException(Verb.ListSets.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
+            }
+            return response.body();
+        } catch (IOException | InterruptedException e) {
+            throw new OaiException(Verb.ListSets.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
+        }
+    }
+
     protected boolean responseIsSuccessful(HttpResponse<String> response) {
         int status = response.statusCode();
         // status should be in the range [200,300)

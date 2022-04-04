@@ -58,19 +58,6 @@ public class NvaAdapter implements Adapter {
     }
 
     @Override
-    public Record getRecord(String identifier) {
-        return new Record("", false, "1234", new Date());
-    }
-
-    @Override
-    public RecordsList getRecords(String from, String until, String institution, int startPosition) {
-        Record record = new Record("", false, "1234", new Date());
-        RecordsList records = new RecordsList(1);
-        records.add(record);
-        return records;
-    }
-
-    @Override
     public List<String> parseInstitutionResponse(String json) throws OaiException {
         List<String> list = new ArrayList<>();
         list.add("ntnu");
@@ -84,6 +71,33 @@ public class NvaAdapter implements Adapter {
         return UriWrapper
                 .fromUri("https://api.dev.nva.aws.unit.no/customer/")
                 .getUri();
+    }
+
+    @Override
+    public URI getRecordUri(String identifier) {
+        return UriWrapper
+                .fromUri("https://api.dev.nva.aws.unit.no/customer/")
+                .getUri();
+    }
+
+    @Override
+    public URI getRecordsListUri(String from, String until, String institution, int startPosition) {
+        return UriWrapper
+                .fromUri("https://api.dev.nva.aws.unit.no/customer/")
+                .getUri();
+    }
+
+    @Override
+    public Record parseRecordResponse(String json) throws OaiException {
+        return new Record("", false, "1234", new Date());
+    }
+
+    @Override
+    public RecordsList parseRecordsListResponse(String verb, String json) throws OaiException {
+        Record record = new Record("", false, "1234", new Date());
+        RecordsList records = new RecordsList(1);
+        records.add(record);
+        return records;
     }
 
 }

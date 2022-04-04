@@ -29,11 +29,15 @@ public interface Adapter {
 
     public String getBaseUrl();
 
-    public Record getRecord(String identifier);
-
-    public RecordsList getRecords(String from, String until, String institution, int startPosition);
-
     public List<String> parseInstitutionResponse(String json) throws OaiException;
 
+    public Record parseRecordResponse(String json) throws OaiException;
+
+    public RecordsList parseRecordsListResponse(String verb, String json) throws OaiException;
+
     public URI getInstitutionsUri();
+
+    public URI getRecordUri(String identifier);
+
+    public URI getRecordsListUri(String from, String until, String institution, int startPosition);
 }

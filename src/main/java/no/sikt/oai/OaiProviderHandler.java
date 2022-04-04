@@ -77,7 +77,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                 case GetRecord:
                     validateMetadataPrefix(verb, metadataPrefix);
                     validateIdentifier(verb, identifier, adapter.getRepositoryName());
-                    Record record = adapter.getRecord(identifier);
+                    Record record = getRecord(identifier);
                     response = OaiResponse.getRecord(record, identifier, metadataPrefix, setSpec, adapter.getBaseUrl(),
                             startTime);
                     break;
@@ -87,7 +87,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                     validateFromAndUntilParameters(verb, from, until);
                     validateSet(verb, setSpec);
                     validateResumptionToken(verb, resumptionToken);
-                    recordsList = adapter.getRecords(from, until, setSpec, 0);
+                    recordsList = getRecordsList(verb, from, until, setSpec, 0);
                     response = OaiResponse.listRecords(from, until, resumptionToken, metadataPrefix,
                             adapter.getBaseUrl(), 0, setSpec, recordsList, startTime);
                     break;
@@ -97,7 +97,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                     validateFromAndUntilParameters(verb, from, until);
                     validateSet(verb, setSpec);
                     validateResumptionToken(verb, resumptionToken);
-                    recordsList = adapter.getRecords(from, until, setSpec, 0);
+                    recordsList = getRecordsList(verb, from, until, setSpec, 0);
                     response = OaiResponse.listIdentifiers(from, until, metadataPrefix, resumptionToken,
                             adapter.getBaseUrl(), setSpec, 0, recordsList, startTime);
                     break;
@@ -180,8 +180,10 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         if (until.length() > 0 && !TimeUtils.verifyUTCdate(until)) {
             throw new OaiException(verb, OaiConstants.BAD_ARGUMENT, OaiConstants.ILLEGAL_DATE_UNTIL);
         }
-        if (from.length() != until.length()) {
-            throw new OaiException(verb, OaiConstants.BAD_ARGUMENT, OaiConstants.DIFFERENT_DATE_GRANULARITIES);
+        if (from.length() > 0 && until.length() > 0) {
+            if (from.length() != until.length()) {
+                throw new OaiException(verb, OaiConstants.BAD_ARGUMENT, OaiConstants.DIFFERENT_DATE_GRANULARITIES);
+            }
         }
     }
 
@@ -194,6 +196,17 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     private List<String> getInstitutionList() throws OaiException {
         String json = dataProvider.getInstitutionList();
         return adapter.parseInstitutionResponse(json);
+    }
+
+    private Record getRecord(String identifier) throws OaiException {
+        String json = dataProvider.getRecord(identifier);
+        return adapter.parseRecordResponse(json);
+    }
+
+    private RecordsList getRecordsList(String verb, String from, String until, String setSpec, int startPosition)
+            throws OaiException {
+        String json = dataProvider.getRecordsList(from, until, setSpec, startPosition);
+        return adapter.parseRecordsListResponse(verb, json);
     }
 
     protected void validateResumptionToken(String verb, String resumptionToken) throws OaiException {

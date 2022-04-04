@@ -13,6 +13,7 @@ import nva.commons.core.paths.UriWrapper;
 import java.net.URI;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import static no.sikt.oai.OaiConstants.NO_SETS_FOUND;
 import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
@@ -67,19 +68,6 @@ public class DlrAdapter implements Adapter{
     }
 
     @Override
-    public Record getRecord(String identifier) {
-        return new Record("", false, "1234", new Date());
-    }
-
-    @Override
-    public RecordsList getRecords(String from, String until, String institution, int startPosition) {
-        Record record = new Record("", false, "1234", new Date());
-        RecordsList records = new RecordsList(1);
-        records.add(record);
-        return records;
-    }
-
-    @Override
     public List<String> parseInstitutionResponse(String json) throws OaiException {
         mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
         try {
@@ -90,19 +78,69 @@ public class DlrAdapter implements Adapter{
     }
 
     @Override
+    public Record parseRecordResponse(String json) throws OaiException {
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        try {
+            Resource resource = mapper.readValue(json, Resource.class);
+            return new Record("", false, "1234", new Date());
+        } catch (JsonProcessingException e) {
+            throw new OaiException(Verb.GetRecord.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
+        }
+    }
+
+    @Override
+    public RecordsList parseRecordsListResponse(String verb, String json) throws OaiException {
+        //            ResourceSearchResponse resourceSearchResponse = mapper.readValue(json, ResourceSearchResponse.class);
+        Record record = new Record("", false, "1234", new Date());
+        RecordsList records = new RecordsList(1);
+        records.add(record);
+        return records;
+    }
+
+    @Override
     public URI getInstitutionsUri() {
         return UriWrapper
                 .fromUri("https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/institutions")
                 .getUri();
-//        try {
-//            return new URI("https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/institutions");
-//        } catch (URISyntaxException e) {
-//            e.printStackTrace();
-//        }
+    }
+
+    @Override
+    public URI getRecordUri(String identifier) {
+        return UriWrapper
+                .fromUri("https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/" +
+                        "resources/" + identifier)
+
+                .getUri();
+    }
+
+    @Override
+    public URI getRecordsListUri(String from, String until, String institution, int startPosition) {
+        return UriWrapper
+                .fromUri("https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/" +
+                        "resources?filter=facet_institution::"+institution) //"&from=" + from)
+                .getUri();
     }
 
     private static class Institutions {
         @JsonProperty("institutions")
         List<String> institutions;
     }
+
+    private static class Resource {
+        @JsonProperty("identifier")
+        String identifier;
+        @JsonProperty("features")
+        Map<String, String> features;
+    }
+
+    private static class ResourceSearchResponse {
+        String offset;
+        String limit;
+        long numFound;
+        int queryTime;
+        List<String> resourcesAsJson;
+        List<Map<String, String>> facet_counts;
+        List<String> spellcheck_suggestions;
+    }
+
 }

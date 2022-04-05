@@ -20,7 +20,7 @@ import static no.sikt.oai.MetadataFormat.valueOf;
 import static no.sikt.oai.OaiConstants.NO_SETS_FOUND;
 import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
 
-public class DlrAdapter implements Adapter{
+public class DlrAdapter implements Adapter {
 
     private ObjectMapper mapper = new ObjectMapper();
 
@@ -173,8 +173,8 @@ public class DlrAdapter implements Adapter{
         buffer.append("                    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n");
         buffer.append("                    <dc:date>").append(resource.features.get("dlr_time_created")).append("</dc:date>\n");
         buffer.append("                    <dc:date>").append(resource.features.get("dlr_time_published")).append("</dc:date>\n");
-        buffer.append("                    <dc:identifier").append(resource.features.get("dlr_identifier_handle")).append("</dc:identifier>\n");
-        buffer.append("                    <dc:identifier").append(resource.identifier).append("</dc:identifier>\n");
+        buffer.append("                    <dc:identifier>").append(resource.features.get("dlr_identifier_handle")).append("</dc:identifier>\n");
+        buffer.append("                    <dc:identifier>").append(resource.identifier).append("</dc:identifier>\n");
         buffer.append("                </oai_dc:dc>\n");
         return buffer.toString();
     }
@@ -196,9 +196,9 @@ public class DlrAdapter implements Adapter{
         }
         buffer.append("                    <dc:rights>").append(resource.features.get("dlr_rights_license_name")).append("</dc:rights>\n");
         buffer.append("                    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n");
-        buffer.append("                    <dcterms:created").append(resource.features.get("dlr_time_created")).append("</dcterms:created>\n");
-        buffer.append("                    <dcterms:identifier xsi:type=\"dcterms:URI\"").append(resource.features.get("dlr_identifier_handle")).append("</dcterms:identifier>\n");
-        buffer.append("                    <dcterms:identifier").append(resource.identifier).append("</dcterms:identifier>\n");
+        buffer.append("                    <dcterms:created>").append(resource.features.get("dlr_time_created")).append("</dcterms:created>\n");
+        buffer.append("                    <dcterms:identifier xsi:type=\"dcterms:URI\">").append(resource.features.get("dlr_identifier_handle")).append("</dcterms:identifier>\n");
+        buffer.append("                    <dcterms:identifier>").append(resource.identifier).append("</dcterms:identifier>\n");
         buffer.append("                </qdc:qualifieddc>\n");
         return buffer.toString();
     }
@@ -229,9 +229,7 @@ public class DlrAdapter implements Adapter{
         buffer.append("                    <datacite:dates>\n");
         buffer.append("                        <datacite:date dateType=\"Issued\">").append(resource.features.get("dlr_time_published")).append("</datacite:date>\n");
         buffer.append("                    </datacite:dates>\n");
-        buffer.append("                    <dc:rights>").append(resource.features.get("dlr_rights_license_name")).append("</dc:rights>\n");
-        buffer.append("                    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n");
-        buffer.append("                </oai_dc:dc>\n");
+        buffer.append("                </oaire:resource>\n");
         return buffer.toString();
     }
 

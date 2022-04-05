@@ -16,8 +16,6 @@ import nva.commons.core.Environment;
 import nva.commons.core.JacocoGenerated;
 
 import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -77,7 +75,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                 case GetRecord:
                     validateMetadataPrefix(verb, metadataPrefix);
                     validateIdentifier(verb, identifier, adapter.getRepositoryName());
-                    Record record = getRecord(identifier);
+                    Record record = getRecord(identifier, metadataPrefix);
                     response = OaiResponse.getRecord(record, identifier, metadataPrefix, setSpec, adapter.getBaseUrl(),
                             startTime);
                     break;
@@ -87,7 +85,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                     validateFromAndUntilParameters(verb, from, until);
                     validateSet(verb, setSpec);
                     validateResumptionToken(verb, resumptionToken);
-                    recordsList = getRecordsList(verb, from, until, setSpec, 0);
+                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, 0);
                     response = OaiResponse.listRecords(from, until, resumptionToken, metadataPrefix,
                             adapter.getBaseUrl(), 0, setSpec, recordsList, startTime);
                     break;
@@ -97,7 +95,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                     validateFromAndUntilParameters(verb, from, until);
                     validateSet(verb, setSpec);
                     validateResumptionToken(verb, resumptionToken);
-                    recordsList = getRecordsList(verb, from, until, setSpec, 0);
+                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, 0);
                     response = OaiResponse.listIdentifiers(from, until, metadataPrefix, resumptionToken,
                             adapter.getBaseUrl(), setSpec, 0, recordsList, startTime);
                     break;
@@ -198,15 +196,16 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         return adapter.parseInstitutionResponse(json);
     }
 
-    private Record getRecord(String identifier) throws OaiException {
+    private Record getRecord(String identifier, String metadataPrefix) throws OaiException {
         String json = dataProvider.getRecord(identifier);
-        return adapter.parseRecordResponse(json);
+        return adapter.parseRecordResponse(json, metadataPrefix);
     }
 
-    private RecordsList getRecordsList(String verb, String from, String until, String setSpec, int startPosition)
+    private RecordsList getRecordsList(String verb, String from, String until, String setSpec, String metadataPrefix,
+                                       int startPosition)
             throws OaiException {
         String json = dataProvider.getRecordsList(from, until, setSpec, startPosition);
-        return adapter.parseRecordsListResponse(verb, json);
+        return adapter.parseRecordsListResponse(verb, json, metadataPrefix);
     }
 
     protected void validateResumptionToken(String verb, String resumptionToken) throws OaiException {
@@ -215,7 +214,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     protected void validateMetadataPrefix(String verb, String metadataPrefix)
             throws OaiException {
-        if (!MetadatFormat.isValid(metadataPrefix)) {
+        if (!MetadataFormat.isValid(metadataPrefix)) {
             throw new OaiException(verb, OaiConstants.CANNOT_DISSEMINATE_FORMAT, OaiConstants.METADATA_FORMAT_NOT_SUPPORTED);
         }
     }

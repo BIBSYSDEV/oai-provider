@@ -88,12 +88,13 @@ public class NvaAdapter implements Adapter {
     }
 
     @Override
-    public Record parseRecordResponse(String json) throws OaiException {
+    public Record parseRecordResponse(String json, String metadataPrefix) throws OaiException {
         return new Record("", false, "1234", new Date());
     }
 
     @Override
-    public RecordsList parseRecordsListResponse(String verb, String json) throws OaiException {
+    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix)
+            throws OaiException {
         Record record = new Record("", false, "1234", new Date());
         RecordsList records = new RecordsList(1);
         records.add(record);

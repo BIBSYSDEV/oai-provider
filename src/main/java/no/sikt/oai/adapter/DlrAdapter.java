@@ -66,7 +66,12 @@ public class DlrAdapter implements Adapter {
 
     @Override
     public String getBaseUrl() {
-        return "https://example.com";
+        return "https://dlr.unit.no";
+    }
+
+    @Override
+    public String getIdentifierPrefix() {
+        return "oai:dlr.unit.no:";
     }
 
     @Override
@@ -138,7 +143,7 @@ public class DlrAdapter implements Adapter {
         return new Record(
                 createRecordContent(resource, metadataPrefix),
                 false,
-                resource.identifier,
+                getIdentifierPrefix() + resource.identifier,
                 TimeUtils.String2Date(resource.features.get("dlr_time_published"), TimeUtils.FORMAT_ZULU_SHORT));
     }
 

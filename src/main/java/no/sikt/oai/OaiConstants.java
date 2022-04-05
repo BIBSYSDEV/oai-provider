@@ -14,6 +14,8 @@ public class OaiConstants {
     public static final String VERB_IS_MISSING = "'verb' is missing";
     public static final String ID_DOES_NOT_EXIST = "idDoesNotExist";
     public static final String METADATA_PREFIX_IS_A_REQUIRED = "metadataPrefix is a required argument for the verb ";
+    public static final String ILLEGAL_IDENTIFIER = "Illegal identifier.";
+    public static final String ILLEGAL_IDENTIFIER_PREFIX = "Illegal identifier. Expected prefix '%s'.";
     public static final String NOT_A_LEGAL_PARAMETER = "Not a legal parameter: ";
     public static final String ILLEGAL_DATE_FROM = "Not a legal date FROM, use YYYY-MM-DD";
     public static final String ILLEGAL_DATE_UNTIL = "Not a legal date UNTIL, use YYYY-MM-DD";

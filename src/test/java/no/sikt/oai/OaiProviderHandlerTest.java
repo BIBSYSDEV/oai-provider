@@ -32,7 +32,7 @@ public class OaiProviderHandlerTest {
     public static final String BLANK = " ";
     public static final String UNKNOWN_CLIENT_NAME = "Unknown client name";
     public static final String UNKNOWN_VERB = "UnknownVerb";
-    public static final String VALID_IDENTIFIER = "00000000-0000-0000-0000-000000000000";
+    public static final String VALID_IDENTIFIER = "oai:dlr.unit.no:00000000-0000-0000-0000-000000000000";
     private OaiProviderHandler handler;
     private Environment environment;
     private Context context;
@@ -60,7 +60,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWithUnknownVerb() throws IOException {
+    public void shouldReturnBadArgumentErrorWithUnknownVerb() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, UNKNOWN_VERB);
@@ -72,7 +72,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWithMissingVerb() throws IOException {
+    public void shouldReturnBadArgumentErrorWithMissingVerb() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, BLANK);
@@ -84,7 +84,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenListRecordsWithoutResumptionToken() throws IOException {
+    public void shouldReturnBadArgumentErrorWhenListRecordsWithoutResumptionToken() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -97,7 +97,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenGetRecordWithInvalidIdentifier() throws IOException {
+    public void shouldBadArgumentErrorWhenGetRecordWithInvalidIdentifier() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -108,11 +108,11 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.ID_DOES_NOT_EXIST)));
+        assertThat(responseBody, is(containsString(OaiConstants.BAD_ARGUMENT)));
     }
 
     @Test
-    public void shouldReturnBadRequestWhenGetRecordWithoutMetadataPrefix() throws IOException {
+    public void shouldReturnCannotDisseminateFormatErrorWhenGetRecordWithoutMetadataPrefix() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -126,7 +126,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenRequestWithInvalidQueryParam() throws IOException {
+    public void shouldReturnBadArgumentErrorWhenRequestWithInvalidQueryParam() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -146,7 +146,7 @@ public class OaiProviderHandlerTest {
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
         queryParameters.put(ValidParameterKey.SET.key, "sikt");
-        queryParameters.put(ValidParameterKey.IDENTIFIER.key, "9a1eae92-38bf-4002-a1a9-d21035242d30");
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, "oai:dlr.unit.no:9a1eae92-38bf-4002-a1a9-d21035242d30");
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -199,7 +199,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenAskedForListIdentifiersWithoutMetadataPrefix() throws IOException {
+    public void shouldReturnBadArgumentErrorWhenAskedForListIdentifiersWithoutMetadataPrefix() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
@@ -212,7 +212,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenAskedForListRecordsWithNonExistingMetadataFormat() throws IOException {
+    public void shouldReturnBadArgumentErrorWhenAskedForListRecordsWithNonExistingMetadataFormat() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -226,7 +226,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenAskedForListRecordsWithNonExistingSetSpec() throws IOException {
+    public void shouldReturnBadArgumentErrorWhenAskedForListRecordsWithNonExistingSetSpec() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -276,7 +276,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenAskedForListRecordsWithNonExistingNVASetSpec() throws IOException {
+    public void shouldReturnBadArgumentErrorWhenAskedForListRecordsWithNonExistingNVASetSpec() throws IOException {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
         when(environment.readEnv(OaiProviderHandler.CLIENT_NAME_ENV)).thenReturn("NVA");
@@ -296,7 +296,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenClientNameFromEnvironmentIsUnknown() throws IOException {
+    public void shouldReturnBadArgumentErrorWhenClientNameFromEnvironmentIsUnknown() throws IOException {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
         when(environment.readEnv(OaiProviderHandler.CLIENT_NAME_ENV)).thenReturn(UNKNOWN_CLIENT_NAME);
@@ -321,7 +321,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenAskedWithInvalidFromParam() throws IOException {
+    public void shouldReturnBadArgumentErrorWhenAskedWithInvalidFromParam() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -336,7 +336,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenAskedWithNullFromParam() throws IOException {
+    public void shouldReturnBadArgumentErrorWhenAskedWithNullFromParam() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -351,7 +351,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenAskedWithInvalidUntilParam() throws IOException {
+    public void shouldReturnBadArgumentErrorWhenAskedWithInvalidUntilParam() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -366,7 +366,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenAskedWithDifferentLengthFromUntilParam() throws IOException {
+    public void shouldReturnBadArgumentErrorWhenAskedWithDifferentLengthFromUntilParam() throws IOException {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());

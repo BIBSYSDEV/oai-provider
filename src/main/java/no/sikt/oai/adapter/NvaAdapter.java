@@ -54,7 +54,12 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public String getBaseUrl() {
-        return "https://example.com";
+        return "https://nva.unit.no";
+    }
+
+    @Override
+    public String getIdentifierPrefix() {
+        return "oai:nva.unit.no:";
     }
 
     @Override

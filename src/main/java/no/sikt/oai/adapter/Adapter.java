@@ -27,6 +27,8 @@ public interface Adapter {
 
     public String getBaseUrl();
 
+    public String getIdentifierPrefix();
+
     public List<String> parseInstitutionResponse(String json) throws OaiException;
 
     public Record parseRecordResponse(String json, String metadataPrefix) throws OaiException;

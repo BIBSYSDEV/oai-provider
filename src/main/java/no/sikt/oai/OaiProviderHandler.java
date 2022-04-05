@@ -74,10 +74,11 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
             switch (Verb.valueOf(verb)) {
                 case GetRecord:
                     validateMetadataPrefix(verb, metadataPrefix);
-                    validateIdentifier(verb, identifier, adapter.getRepositoryName());
-                    Record record = getRecord(identifier, metadataPrefix);
-                    response = OaiResponse.getRecord(record, identifier, metadataPrefix, setSpec, adapter.getBaseUrl(),
-                            startTime);
+                    OaiIdentifier oaiIdentifier = new OaiIdentifier(identifier, adapter.getIdentifierPrefix());
+                    validateIdentifier(verb, oaiIdentifier.getIdentifier(), adapter.getRepositoryName());
+                    Record record = getRecord(oaiIdentifier.getIdentifier(), metadataPrefix);
+                    response = OaiResponse.getRecord(record, oaiIdentifier.toString(), metadataPrefix, setSpec,
+                            adapter.getBaseUrl(), startTime);
                     break;
                 case ListRecords:
                     validateRequiredParameters(verb, resumptionToken, metadataPrefix);

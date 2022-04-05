@@ -20,7 +20,7 @@ public class OaiResponse {
 
     public static String identify(Adapter adapter, long startTime) {
         StringBuilder buffer = new StringBuilder();
-        makeHeader(buffer, false);
+        makeHeader(buffer);
         makeHeaderRequest(Identify.name(), adapter.getBaseUrl(), buffer);
         makeVerbStart(Identify.name(), buffer);
         makeIdentify(adapter, buffer);
@@ -33,7 +33,7 @@ public class OaiResponse {
     public static String listMetadataFormats(String baseUrl, String metadataPrefix, String schema,
                                              String metadataNamespace, long startTime) {
         StringBuilder buffer = new StringBuilder();
-        makeHeader(buffer, false);
+        makeHeader(buffer);
         makeHeaderRequest(ListMetadataFormats.name(), baseUrl, buffer);
         makeVerbStart(ListMetadataFormats.name(), buffer);
         makeListMetadataFormats(metadataPrefix, schema, metadataNamespace, buffer);
@@ -46,7 +46,7 @@ public class OaiResponse {
     public static String getRecord(Record record, String identifier, String metadataPrefix, String setSpec,
                                    String baseUrl, long startTime) {
         StringBuilder buffer = new StringBuilder(1000);
-        makeHeader(buffer, true);
+        makeHeader(buffer);
         makeHeaderRequestGetRecord(GetRecord.name(), metadataPrefix, identifier, baseUrl, buffer);
         makeVerbStart(GetRecord.name(), buffer);
         makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer);
@@ -60,7 +60,7 @@ public class OaiResponse {
                                          String resumptionToken, String baseUrl, String setSpec,
                                          int startPosition, RecordsList records, long startTime) {
         StringBuilder buffer = new StringBuilder();
-        makeHeader(buffer, true);
+        makeHeader(buffer);
         makeHeaderRequestListRecordsIdentifiers(ListIdentifiers.name(), resumptionToken, from, until, metadataPrefix,
                 baseUrl, buffer);
         makeVerbStart(ListIdentifiers.name(), buffer);
@@ -90,7 +90,7 @@ public class OaiResponse {
                                      long startTime) {
         StringBuilder buffer = new StringBuilder();
         String newResumptionToken = "";
-        makeHeader(buffer, true);
+        makeHeader(buffer);
         makeHeaderRequestListRecordsIdentifiers(ListRecords.name(), resumptionToken, from, until, metadataPrefix,
                 baseUrl, buffer);
         makeVerbStart(ListRecords.name(), buffer);
@@ -116,7 +116,7 @@ public class OaiResponse {
 
     public static String listSets(String baseUrl, List<String> setList, long startTime) {
         StringBuilder buffer = new StringBuilder(1000);
-        makeHeader(buffer, false);
+        makeHeader(buffer);
         makeHeaderRequest(ListSets.name(), baseUrl, buffer);
         makeVerbStart(ListSets.name(), buffer);
         for (String set : setList) {
@@ -130,7 +130,7 @@ public class OaiResponse {
 
     public static String oaiError(String baseUrl, String errorCode, String errorMessage) {
         StringBuilder stringBuilder = new StringBuilder();
-        makeHeader(stringBuilder, false);
+        makeHeader(stringBuilder);
         makeHeaderRequest(baseUrl, stringBuilder);
         makeError(errorCode, errorMessage, stringBuilder);
         makeFooter(stringBuilder);
@@ -139,18 +139,12 @@ public class OaiResponse {
 
     // OAI Helpers
 
-    protected static void makeHeader(StringBuilder buffer, boolean withMarcxchange) {
+    protected static void makeHeader(StringBuilder buffer) {
         buffer.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" + "\n");
         buffer.append("<OAI-PMH  xmlns=\"http://www.openarchives.org/OAI/2.0/\" " +
                 "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ");
-        if (withMarcxchange) {
-            buffer.append("xmlns:marc=\"info:lc/xmlns/marcxchange-v1\" ");
-        }
         buffer.append("xsi:schemaLocation=" +
                 "\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
-        if (withMarcxchange) {
-            buffer.append(" info:lc/xmlns/marcxchange-v1 http://www.loc.gov/standards/iso25577/marcxchange-1-1.xsd");
-        }
         buffer.append("\">\n");
         buffer.append("    <responseDate>" + no.sikt.oai.TimeUtils.getResponseTime() + "</responseDate>" + "\n");
     }

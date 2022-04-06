@@ -309,9 +309,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
-        queryParameters.put(ValidParameterKey.RESUMPTIONTOKEN.key, randomString());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadataFormat.OAI_DATACITE.name());
-        queryParameters.put(ValidParameterKey.SET.key, "sikt");
+        queryParameters.put(ValidParameterKey.RESUMPTIONTOKEN.key, "lr~sikt~~~qdc~50");
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());

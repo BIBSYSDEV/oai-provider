@@ -16,7 +16,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import static no.sikt.oai.MetadataFormat.valueOf;
 import static no.sikt.oai.OaiConstants.NO_SETS_FOUND;
 import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
 

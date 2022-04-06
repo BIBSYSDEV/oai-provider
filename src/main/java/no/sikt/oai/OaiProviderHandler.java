@@ -82,21 +82,27 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                     break;
                 case ListRecords:
                     validateRequiredParameters(verb, resumptionToken, metadataPrefix);
-                    validateMetadataPrefix(verb, metadataPrefix);
-                    validateFromAndUntilParameters(verb, from, until);
-                    validateSet(verb, setSpec);
-                    validateResumptionToken(verb, resumptionToken);
-                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, 0);
+                    if (resumptionToken.length() > 0) {
+                        validateResumptionToken(verb, resumptionToken);
+                    } else {
+                        validateMetadataPrefix(verb, metadataPrefix);
+                        validateFromAndUntilParameters(verb, from, until);
+                        validateSet(verb, setSpec);
+                    }
+                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, resumptionToken,0);
                     response = OaiResponse.listRecords(from, until, resumptionToken, metadataPrefix,
                             adapter.getBaseUrl(), 0, setSpec, recordsList, startTime);
                     break;
                 case ListIdentifiers:
                     validateRequiredParameters(verb, resumptionToken, metadataPrefix);
-                    validateMetadataPrefix(verb, metadataPrefix);
-                    validateFromAndUntilParameters(verb, from, until);
-                    validateSet(verb, setSpec);
-                    validateResumptionToken(verb, resumptionToken);
-                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, 0);
+                    if (resumptionToken.length() > 0) {
+                        validateResumptionToken(verb, resumptionToken);
+                    } else {
+                        validateMetadataPrefix(verb, metadataPrefix);
+                        validateFromAndUntilParameters(verb, from, until);
+                        validateSet(verb, setSpec);
+                    }
+                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, resumptionToken,0);
                     response = OaiResponse.listIdentifiers(from, until, metadataPrefix, resumptionToken,
                             adapter.getBaseUrl(), setSpec, 0, recordsList, startTime);
                     break;
@@ -203,9 +209,16 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     }
 
     private RecordsList getRecordsList(String verb, String from, String until, String setSpec, String metadataPrefix,
-                                       int startPosition)
+                                       String resumptionToken, int startPosition)
             throws OaiException {
-        String json = dataProvider.getRecordsList(from, until, setSpec, startPosition);
+        String json;
+        if (resumptionToken.length() > 0) {
+            ResumptionToken token = new ResumptionToken(resumptionToken);
+            json = dataProvider.getRecordsList(token.from, token.until, token.setSpec,
+                    Integer.parseInt(token.startPosition));
+        } else {
+            json = dataProvider.getRecordsList(from, until, setSpec, startPosition);
+        }
         return adapter.parseRecordsListResponse(verb, json, metadataPrefix);
     }
 

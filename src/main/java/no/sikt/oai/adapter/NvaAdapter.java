@@ -1,8 +1,10 @@
 package no.sikt.oai.adapter;
 
+import no.sikt.oai.OaiConstants;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
 import no.sikt.oai.exception.OaiException;
+import nva.commons.core.Environment;
 import nva.commons.core.paths.UriWrapper;
 
 import java.net.URI;
@@ -11,6 +13,14 @@ import java.util.Date;
 import java.util.List;
 
 public class NvaAdapter implements Adapter {
+
+    private String resourcesUri;
+    private String setsUri = "https://api.dev.nva.aws.unit.no/customer/";
+
+    public NvaAdapter(Environment environment) {
+        setsUri = environment.readEnv(OaiConstants.SETS_URI_ENV);
+        resourcesUri = environment.readEnv(OaiConstants.RECORDS_URI_ENV);
+    }
 
     @Override
     public boolean isValidIdentifier(String identifier) {
@@ -74,21 +84,21 @@ public class NvaAdapter implements Adapter {
     @Override
     public URI getInstitutionsUri() {
         return UriWrapper
-                .fromUri("https://api.dev.nva.aws.unit.no/customer/")
+                .fromUri(setsUri)
                 .getUri();
     }
 
     @Override
     public URI getRecordUri(String identifier) {
         return UriWrapper
-                .fromUri("https://api.dev.nva.aws.unit.no/customer/")
+                .fromUri(resourcesUri)
                 .getUri();
     }
 
     @Override
     public URI getRecordsListUri(String from, String until, String institution, int startPosition) {
         return UriWrapper
-                .fromUri("https://api.dev.nva.aws.unit.no/customer/")
+                .fromUri(resourcesUri)
                 .getUri();
     }
 

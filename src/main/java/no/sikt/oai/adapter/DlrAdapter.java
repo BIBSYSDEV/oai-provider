@@ -10,6 +10,7 @@ import no.sikt.oai.Verb;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
 import no.sikt.oai.exception.OaiException;
+import nva.commons.core.Environment;
 import nva.commons.core.paths.UriWrapper;
 
 import java.net.URI;
@@ -21,7 +22,14 @@ import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
 
 public class DlrAdapter implements Adapter {
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
+    private String resourcesUri = "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resources";
+    private String setsUri = "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/institutions";
+
+    public DlrAdapter(Environment environment) {
+        setsUri = environment.readEnv("SETS_URI");
+        resourcesUri = environment.readEnv("RESOURCES_URI");
+    }
 
     @Override
     public boolean isValidIdentifier(String identifier) {
@@ -111,21 +119,21 @@ public class DlrAdapter implements Adapter {
     @Override
     public URI getInstitutionsUri() {
         return UriWrapper
-                .fromUri("https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/institutions")
+                .fromUri(setsUri)
                 .getUri();
     }
 
     @Override
     public URI getRecordUri(String identifier) {
         return UriWrapper
-                .fromUri("https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resources")
+                .fromUri(resourcesUri)
                 .addChild(identifier)
                 .getUri();
     }
 
     @Override
     public URI getRecordsListUri(String from, String until, String institution, int startPosition) {
-        UriWrapper uriWrapper = UriWrapper.fromUri("https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resources");
+        UriWrapper uriWrapper = UriWrapper.fromUri(resourcesUri);
         if (!"".equalsIgnoreCase(institution)) {
             uriWrapper = uriWrapper.addQueryParameter("filter", "facet_institution::" + institution);
         }

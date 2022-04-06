@@ -2,6 +2,8 @@ package no.sikt.oai;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.github.tomakehurst.wiremock.WireMockServer;
 import no.unit.nva.testutils.HandlerRequestBuilder;
 import nva.commons.apigateway.GatewayResponse;
 import nva.commons.core.Environment;
@@ -12,11 +14,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.http.HttpClient;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static no.sikt.oai.MetadataFormat.QDC;
 import static no.sikt.oai.RestApiConfig.restServiceObjectMapper;
+import static no.unit.nva.commons.json.JsonUtils.dtoObjectMapper;
 import static no.unit.nva.testutils.RandomDataGenerator.randomString;
 import static nva.commons.apigateway.ApiGatewayHandler.ALLOWED_ORIGIN_ENV;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,9 +32,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 public class OaiProviderHandlerTest {
 
+    public static final String START_OF_QUERY = "/?";
     public static final String BLANK = " ";
     public static final String UNKNOWN_CLIENT_NAME = "Unknown client name";
     public static final String UNKNOWN_VERB = "UnknownVerb";
@@ -36,14 +44,21 @@ public class OaiProviderHandlerTest {
     private OaiProviderHandler handler;
     private Environment environment;
     private Context context;
+    private WireMockServer httpServer;
+    private HttpClient httpClient;
+    private URI serverUriSets;
+    private URI serverUriRecords;
 
     @BeforeEach
     public void init() {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
-        when(environment.readEnv(OaiProviderHandler.CLIENT_NAME_ENV)).thenReturn("DLR");
+        when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn("DLR");
+        startWiremockServer();
+        when(environment.readEnv(OaiConstants.SETS_URI_ENV)).thenReturn(serverUriSets.toString());
         context = mock(Context.class);
-        handler = new OaiProviderHandler(environment);
+        httpClient = WiremockHttpClient.create();
+        handler = new OaiProviderHandler(environment, httpClient);
     }
 
     @Test
@@ -246,7 +261,6 @@ public class OaiProviderHandlerTest {
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadataFormat.OAI_DATACITE.name());
-        queryParameters.put(ValidParameterKey.SET.key, "sikt");
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -259,7 +273,7 @@ public class OaiProviderHandlerTest {
     public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingNVASetSpec() throws IOException {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
-        when(environment.readEnv(OaiProviderHandler.CLIENT_NAME_ENV)).thenReturn("NVA");
+        when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn("NVA");
         context = mock(Context.class);
         handler = new OaiProviderHandler(environment);
         var output = new ByteArrayOutputStream();
@@ -279,7 +293,7 @@ public class OaiProviderHandlerTest {
     public void shouldReturnBadArgumentErrorWhenAskedForListRecordsWithNonExistingNVASetSpec() throws IOException {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
-        when(environment.readEnv(OaiProviderHandler.CLIENT_NAME_ENV)).thenReturn("NVA");
+        when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn("NVA");
         context = mock(Context.class);
         handler = new OaiProviderHandler(environment);
         var output = new ByteArrayOutputStream();
@@ -296,10 +310,10 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenClientNameFromEnvironmentIsUnknown() throws IOException {
+    public void shouldReturnBadArgumentErrorWhenClientNameFromEnvironmentIsUnknown() {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
-        when(environment.readEnv(OaiProviderHandler.CLIENT_NAME_ENV)).thenReturn(UNKNOWN_CLIENT_NAME);
+        when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn(UNKNOWN_CLIENT_NAME);
         context = mock(Context.class);
         assertThrows(RuntimeException.class, () ->  handler = new OaiProviderHandler(environment));
     }
@@ -385,7 +399,6 @@ public class OaiProviderHandlerTest {
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  QDC.name());
-        queryParameters.put(ValidParameterKey.SET.key, "sikt");
         queryParameters.put(ValidParameterKey.FROM.key, "2006-06-06");
         queryParameters.put(ValidParameterKey.UNTIL.key, "2007-06-06");
         var inputStream = handlerInputStream(queryParameters);
@@ -407,6 +420,37 @@ public class OaiProviderHandlerTest {
         var typeRef = restServiceObjectMapper.getTypeFactory()
                 .constructParametricType(GatewayResponse.class, String.class);
         return restServiceObjectMapper.readValue(output, typeRef);
+    }
+
+    private URI mockedSetsReturnsUri(URI queryUri) {
+        var uri = URI.create("https://example.dlr.aws.unit.no/v1/oai/institutions/");
+        ArrayNode responseBody = createSetsResponseWithUri(uri);
+        stubFor(get(START_OF_QUERY + queryUri
+                .getQuery())
+                .willReturn(aResponse().withBody(responseBody
+                        .toPrettyString()).withStatus(HttpURLConnection.HTTP_OK)));
+        return uri;
+    }
+
+    private void startWiremockServer() {
+        httpServer = new WireMockServer(options().dynamicHttpsPort());
+        httpServer.start();
+        serverUriSets = URI.create(httpServer.baseUrl());
+        serverUriRecords = URI.create(httpServer.baseUrl());
+    }
+
+    private ArrayNode createSetsResponseWithUri(URI uri) {
+        var objectArray = dtoObjectMapper.createArrayNode();
+        objectArray.add("bi");
+        objectArray.add("diku");
+        objectArray.add("ntnu");
+        objectArray.add("sikt");
+        objectArray.add("uit");
+        var responseBodyElement = dtoObjectMapper.createObjectNode();
+        responseBodyElement.set("institutions", objectArray);
+        var responseBody = dtoObjectMapper.createArrayNode();
+        responseBody.add(responseBodyElement);
+        return responseBody;
     }
 
 }

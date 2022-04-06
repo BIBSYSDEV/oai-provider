@@ -24,4 +24,8 @@ public class OaiConstants {
     public static final String METADATA_FORMAT_NOT_SUPPORTED = "The metadata format identified by the value given " +
             "for the metadataPrefix argument is not supported by the item or by the repository.";
     public static final String UNKNOWN_SET_NAME = "unknown set name: ";
+
+    public static final String SETS_URI_ENV = "SETS_URI";
+    public static final String RECORDS_URI_ENV = "RECORDS_URI";
+    public static final String CLIENT_NAME_ENV = "OAI_CLIENT_NAME";
 }

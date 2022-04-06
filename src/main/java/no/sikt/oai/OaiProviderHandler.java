@@ -16,6 +16,7 @@ import nva.commons.core.Environment;
 import nva.commons.core.JacocoGenerated;
 
 import java.net.HttpURLConnection;
+import java.net.http.HttpClient;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -28,10 +29,8 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public static final String UNKNOWN_CLIENT_NAME = "Could not find clientName %s to initiate adapter.";
     public static final String NO_MATCHING_IDENTIFIER = "No matching identifier in: ";
 
-    public static final String CLIENT_NAME_ENV = "OAI_CLIENT_NAME";
-
     private Adapter adapter;
-    private DataProvider dataProvider;
+    private final DataProvider dataProvider;
 
     @JacocoGenerated
     public OaiProviderHandler() {
@@ -42,6 +41,12 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         super(Void.class, environment);
         initAdapter();
         this.dataProvider = new DataProvider(adapter);
+    }
+
+    public OaiProviderHandler(Environment environment, HttpClient client) {
+        super(Void.class, environment);
+        initAdapter();
+        this.dataProvider = new DataProvider(client, adapter);
     }
 
     @Override
@@ -130,13 +135,13 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     }
 
     private void initAdapter() {
-        String clientName = environment.readEnv(CLIENT_NAME_ENV);
+        String clientName = environment.readEnv(OaiConstants.CLIENT_NAME_ENV);
         switch (clientName) {
             case "DLR":
-                this.adapter = new DlrAdapter();
+                this.adapter = new DlrAdapter(environment);
                 break;
             case "NVA":
-                this.adapter = new NvaAdapter();
+                this.adapter = new NvaAdapter(environment);
                 break;
             default:
                 throw new RuntimeException(String.format(UNKNOWN_CLIENT_NAME, clientName));

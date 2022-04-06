@@ -126,13 +126,13 @@ public class DlrAdapter implements Adapter {
     @Override
     public URI getRecordsListUri(String from, String until, String institution, int startPosition) {
         UriWrapper uriWrapper = UriWrapper.fromUri("https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resources");
-        if (institution != null) {
+        if (!"".equalsIgnoreCase(institution)) {
             uriWrapper = uriWrapper.addQueryParameter("filter", "facet_institution::" + institution);
         }
-        if (from != null) {
+        if (!"".equalsIgnoreCase(from)) {
             uriWrapper = uriWrapper.addQueryParameter("from", from);
         }
-        if (until != null) {
+        if (!"".equalsIgnoreCase(until)) {
             uriWrapper = uriWrapper.addQueryParameter("until", until);
         }
         if (startPosition != 0) {

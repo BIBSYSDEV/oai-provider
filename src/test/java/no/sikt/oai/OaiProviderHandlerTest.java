@@ -4,9 +4,11 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import no.unit.nva.testutils.HandlerRequestBuilder;
 import nva.commons.apigateway.GatewayResponse;
 import nva.commons.core.Environment;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -59,6 +61,11 @@ public class OaiProviderHandlerTest {
         context = mock(Context.class);
         httpClient = WiremockHttpClient.create();
         handler = new OaiProviderHandler(environment, httpClient);
+    }
+
+    @AfterEach
+    public void tearDown() {
+        httpServer.stop();
     }
 
     @Test

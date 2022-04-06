@@ -135,6 +135,9 @@ public class DlrAdapter implements Adapter {
         if (until != null) {
             uriWrapper = uriWrapper.addQueryParameter("until", until);
         }
+        if (startPosition != 0) {
+            uriWrapper = uriWrapper.addQueryParameter("offset", String.valueOf(startPosition));
+        }
         return uriWrapper.getUri();
     }
 

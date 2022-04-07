@@ -204,7 +204,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     }
 
     private List<String> getInstitutionList() throws OaiException {
-        String json = dataProvider.getInstitutionList();
+        String json = dataProvider.getSetsList();
         return adapter.parseInstitutionResponse(json);
     }
 

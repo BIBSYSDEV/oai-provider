@@ -19,6 +19,8 @@ import java.util.Map;
 
 import static no.sikt.oai.OaiConstants.NO_SETS_FOUND;
 import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
+import static no.sikt.oai.OaiConstants.RECORDS_URI_ENV;
+import static no.sikt.oai.OaiConstants.SETS_URI_ENV;
 
 public class DlrAdapter implements Adapter {
 
@@ -27,8 +29,8 @@ public class DlrAdapter implements Adapter {
     private String setsUri = "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/institutions";
 
     public DlrAdapter(Environment environment) {
-        setsUri = environment.readEnv("SETS_URI");
-        resourcesUri = environment.readEnv("RESOURCES_URI");
+        setsUri = environment.readEnv(SETS_URI_ENV);
+        resourcesUri = environment.readEnv(RECORDS_URI_ENV);
     }
 
     @Override
@@ -117,7 +119,7 @@ public class DlrAdapter implements Adapter {
     }
 
     @Override
-    public URI getInstitutionsUri() {
+    public URI getSetsUri() {
         return UriWrapper
                 .fromUri(setsUri)
                 .getUri();

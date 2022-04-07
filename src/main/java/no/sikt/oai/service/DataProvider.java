@@ -32,10 +32,10 @@ public class DataProvider {
         this(HttpClient.newBuilder().build(), adapter);
     }
 
-    public String getInstitutionList() throws OaiException {
+    public String getSetsList() throws OaiException {
         try {
             HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(adapter.getInstitutionsUri())
+                    .uri(adapter.getSetsUri())
                     .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
                     .GET()
                     .build();

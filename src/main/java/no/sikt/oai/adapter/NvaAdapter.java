@@ -82,7 +82,7 @@ public class NvaAdapter implements Adapter {
     }
 
     @Override
-    public URI getInstitutionsUri() {
+    public URI getSetsUri() {
         return UriWrapper
                 .fromUri(setsUri)
                 .getUri();

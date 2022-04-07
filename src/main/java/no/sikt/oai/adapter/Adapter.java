@@ -36,7 +36,7 @@ public interface Adapter {
     public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix)
             throws OaiException;
 
-    public URI getInstitutionsUri();
+    public URI getSetsUri();
 
     public URI getRecordUri(String identifier);
 

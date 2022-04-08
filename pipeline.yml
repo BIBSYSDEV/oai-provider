@@ -90,6 +90,13 @@ Parameters:
 #    Default: '/alert/topicArn'
     Type: String
     Default: ''
+  OaiClientName:
+    Type: String
+    AllowedValues:
+      - 'DLR'
+      - 'NVA'
+    Default: 'DLR'
+    Description: DLR/NVA defines adapter for oai-data-mapping
 
 Conditions:
   IsPipelineApprovalActionCondition: !Equals [!Ref PipelineApprovalAction, 'Yes']
@@ -97,6 +104,14 @@ Conditions:
   HasAlertTopic: !Not [!Equals [!Ref AlertTopicArn, '']]
 
 Resources:
+  OaiParameters:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: DLR/NVA defines which adapter for oai-data-mapping is choosen
+      Name: OAI_CLIENT_NAME
+      Type: String
+      Value: !Ref OaiClientName
+
   ArtifactsBucket:
     Type: 'AWS::S3::Bucket'
     Metadata:

@@ -33,19 +33,19 @@ public class TimeUtils {
 //        }
 //    }
 
-//    public static Date String2Date(String sDato, String format) {
-//        SimpleDateFormat sf = new SimpleDateFormat(format);
-//        sf.setLenient(false);
-//        Date myDate = null;
-//
-//        try {
-//            myDate = sf.parse(sDato);
-//            return myDate;
-//        } catch (ParseException var5) {
-//            LOG.debug("", var5);
-//            return myDate;
-//        }
-//    }
+    public static Date String2Date(String sDato, String format) {
+        SimpleDateFormat sf = new SimpleDateFormat(format);
+        sf.setLenient(false);
+        Date myDate = null;
+
+        try {
+            myDate = sf.parse(sDato);
+            return myDate;
+        } catch (ParseException var5) {
+            LOG.debug("", var5);
+            return myDate;
+        }
+    }
 
     public static String Date2String(Date date, String format) {
         if (date != null) {

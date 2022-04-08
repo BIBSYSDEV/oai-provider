@@ -13,10 +13,10 @@ Parameters:
     Description: (Optional) Base path mapping in CustomDomain
     AllowedPattern: "^[a-zA-Z0-9$\\-_.+!*'(),]*$"
     ConstraintDescription: "May contain only letters, numbers and one of $-_.+!*'(),"
-  Stage:
+  OaiClientName:
     Type: AWS::SSM::Parameter::Value<String>
-    Default: 'environment'
-    Description: dev/test/prod
+    Default: 'OAI_CLIENT_NAME'
+    Description: DLR/NVA defines adapter for oai-data-mapping
 
 Conditions:
   HasDomainName: !Not [!Equals [!Ref CustomDomain, '']]
@@ -25,8 +25,6 @@ Conditions:
 Globals:
   Function:
     Timeout: 20
-#    Architecures:
-#      - arm64
   Api:
     Cors:
       AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
@@ -56,7 +54,7 @@ Resources:
       EndpointConfiguration:
         Type: REGIONAL
       MethodSettings:
-        - ResourcePath: /oai
+        - ResourcePath: /
           HttpMethod: GET
       DefinitionBody:
         openapi: 3.0.3
@@ -68,7 +66,7 @@ Resources:
             validateRequestBody: false
             validateRequestParameters: true
         paths:
-          /oai:
+          /:
             get:
               summary: text text text
               description: text text text
@@ -122,13 +120,17 @@ Resources:
       Handler: no.sikt.oai.OaiProviderHandler::handleRequest
       Runtime: java11
       MemorySize: 1024
+      Environment:
+        Variables:
+          ALLOWED_ORIGIN: '*'
+          OAI_CLIENT_NAME: !Ref OaiClientName
       Events:
         OaiProviderEvent:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             RestApiId: !Ref OaiProviderApi
             Method: get
-            Path: /libcheck
+            Path: /
 
   OaiProviderBasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping

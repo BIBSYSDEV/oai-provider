@@ -26,6 +26,7 @@ public class OaiConstants {
     public static final String UNKNOWN_SET_NAME = "unknown set name: ";
 
     public static final String SETS_URI_ENV = "SETS_URI";
+    public static final String RECORD_URI_ENV = "RECORD_URI";
     public static final String RECORDS_URI_ENV = "RECORDS_URI";
     public static final String CLIENT_NAME_ENV = "OAI_CLIENT_NAME";
 }

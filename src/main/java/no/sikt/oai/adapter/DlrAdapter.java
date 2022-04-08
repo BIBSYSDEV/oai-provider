@@ -17,19 +17,18 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import static no.sikt.oai.OaiConstants.NO_SETS_FOUND;
-import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
-import static no.sikt.oai.OaiConstants.RECORDS_URI_ENV;
-import static no.sikt.oai.OaiConstants.SETS_URI_ENV;
+import static no.sikt.oai.OaiConstants.*;
 
 public class DlrAdapter implements Adapter {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private String resourcesUri = "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resources";
+    private String resourceUri = "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resource";
     private String setsUri = "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/institutions";
 
     public DlrAdapter(Environment environment) {
         setsUri = environment.readEnv(SETS_URI_ENV);
+        resourceUri = environment.readEnv(RECORD_URI_ENV);
         resourcesUri = environment.readEnv(RECORDS_URI_ENV);
     }
 
@@ -127,6 +126,14 @@ public class DlrAdapter implements Adapter {
 
     @Override
     public URI getRecordUri(String identifier) {
+        return UriWrapper
+                .fromUri(resourceUri)
+                .addChild(identifier)
+                .getUri();
+    }
+
+    @Override
+    public URI getRecordsUri(String identifier) {
         return UriWrapper
                 .fromUri(resourcesUri)
                 .addChild(identifier)

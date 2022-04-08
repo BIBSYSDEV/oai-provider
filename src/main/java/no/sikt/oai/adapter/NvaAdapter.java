@@ -14,11 +14,13 @@ import java.util.List;
 
 public class NvaAdapter implements Adapter {
 
+    private String resourceUri;
     private String resourcesUri;
     private String setsUri = "https://api.dev.nva.aws.unit.no/customer/";
 
     public NvaAdapter(Environment environment) {
         setsUri = environment.readEnv(OaiConstants.SETS_URI_ENV);
+        resourceUri = environment.readEnv(OaiConstants.RECORD_URI_ENV);
         resourcesUri = environment.readEnv(OaiConstants.RECORDS_URI_ENV);
     }
 
@@ -90,6 +92,13 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public URI getRecordUri(String identifier) {
+        return UriWrapper
+                .fromUri(resourceUri)
+                .getUri();
+    }
+
+    @Override
+    public URI getRecordsUri(String identifier) {
         return UriWrapper
                 .fromUri(resourcesUri)
                 .getUri();

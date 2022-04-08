@@ -8,7 +8,6 @@ import no.unit.nva.testutils.HandlerRequestBuilder;
 import nva.commons.apigateway.GatewayResponse;
 import nva.commons.core.Environment;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -46,28 +45,35 @@ public class OaiProviderHandlerTest {
     private Context context;
     private WireMockServer httpServer;
     private URI serverUriSets;
+    private URI serverUriRecord;
     private URI serverUriRecords;
 
-    @BeforeEach
-    public void init() {
+    public void init(String adapter) {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
-        when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn("DLR");
+        when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn(adapter);
         startWiremockServer();
         when(environment.readEnv(OaiConstants.SETS_URI_ENV)).thenReturn(serverUriSets.toString());
+        when(environment.readEnv(OaiConstants.RECORD_URI_ENV)).thenReturn(serverUriRecord.toString());
         when(environment.readEnv(OaiConstants.RECORDS_URI_ENV)).thenReturn(serverUriRecords.toString());
         context = mock(Context.class);
         HttpClient httpClient = WiremockHttpClient.create();
+        mockSetsResponse();
+        mockRecordResponse();
+        mockRecordsResponse();
         handler = new OaiProviderHandler(environment, httpClient);
     }
 
     @AfterEach
     public void tearDown() {
-        httpServer.stop();
+        if(httpServer != null && httpServer.isRunning()) {
+            httpServer.stop();
+        }
     }
 
     @Test
     public void handleRequestReturnsIdentifyOaiResponse() throws IOException {
+        init("DLR");
         TimeUtils timeUtils = new TimeUtils();
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
@@ -81,6 +87,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnBadArgumentErrorWithUnknownVerb() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, UNKNOWN_VERB);
@@ -93,6 +100,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnBadArgumentErrorWithMissingVerb() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, BLANK);
@@ -105,6 +113,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnBadArgumentErrorWhenListRecordsWithoutResumptionToken() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -118,6 +127,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldBadArgumentErrorWhenGetRecordWithInvalidIdentifier() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -133,6 +143,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnCannotDisseminateFormatErrorWhenGetRecordWithoutMetadataPrefix() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -147,6 +158,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnBadArgumentErrorWhenRequestWithInvalidQueryParam() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -161,6 +173,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefixAndIdentifier() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -177,6 +190,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListMetadataFormatsResponseWhenAskedForListMetadataFormats() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListMetadataFormats.name());
@@ -191,7 +205,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListSetsResponseWhenAskedForListSets() throws IOException {
-        mockSetsResponse();
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListSets.name());
@@ -206,6 +220,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListIdentifiersResponseWhenAskedForListIdentifiers() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
@@ -221,6 +236,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnBadArgumentErrorWhenAskedForListIdentifiersWithoutMetadataPrefix() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
@@ -234,6 +250,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnBadArgumentErrorWhenAskedForListRecordsWithNonExistingMetadataFormat() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -248,7 +265,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnBadArgumentErrorWhenAskedForListRecordsWithNonExistingSetSpec() throws IOException {
-        mockSetsResponse();
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -264,6 +281,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingSetSpec() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -278,11 +296,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingNVASetSpec() throws IOException {
-        environment = mock(Environment.class);
-        when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
-        when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn("NVA");
-        context = mock(Context.class);
-        handler = new OaiProviderHandler(environment);
+        init("NVA");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -298,13 +312,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnBadArgumentErrorWhenAskedForListRecordsWithNonExistingNVASetSpec() throws IOException {
-        mockSetsResponse();
-        mockRecordsResponse();
-        environment = mock(Environment.class);
-        when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
-        when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn("NVA");
-        context = mock(Context.class);
-        handler = new OaiProviderHandler(environment);
+        init("NVA");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -329,6 +337,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListRecordsResponseWhenAskedForListRecordsWithResumptionToken() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -343,6 +352,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnBadArgumentErrorWhenAskedWithInvalidFromParam() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -358,6 +368,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnBadArgumentErrorWhenAskedWithNullFromParam() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -373,6 +384,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnBadArgumentErrorWhenAskedWithInvalidUntilParam() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -388,6 +400,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnBadArgumentErrorWhenAskedWithDifferentLengthFromUntilParam() throws IOException {
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -404,8 +417,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListRecordsResponseWhenAskedWithSameLengthFromUntilParam() throws IOException {
-        mockSetsResponse();
-        mockRecordsResponse();
+        init("DLR");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -436,13 +448,14 @@ public class OaiProviderHandlerTest {
     private void startWiremockServer() {
         httpServer = new WireMockServer(options().dynamicHttpsPort());
         httpServer.start();
-        serverUriSets = URI.create(httpServer.baseUrl());
-        serverUriRecords = URI.create(httpServer.baseUrl());
+        serverUriSets = URI.create(httpServer.baseUrl() + "/sets");
+        serverUriRecord = URI.create(httpServer.baseUrl() + "/record");
+        serverUriRecords = URI.create(httpServer.baseUrl() + "/records");
     }
 
     private void mockSetsResponse() {
         ObjectNode responseBody = createSetsResponse();
-        stubFor(get(urlEqualTo("/"))
+        stubFor(get(urlPathMatching("/sets"))
                 .willReturn(aResponse().withBody(responseBody
                         .toPrettyString()).withStatus(HttpURLConnection.HTTP_OK)));
     }
@@ -461,7 +474,14 @@ public class OaiProviderHandlerTest {
 
     private void mockRecordsResponse() {
         ObjectNode responseBody = createRecordsResponse();
-        stubFor(get(urlPathMatching("/"))
+        stubFor(get(urlPathMatching("/records"))
+                .willReturn(aResponse().withBody(responseBody
+                        .toPrettyString()).withStatus(HttpURLConnection.HTTP_OK)));
+    }
+
+    private void mockRecordResponse() {
+        ObjectNode responseBody = createRecordResponse();
+        stubFor(get(urlPathMatching("^/[^/]+/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
                 .willReturn(aResponse().withBody(responseBody
                         .toPrettyString()).withStatus(HttpURLConnection.HTTP_OK)));
     }
@@ -478,6 +498,30 @@ public class OaiProviderHandlerTest {
         objectArray.add("{\"identifier\":\"342cfbae-4844-476d-8516-f112861d8dec\",\"features\":{\"dlr_access\":\"open\",\"dlr_app\":\"learning\",\"dlr_content\":\"https://www.facebook.com/NTNUbibliotek/posts/2917760898259307\",\"dlr_content_type\":\"link\",\"dlr_description\":\"See posts, photos and more on Fafsldøflsdæfl\\n\\nfsdkølfsdkøflsdkø\\n\\n\\nkfsdølkfscebook.\",\"dlr_identifier\":\"342cfbae-4844-476d-8516-f112861d8dec\",\"dlr_licensehelper_can_be_used_commercially\":\"undefined\",\"dlr_licensehelper_contains_other_peoples_work\":\"no\",\"dlr_licensehelper_others_can_modify_and_build_upon\":\"undefined\",\"dlr_licensehelper_resource_restriction\":\"CC BY 4.0\",\"dlr_resource\":\"true\",\"dlr_resource_learning\":\"true\",\"dlr_rights_license_name\":\"CC BY 4.0\",\"dlr_status_published\":\"true\",\"dlr_storage_id\":\"unit\",\"dlr_submitter_email\":\"pcb@unit.no\",\"dlr_time_created\":\"2022-02-10T11:19:59.537Z\",\"dlr_time_published\":\"2022-02-10T11:20:30.304Z\",\"dlr_title\":\"Log in or sign up to view\",\"dlr_type\":\"Document\"},\"subjects\":[],\"courses\":[],\"tags\":[],\"types\":[\"learning\"],\"projects\":[],\"funders\":[],\"geographicalCoverages\":[],\"observationalUnits\":[],\"processMethods\":[],\"creators\":[{\"features\":{\"dlr_creator_identifier\":\"a129a11f-dcce-4b34-bcc0-f9f64629e170\",\"dlr_creator_name\":\"Per Christian Bjelke\",\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":\"2022-02-10T11:20:03.925Z\"}}],\"contributors\":[{\"features\":{\"dlr_contributor_identifier\":\"224742ba-4df0-4501-8601-9a965b445188\",\"dlr_contributor_name\":\"UNIT\",\"dlr_contributor_time_created\":\"2022-02-10T11:20:01.244Z\",\"dlr_contributor_type\":\"HostingInstitution\"}}],\"accessRead\":[],\"accessWrite\":[\"pcb@unit.no\"]}");
         objectArray.add("{\"identifier\":\"ce2e98d1-4df3-4ce9-a42f-182218beca3e\",\"features\":{\"dlr_access\":\"private\",\"dlr_app\":\"learning\",\"dlr_content\":\"pug2.jpeg\",\"dlr_content_type\":\"file\",\"dlr_identifier\":\"ce2e98d1-4df3-4ce9-a42f-182218beca3e\",\"dlr_licensehelper_contains_other_peoples_work\":\"yes\",\"dlr_licensehelper_usage_cleared_with_owner\":\"no_clearance\",\"dlr_resource\":\"true\",\"dlr_resource_learning\":\"true\",\"dlr_rights_license_name\":\"CC BY-NC-SA 4.0\",\"dlr_status_published\":\"true\",\"dlr_storage_id\":\"unit\",\"dlr_submitter_email\":\"ansi@unit.no\",\"dlr_time_created\":\"2022-03-21T09:22:03.509Z\",\"dlr_time_published\":\"2022-03-22T09:51:08.677Z\",\"dlr_title\":\"pug2\",\"dlr_type\":\"Image\"},\"subjects\":[],\"courses\":[],\"tags\":[],\"types\":[\"learning\"],\"projects\":[],\"funders\":[],\"geographicalCoverages\":[],\"observationalUnits\":[],\"processMethods\":[],\"creators\":[{\"features\":{\"dlr_creator_identifier\":\"2ef37cbe-3fda-4d7d-84c2-1442101428f8\",\"dlr_creator_name\":\"Anette Olli Siiri\",\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":\"2022-03-21T09:22:06.950Z\"}}],\"contributors\":[{\"features\":{\"dlr_contributor_identifier\":\"9b4cd8fe-b78f-485d-a0cd-f94edf21daeb\",\"dlr_contributor_name\":\"UNIT\",\"dlr_contributor_time_created\":\"2022-03-21T09:22:04.845Z\",\"dlr_contributor_type\":\"HostingInstitution\"}}],\"accessRead\":[],\"accessWrite\":[\"ansi@unit.no\"]}");
         responseBodyElement.set("resourcesAsJson", objectArray);
+        return responseBodyElement;
+    }
+
+    private ObjectNode createRecordResponse() {
+        var responseBodyElement = dtoObjectMapper.createObjectNode();
+        responseBodyElement.put("identifier", "1234");
+        var responseBodyFeaturesObject = dtoObjectMapper.createObjectNode();
+        responseBodyFeaturesObject.put("dlr_title", "title");
+        responseBodyFeaturesObject.put("dlr_description", "description");
+        responseBodyFeaturesObject.put("dlr_rights_license_name", "CC BY 4.0");
+        responseBodyFeaturesObject.put("dlr_time_created", "2021-08-09T08:25:22.552Z");
+        responseBodyFeaturesObject.put("dlr_time_published", "2021-08-12T08:45:42.154Z");
+        responseBodyFeaturesObject.put("dlr_identifier_handle", "https://hdl.handle.net/11250.1/1234");
+        responseBodyFeaturesObject.put("dlr_identifier_doi", "10.123/SIKT");
+        responseBodyElement.set("features", responseBodyFeaturesObject);
+        var responseBodyCreatorsArray = dtoObjectMapper.createArrayNode();
+        var responseBodyCreatorObject = dtoObjectMapper.createObjectNode();
+        var responseBodyCreatorFeaturesObject = dtoObjectMapper.createObjectNode();
+        responseBodyCreatorFeaturesObject.put("dlr_creator_name", "Nikoli Fixe");
+        responseBodyCreatorObject.set("features", responseBodyCreatorFeaturesObject);
+        responseBodyCreatorsArray.add(responseBodyCreatorObject);
+        responseBodyElement.set("creators", responseBodyCreatorsArray);
+        var responseBodyContributorsObject = dtoObjectMapper.createArrayNode();
+        responseBodyElement.set("contributors", responseBodyContributorsObject);
         return responseBodyElement;
     }
 

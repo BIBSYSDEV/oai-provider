@@ -40,5 +40,7 @@ public interface Adapter {
 
     public URI getRecordUri(String identifier);
 
+    public URI getRecordsUri(String identifier);
+
     public URI getRecordsListUri(String from, String until, String institution, int startPosition);
 }

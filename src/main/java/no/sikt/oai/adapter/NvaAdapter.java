@@ -97,13 +97,6 @@ public class NvaAdapter implements Adapter {
     }
 
     @Override
-    public URI getRecordsUri(String identifier) {
-        return UriWrapper
-                .fromUri(resourcesUri)
-                .getUri();
-    }
-
-    @Override
     public URI getRecordsListUri(String from, String until, String institution, int startPosition) {
         return UriWrapper
                 .fromUri(resourcesUri)

@@ -136,14 +136,6 @@ public class DlrAdapter implements Adapter {
     }
 
     @Override
-    public URI getRecordsUri(String identifier) {
-        return UriWrapper
-                .fromUri(resourcesUri)
-                .addChild(identifier)
-                .getUri();
-    }
-
-    @Override
     public URI getRecordsListUri(String from, String until, String institution, int startPosition) {
         UriWrapper uriWrapper = UriWrapper.fromUri(resourcesUri);
         if (!"".equalsIgnoreCase(institution)) {

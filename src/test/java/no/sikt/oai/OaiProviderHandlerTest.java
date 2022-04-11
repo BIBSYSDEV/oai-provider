@@ -24,8 +24,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static no.sikt.oai.MetadataFormat.OAI_DC;
 import static no.sikt.oai.MetadataFormat.QDC;
 import static no.sikt.oai.OaiConstants.CLIENT_TYPE_DLR;
+import static no.sikt.oai.OaiConstants.CLIENT_TYPE_NVA;
 import static no.sikt.oai.OaiConstants.ID_DOES_NOT_EXIST;
 import static no.sikt.oai.RestApiConfig.restServiceObjectMapper;
 import static no.unit.nva.commons.json.JsonUtils.dtoObjectMapper;
@@ -252,7 +254,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListSets.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DC.name());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -372,7 +374,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingNVASetSpec() throws IOException {
-        init("NVA");
+        init(CLIENT_TYPE_NVA);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -387,8 +389,26 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
+    public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingNVASetSpecAndOaiDcMetadataPrefix()
+            throws IOException {
+        init(CLIENT_TYPE_DLR);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DC.name());
+        queryParameters.put(ValidParameterKey.SET.key, "BI");
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.ListRecords.name())));
+        assertThat(responseBody, is(containsString("<oai_dc:dc")));
+    }
+
+    @Test
     public void shouldReturnErrorWhenAskedForListRecordsWithNonExistingNVASetSpec() throws IOException {
-        init("NVA");
+        init(CLIENT_TYPE_NVA);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());

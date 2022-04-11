@@ -7,6 +7,7 @@ import no.sikt.oai.adapter.DlrAdapter;
 import no.sikt.oai.adapter.NvaAdapter;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
+import no.sikt.oai.exception.InternalOaiException;
 import no.sikt.oai.exception.OaiException;
 import no.sikt.oai.service.DataProvider;
 import nva.commons.apigateway.ApiGatewayHandler;
@@ -197,25 +198,25 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         }
     }
 
-    protected void validateSet(String verb, String setSpec) throws OaiException {
+    protected void validateSet(String verb, String setSpec) throws OaiException, InternalOaiException {
         if (setSpec.length() > 0 && !getInstitutionList().contains(setSpec)) {
             throw new OaiException(verb, OaiConstants.BAD_ARGUMENT, OaiConstants.UNKNOWN_SET_NAME + setSpec);
         }
     }
 
-    private List<String> getInstitutionList() throws OaiException {
+    private List<String> getInstitutionList() throws OaiException, InternalOaiException {
         String json = dataProvider.getSetsList();
         return adapter.parseInstitutionResponse(json);
     }
 
-    private Record getRecord(String identifier, String metadataPrefix) throws OaiException {
+    private Record getRecord(String identifier, String metadataPrefix) throws InternalOaiException, OaiException {
         String json = dataProvider.getRecord(identifier);
         return adapter.parseRecordResponse(json, metadataPrefix);
     }
 
     private RecordsList getRecordsList(String verb, String from, String until, String setSpec, String metadataPrefix,
                                        String resumptionToken, int startPosition)
-            throws OaiException {
+            throws OaiException, InternalOaiException {
         String json;
         if (resumptionToken.length() > 0) {
             ResumptionToken token = new ResumptionToken(resumptionToken);
@@ -227,14 +228,16 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         return adapter.parseRecordsListResponse(verb, json, metadataPrefix);
     }
 
-    protected void validateResumptionToken(String verb, String resumptionToken) throws OaiException {
+    protected void validateResumptionToken(String verb, String resumptionToken)
+            throws OaiException, InternalOaiException {
         validateSet(verb, new ResumptionToken(resumptionToken).setSpec);
     }
 
     protected void validateMetadataPrefix(String verb, String metadataPrefix)
             throws OaiException {
         if (!MetadataFormat.isValid(metadataPrefix)) {
-            throw new OaiException(verb, OaiConstants.CANNOT_DISSEMINATE_FORMAT, OaiConstants.METADATA_FORMAT_NOT_SUPPORTED);
+            throw new OaiException(verb, OaiConstants.CANNOT_DISSEMINATE_FORMAT,
+                    OaiConstants.METADATA_FORMAT_NOT_SUPPORTED);
         }
     }
 

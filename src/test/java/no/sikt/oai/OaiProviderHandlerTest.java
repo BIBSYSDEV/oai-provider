@@ -19,6 +19,10 @@ import java.net.http.HttpClient;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static no.sikt.oai.MetadataFormat.QDC;
 import static no.sikt.oai.OaiConstants.CLIENT_TYPE_DLR;
@@ -33,7 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 public class OaiProviderHandlerTest {
 
@@ -41,6 +44,7 @@ public class OaiProviderHandlerTest {
     public static final String UNKNOWN_CLIENT_NAME = "Unknown client name";
     public static final String UNKNOWN_VERB = "UnknownVerb";
     public static final String VALID_IDENTIFIER = "oai:dlr.unit.no:00000000-0000-0000-0000-000000000000";
+    public static final String FAULTY_JSON = "faultyJson";
     private OaiProviderHandler handler;
     private Environment environment;
     private Context context;
@@ -127,7 +131,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldBadArgumentErrorWhenGetRecordWithInvalidIdentifier() throws IOException {
+    public void shouldReturnErrorWhenGetRecordWithInvalidIdentifier() throws IOException {
         init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
@@ -140,6 +144,24 @@ public class OaiProviderHandlerTest {
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
         assertThat(responseBody, is(containsString(OaiConstants.BAD_ARGUMENT)));
+    }
+
+    @Test
+    public void shouldReturnExceptionWhenGetRecordWithFaultyJsonResponse() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockFaultyRecordResponse();
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.SET.key, "sikt");
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, "oai:dlr.unit.no:9a1eae92-38bf-4002-a1a9-d21035242d30");
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_UNAVAILABLE, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(FAULTY_JSON)));
     }
 
     @Test
@@ -247,9 +269,9 @@ public class OaiProviderHandlerTest {
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
-        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        assertEquals(HttpURLConnection.HTTP_UNAVAILABLE, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.NO_SET_HIERARCHY)));
+        assertThat(responseBody, is(containsString(FAULTY_JSON)));
     }
 
     @Test
@@ -267,7 +289,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnErrorWhenAskedForListRecordsWithNonExistingMetadataFormat() throws IOException {
+    public void shouldReturnErrorWhenAskedForGettRecordWithNonExistingMetadataFormat() throws IOException {
         init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
@@ -310,6 +332,22 @@ public class OaiProviderHandlerTest {
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
         assertThat(responseBody, is(containsString(Verb.ListRecords.name())));
+    }
+
+    @Test
+    public void shouldReturnExceptionWhenAskedForListRecordsWithFaultyJsonResponse() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockFaultyRecordsResponse();
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadataFormat.OAI_DATACITE.name());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_UNAVAILABLE, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(FAULTY_JSON)));
     }
 
     @Test
@@ -479,7 +517,7 @@ public class OaiProviderHandlerTest {
     }
 
     private void mockFaultySetsResponse() {
-        String faultyResponseBody = "{\"institution\": \"bi\"}";
+        String faultyResponseBody = FAULTY_JSON;
         stubFor(get(urlPathMatching("/sets"))
                 .willReturn(aResponse().withBody(faultyResponseBody).withStatus(HttpURLConnection.HTTP_OK)));
     }
@@ -496,6 +534,18 @@ public class OaiProviderHandlerTest {
         return responseBodyElement;
     }
 
+    private void mockRecordResponse() {
+        ObjectNode responseBody = createRecordResponse();
+        stubFor(get(urlPathMatching("^/[^/]+/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
+                .willReturn(aResponse().withBody(responseBody
+                        .toPrettyString()).withStatus(HttpURLConnection.HTTP_OK)));
+    }
+    private void mockFaultyRecordResponse() {
+        String faultyResponseBody = FAULTY_JSON;
+        stubFor(get(urlPathMatching("^/[^/]+/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
+                .willReturn(aResponse().withBody(faultyResponseBody).withStatus(HttpURLConnection.HTTP_OK)));
+    }
+
     private void mockRecordsResponse() {
         ObjectNode responseBody = createRecordsResponse();
         stubFor(get(urlPathMatching("/records"))
@@ -503,11 +553,10 @@ public class OaiProviderHandlerTest {
                         .toPrettyString()).withStatus(HttpURLConnection.HTTP_OK)));
     }
 
-    private void mockRecordResponse() {
-        ObjectNode responseBody = createRecordResponse();
-        stubFor(get(urlPathMatching("^/[^/]+/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
-                .willReturn(aResponse().withBody(responseBody
-                        .toPrettyString()).withStatus(HttpURLConnection.HTTP_OK)));
+    private void mockFaultyRecordsResponse() {
+        String faultyResponseBody = FAULTY_JSON;
+        stubFor(get(urlPathMatching("/records"))
+                .willReturn(aResponse().withBody(faultyResponseBody).withStatus(HttpURLConnection.HTTP_OK)));
     }
 
     private ObjectNode createRecordsResponse() {

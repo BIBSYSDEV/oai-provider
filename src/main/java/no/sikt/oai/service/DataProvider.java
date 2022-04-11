@@ -11,8 +11,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import static no.sikt.oai.OaiConstants.ID_DOES_NOT_EXIST;
 import static no.sikt.oai.OaiConstants.NO_SETS_FOUND;
 import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
+import static no.sikt.oai.OaiConstants.UNKNOWN_IDENTIFIER;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 
@@ -58,11 +60,11 @@ public class DataProvider {
                     .build();
             HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             if (!responseIsSuccessful(response)) {
-                throw new OaiException(Verb.ListSets.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
+                throw new OaiException(Verb.GetRecord.name(), ID_DOES_NOT_EXIST, UNKNOWN_IDENTIFIER);
             }
             return response.body();
         } catch (IOException | InterruptedException e) {
-            throw new OaiException(Verb.ListSets.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
+            throw new OaiException(Verb.GetRecord.name(), ID_DOES_NOT_EXIST, UNKNOWN_IDENTIFIER);
         }
     }
 

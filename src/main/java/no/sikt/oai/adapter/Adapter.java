@@ -2,7 +2,7 @@ package no.sikt.oai.adapter;
 
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
-import no.sikt.oai.exception.OaiException;
+import no.sikt.oai.exception.InternalOaiException;
 
 import java.net.URI;
 import java.util.List;
@@ -29,12 +29,12 @@ public interface Adapter {
 
     public String getIdentifierPrefix();
 
-    public List<String> parseInstitutionResponse(String json) throws OaiException;
+    public List<String> parseInstitutionResponse(String json) throws InternalOaiException;
 
-    public Record parseRecordResponse(String json, String metadataPrefix) throws OaiException;
+    public Record parseRecordResponse(String json, String metadataPrefix) throws InternalOaiException;
 
     public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix)
-            throws OaiException;
+            throws InternalOaiException;
 
     public URI getSetsUri();
 

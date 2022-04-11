@@ -194,14 +194,16 @@ public class OaiResponse {
             buffer.append("                <setSpec>").append(setSpec).append("</setSpec>\n");
         }
         buffer.append("            </header>\n");
-        buffer.append("            <metadata>\n");
+        if (!isDeleted) {
+            buffer.append("            <metadata>\n");
 
-        // Kun for å få riktig innrykk...
-        String[] recordXml = xmlContent.split("\\r?\\n");
-        for (String recordXmlPart : recordXml) {
-            buffer.append("                ").append(recordXmlPart).append("\n");
+            // Kun for å få riktig innrykk...
+            String[] recordXml = xmlContent.split("\\r?\\n");
+            for (String recordXmlPart : recordXml) {
+                buffer.append("                ").append(recordXmlPart).append("\n");
+            }
+            buffer.append("            </metadata>\n");
         }
-        buffer.append("            </metadata>\n");
         buffer.append("        </record>\n");
     }
 

@@ -154,9 +154,10 @@ public class DlrAdapter implements Adapter {
     }
 
     private Record createRecordFromResource(Resource resource, String metadataPrefix) {
+        boolean deleted = Boolean.parseBoolean(resource.features.get("dlr_status_deleted"));
         return new Record(
                 createRecordContent(resource, metadataPrefix),
-                false,
+                deleted,
                 getIdentifierPrefix() + resource.identifier,
                 TimeUtils.String2Date(resource.features.get("dlr_time_published"), TimeUtils.FORMAT_ZULU_SHORT));
     }

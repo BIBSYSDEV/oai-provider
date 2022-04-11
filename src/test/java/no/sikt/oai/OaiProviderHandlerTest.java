@@ -36,6 +36,7 @@ import static nva.commons.apigateway.ApiGatewayHandler.ALLOWED_ORIGIN_ENV;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -407,24 +408,25 @@ public class OaiProviderHandlerTest {
         assertThat(responseBody, is(containsString("<oai_dc:dc")));
     }
 
-//    @Test
-//    public void shouldReturnDeletedRecordWhenAskedForGetRecordWithExistingWithIdentifierToDeletedRecord()
-//            throws IOException {
-//        init(CLIENT_TYPE_DLR);
-//        mockDeletedRecordResponse();
-//        var output = new ByteArrayOutputStream();
-//        Map<String, String> queryParameters = new HashMap<>();
-//        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
-//        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DC.name());
-//        queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER);
-//        var inputStream = handlerInputStream(queryParameters);
-//        handler.handleRequest(inputStream, output, context);
-//        var gatewayResponse = parseSuccessResponse(output.toString());
-//        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
-//        var responseBody = gatewayResponse.getBody();
-//        assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
-//        assertThat(responseBody, is(containsString("<header status=\"deleted\">")));
-//    }
+    @Test
+    public void shouldReturnDeletedRecordWhenAskedForGetRecordWithExistingWithIdentifierToDeletedRecord()
+            throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockDeletedRecordResponse();
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DC.name());
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
+        assertThat(responseBody, is(containsString("<header status=\"deleted\">")));
+        assertThat(responseBody, is(not(containsString("<metadata>"))));
+    }
 
     @Test
     public void shouldReturnErrorWhenAskedForListRecordsWithNonExistingNVASetSpec() throws IOException {
@@ -665,8 +667,26 @@ public class OaiProviderHandlerTest {
     private ObjectNode createDeletedRecordResponse() {
         var responseBodyElement = dtoObjectMapper.createObjectNode();
         responseBodyElement.put("identifier", "1234");
-        responseBodyElement.put("dlr_status", "deleted");
-        responseBodyElement.put("dlr_time_updated", "2021-08-09T08:25:22.552Z");
+        var responseBodyFeaturesObject = dtoObjectMapper.createObjectNode();
+        responseBodyFeaturesObject.put("dlr_title", "title");
+        responseBodyFeaturesObject.put("dlr_description", "description");
+        responseBodyFeaturesObject.put("dlr_rights_license_name", "CC BY 4.0");
+        responseBodyFeaturesObject.put("dlr_time_created", "2021-08-09T08:25:22.552Z");
+        responseBodyFeaturesObject.put("dlr_time_published", "2021-08-12T08:45:42.154Z");
+        responseBodyFeaturesObject.put("dlr_time_updated", "2022-03-12T08:45:42.154Z");
+        responseBodyFeaturesObject.put("dlr_identifier_handle", "https://hdl.handle.net/11250.1/1234");
+        responseBodyFeaturesObject.put("dlr_identifier_doi", "10.123/SIKT");
+        responseBodyFeaturesObject.put("dlr_status_deleted", "true");
+        responseBodyElement.set("features", responseBodyFeaturesObject);
+        var responseBodyCreatorsArray = dtoObjectMapper.createArrayNode();
+        var responseBodyCreatorObject = dtoObjectMapper.createObjectNode();
+        var responseBodyCreatorFeaturesObject = dtoObjectMapper.createObjectNode();
+        responseBodyCreatorFeaturesObject.put("dlr_creator_name", "Nikoli Fixe");
+        responseBodyCreatorObject.set("features", responseBodyCreatorFeaturesObject);
+        responseBodyCreatorsArray.add(responseBodyCreatorObject);
+        responseBodyElement.set("creators", responseBodyCreatorsArray);
+        var responseBodyContributorsObject = dtoObjectMapper.createArrayNode();
+        responseBodyElement.set("contributors", responseBodyContributorsObject);
         return responseBodyElement;
     }
 

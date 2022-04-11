@@ -52,6 +52,9 @@ public class OaiProviderHandlerTest {
     public static final String VALID_IDENTIFIER = "oai:dlr.unit.no:00000000-0000-0000-0000-000000000000";
     public static final String FAULTY_JSON = "faultyJson";
     public static final String UUID_REGEX = "^/[^/]+/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$";
+    public static final String RESUMPTION_TOKEN = "lr~sikt~~~qdc~50";
+    public static final String SET_NAME_SIKT = "sikt";
+    private final HttpClient httpClient = WiremockHttpClient.create();
     private OaiProviderHandler handler;
     private Environment environment;
     private Context context;
@@ -69,7 +72,6 @@ public class OaiProviderHandlerTest {
         when(environment.readEnv(OaiConstants.RECORD_URI_ENV)).thenReturn(serverUriRecord.toString());
         when(environment.readEnv(OaiConstants.RECORDS_URI_ENV)).thenReturn(serverUriRecords.toString());
         context = mock(Context.class);
-        HttpClient httpClient = WiremockHttpClient.create();
         mockSetsResponse();
         mockRecordResponse();
         mockRecordsResponse();
@@ -161,7 +163,7 @@ public class OaiProviderHandlerTest {
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
-        queryParameters.put(ValidParameterKey.SET.key, "sikt");
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
         queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER);
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
@@ -208,7 +210,7 @@ public class OaiProviderHandlerTest {
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
-        queryParameters.put(ValidParameterKey.SET.key, "sikt");
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
         queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER);
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
@@ -225,7 +227,7 @@ public class OaiProviderHandlerTest {
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
-        queryParameters.put(ValidParameterKey.SET.key, "sikt");
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
         queryParameters.put(ValidParameterKey.IDENTIFIER.key, INVALID_IDENTIFIER);
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
@@ -272,7 +274,24 @@ public class OaiProviderHandlerTest {
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
-        queryParameters.put(ValidParameterKey.SET.key, "sikt");
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.ListIdentifiers.name())));
+    }
+
+    @Test
+    public void shouldReturnListIdentifiersResponseWhenAskedForListIdentifiersWithValidResumptionToken() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        queryParameters.put(ValidParameterKey.RESUMPTIONTOKEN.key, RESUMPTION_TOKEN);
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -289,7 +308,7 @@ public class OaiProviderHandlerTest {
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
-        queryParameters.put(ValidParameterKey.SET.key, "sikt");
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -450,7 +469,7 @@ public class OaiProviderHandlerTest {
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
         when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn(UNKNOWN_CLIENT_NAME);
         context = mock(Context.class);
-        assertThrows(RuntimeException.class, () ->  handler = new OaiProviderHandler(environment));
+        assertThrows(RuntimeException.class, () ->  handler = new OaiProviderHandler(environment, httpClient));
     }
 
     @Test
@@ -459,7 +478,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
-        queryParameters.put(ValidParameterKey.RESUMPTIONTOKEN.key, "lr~sikt~~~qdc~50");
+        queryParameters.put(ValidParameterKey.RESUMPTIONTOKEN.key, RESUMPTION_TOKEN);
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -550,6 +569,23 @@ public class OaiProviderHandlerTest {
         assertThat(responseBody, is(containsString(Verb.ListRecords.name())));
     }
 
+    @Test
+    public void shouldReturnListRecordsResponseWhenAskedWithOnlyFromParam() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  QDC.name());
+        queryParameters.put(ValidParameterKey.FROM.key, "2006-06-06");
+        queryParameters.put(ValidParameterKey.UNTIL.key, "");
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.ListRecords.name())));
+    }
+
     private InputStream handlerInputStream(Map<String, String> queryParameters) throws JsonProcessingException {
         return new HandlerRequestBuilder<Void>(restServiceObjectMapper)
                 .withHttpMethod("GET")
@@ -589,7 +625,7 @@ public class OaiProviderHandlerTest {
         objectArray.add("bi");
         objectArray.add("diku");
         objectArray.add("ntnu");
-        objectArray.add("sikt");
+        objectArray.add(SET_NAME_SIKT);
         objectArray.add("uit");
         var responseBodyElement = dtoObjectMapper.createObjectNode();
         responseBodyElement.set("institutions", objectArray);

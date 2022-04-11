@@ -35,13 +35,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     @JacocoGenerated
     public OaiProviderHandler() {
-        this(new Environment());
-    }
-
-    public OaiProviderHandler(Environment environment) {
-        super(Void.class, environment);
-        initAdapter();
-        this.dataProvider = new DataProvider(adapter);
+        this(new Environment(), HttpClient.newBuilder().build());
     }
 
     public OaiProviderHandler(Environment environment, HttpClient client) {
@@ -95,7 +89,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                         validateFromAndUntilParameters(verb, from, until);
                         validateSet(verb, setSpec);
                     }
-                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, resumptionToken,0);
+                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, resumptionToken, 0);
                     response = OaiResponse.listRecords(from, until, resumptionToken, metadataPrefix,
                             adapter.getBaseUrl(), 0, setSpec, recordsList, startTime);
                     break;
@@ -108,7 +102,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                         validateFromAndUntilParameters(verb, from, until);
                         validateSet(verb, setSpec);
                     }
-                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, resumptionToken,0);
+                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, resumptionToken, 0);
                     response = OaiResponse.listIdentifiers(from, until, metadataPrefix, resumptionToken,
                             adapter.getBaseUrl(), setSpec, 0, recordsList, startTime);
                     break;
@@ -117,12 +111,8 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                             startTime);
                     break;
                 case ListSets:
-                    try {
-                        List<String> institutionList = this.getInstitutionList();
-                        response = OaiResponse.listSets(adapter.getBaseUrl(), institutionList, startTime);
-                    } catch (OaiException e) {
-                        response = OaiResponse.oaiError(adapter.getBaseUrl(), e.getErrorCode(), e.getErrorText());
-                    }
+                    List<String> institutionList = this.getInstitutionList();
+                    response = OaiResponse.listSets(adapter.getBaseUrl(), institutionList, startTime);
                     break;
                 case Identify:
                 default:

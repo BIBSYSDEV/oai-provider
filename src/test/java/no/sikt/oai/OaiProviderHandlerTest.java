@@ -21,6 +21,7 @@ import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static no.sikt.oai.MetadataFormat.QDC;
+import static no.sikt.oai.OaiConstants.CLIENT_TYPE_DLR;
 import static no.sikt.oai.RestApiConfig.restServiceObjectMapper;
 import static no.unit.nva.commons.json.JsonUtils.dtoObjectMapper;
 import static no.unit.nva.testutils.RandomDataGenerator.randomString;
@@ -73,7 +74,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void handleRequestReturnsIdentifyOaiResponse() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);;
         TimeUtils timeUtils = new TimeUtils();
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
@@ -86,8 +87,8 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWithUnknownVerb() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWithUnknownVerb() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, UNKNOWN_VERB);
@@ -99,8 +100,8 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWithMissingVerb() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWithMissingVerb() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, BLANK);
@@ -112,8 +113,8 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenListRecordsWithoutResumptionToken() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenListRecordsWithoutResumptionToken() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -127,7 +128,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldBadArgumentErrorWhenGetRecordWithInvalidIdentifier() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -143,7 +144,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnCannotDisseminateFormatErrorWhenGetRecordWithoutMetadataPrefix() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -157,8 +158,8 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenRequestWithInvalidQueryParam() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenRequestWithInvalidQueryParam() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -173,7 +174,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefixAndIdentifier() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -190,7 +191,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListMetadataFormatsResponseWhenAskedForListMetadataFormats() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListMetadataFormats.name());
@@ -205,7 +206,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListSetsResponseWhenAskedForListSets() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListSets.name());
@@ -220,7 +221,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListIdentifiersResponseWhenAskedForListIdentifiers() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
@@ -235,8 +236,25 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedForListIdentifiersWithoutMetadataPrefix() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorResponseWhenAskedForListIdentifiersButListSetResponseIsFaulty() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockFaultySetsResponse();
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.SET.key, "sikt");
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(OaiConstants.NO_SET_HIERARCHY)));
+    }
+
+    @Test
+    public void shouldReturnErrorWhenAskedForListIdentifiersWithoutMetadataPrefix() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
@@ -249,8 +267,8 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedForListRecordsWithNonExistingMetadataFormat() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenAskedForListRecordsWithNonExistingMetadataFormat() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -264,8 +282,8 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedForListRecordsWithNonExistingSetSpec() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenAskedForListRecordsWithNonExistingSetSpec() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -281,7 +299,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingSetSpec() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -311,7 +329,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedForListRecordsWithNonExistingNVASetSpec() throws IOException {
+    public void shouldReturnErrorWhenAskedForListRecordsWithNonExistingNVASetSpec() throws IOException {
         init("NVA");
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
@@ -327,7 +345,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenClientNameFromEnvironmentIsUnknown() {
+    public void shouldReturnErrorWhenClientNameFromEnvironmentIsUnknown() {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
         when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn(UNKNOWN_CLIENT_NAME);
@@ -337,7 +355,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListRecordsResponseWhenAskedForListRecordsWithResumptionToken() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -351,8 +369,8 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedWithInvalidFromParam() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenAskedWithInvalidFromParam() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -367,8 +385,8 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedWithNullFromParam() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenAskedWithNullFromParam() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -383,8 +401,8 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedWithInvalidUntilParam() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenAskedWithInvalidUntilParam() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -399,8 +417,8 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedWithDifferentLengthFromUntilParam() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenAskedWithDifferentLengthFromUntilParam() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -417,7 +435,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListRecordsResponseWhenAskedWithSameLengthFromUntilParam() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -458,6 +476,12 @@ public class OaiProviderHandlerTest {
         stubFor(get(urlPathMatching("/sets"))
                 .willReturn(aResponse().withBody(responseBody
                         .toPrettyString()).withStatus(HttpURLConnection.HTTP_OK)));
+    }
+
+    private void mockFaultySetsResponse() {
+        String faultyResponseBody = "{\"institution\": \"bi\"}";
+        stubFor(get(urlPathMatching("/sets"))
+                .willReturn(aResponse().withBody(faultyResponseBody).withStatus(HttpURLConnection.HTTP_OK)));
     }
 
     private ObjectNode createSetsResponse() {

@@ -98,7 +98,7 @@ public class DlrAdapter implements Adapter {
         try {
             return createRecordFromResource(mapper.readValue(json, Resource.class), metadataPrefix);
         } catch (JsonProcessingException e) {
-            throw new OaiException(Verb.GetRecord.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
+            throw new OaiException(Verb.GetRecord.name(), ID_DOES_NOT_EXIST, COULD_NOT_PARSE_RESPONSE);
         }
     }
 

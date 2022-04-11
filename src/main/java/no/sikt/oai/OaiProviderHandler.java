@@ -137,10 +137,10 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     private void initAdapter() {
         String clientName = environment.readEnv(OaiConstants.CLIENT_NAME_ENV);
         switch (clientName) {
-            case "DLR":
+            case OaiConstants.CLIENT_TYPE_DLR:
                 this.adapter = new DlrAdapter(environment);
                 break;
-            case "NVA":
+            case OaiConstants.CLIENT_TYPE_NVA:
                 this.adapter = new NvaAdapter(environment);
                 break;
             default:

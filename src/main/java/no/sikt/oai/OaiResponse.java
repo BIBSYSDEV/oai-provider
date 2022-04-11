@@ -3,6 +3,7 @@ package no.sikt.oai;
 import no.sikt.oai.adapter.Adapter;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
+import nva.commons.core.JacocoGenerated;
 
 import java.util.Date;
 import java.util.List;
@@ -17,6 +18,10 @@ import static no.sikt.oai.Verb.ListRecords;
 import static no.sikt.oai.Verb.ListSets;
 
 public class OaiResponse {
+
+    @JacocoGenerated
+    public OaiResponse() {
+    }
 
     public static String identify(Adapter adapter, long startTime) {
         StringBuilder buffer = new StringBuilder();
@@ -146,7 +151,7 @@ public class OaiResponse {
         buffer.append("xsi:schemaLocation=" +
                 "\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
         buffer.append("\">\n");
-        buffer.append("    <responseDate>" + no.sikt.oai.TimeUtils.getResponseTime() + "</responseDate>" + "\n");
+        buffer.append("    <responseDate>").append(TimeUtils.getResponseTime()).append("</responseDate>").append("\n");
     }
 
     protected static void makeFooter(StringBuilder buffer) {
@@ -162,7 +167,7 @@ public class OaiResponse {
     }
 
     protected static void makeHeaderRequest(String verb, String baseUrl, StringBuilder buffer) {
-        buffer.append("    <request verb=\"" + verb + "\">").append(baseUrl).append("</request>\n");
+        buffer.append("    <request verb=\"").append(verb).append("\">").append(baseUrl).append("</request>\n");
     }
 
     protected static void makeHeaderRequest(String baseUrl, StringBuilder stringBuilder) {
@@ -185,7 +190,7 @@ public class OaiResponse {
         buffer.append("                <identifier>").append(identifier).append("</identifier>\n");
         buffer.append("                <datestamp>").append(Date2String(lastUpdateDate, FORMAT_ZULU_LONG))
                 .append("</datestamp>\n");
-        if (setSpec != null && setSpec.length() > 0 && !setSpec.equalsIgnoreCase("default")) {
+        if (setSpec.length() > 0) {
             buffer.append("                <setSpec>").append(setSpec).append("</setSpec>\n");
         }
         buffer.append("            </header>\n");
@@ -194,13 +199,13 @@ public class OaiResponse {
         // Kun for å få riktig innrykk...
         String[] recordXml = xmlContent.split("\\r?\\n");
         for (String recordXmlPart : recordXml) {
-            buffer.append("                " + recordXmlPart + "\n");
+            buffer.append("                ").append(recordXmlPart).append("\n");
         }
         buffer.append("            </metadata>\n");
         buffer.append("        </record>\n");
     }
 
-    protected static void makeRecordHeader(boolean isDeleted, String identifier, Date lastUpdateDate, String set,
+    protected static void makeRecordHeader(boolean isDeleted, String identifier, Date lastUpdateDate, String setSpec,
                                            StringBuilder buffer) {
         if (isDeleted) {
             buffer.append("        <header status=\"deleted\">\n");
@@ -210,15 +215,15 @@ public class OaiResponse {
         buffer.append("            <identifier>").append(identifier).append("</identifier>\n");
         buffer.append("            <datestamp>").append(Date2String(lastUpdateDate, FORMAT_ZULU_LONG))
                 .append("</datestamp>\n");
-        if (set != null && set.length() > 0 && !set.equalsIgnoreCase("default")) {
-            buffer.append("            <setSpec>").append(set).append("</setSpec>\n");
+        if (setSpec.length() > 0) {
+            buffer.append("            <setSpec>").append(setSpec).append("</setSpec>\n");
         }
         buffer.append("        </header>\n");
     }
 
     protected static void makeTimeUsed(String verb, long startTime, StringBuilder buffer) {
         long timeUsed = System.currentTimeMillis() - startTime;
-        buffer.append("\n<!-- Time used " + verb + " " + timeUsed + " ms. -->");
+        buffer.append("\n<!-- Time used ").append(verb).append(" ").append(timeUsed).append(" ms. -->");
     }
 
 
@@ -226,17 +231,18 @@ public class OaiResponse {
 
     protected static void makeHeaderRequestGetRecord(String verb, String metadataPrefix, String identifier,
                                                      String baseUrl, StringBuilder buffer) {
-        buffer.append("    <request verb=\"" + verb + "\" identifier=\"" + identifier + "\" metadataPrefix=\""
-                + metadataPrefix + "\">" + baseUrl + "</request>\n");
+        buffer.append("    <request verb=\"").append(verb).append("\" identifier=\"").append(identifier)
+                .append("\" metadataPrefix=\"").append(metadataPrefix).append("\">").append(baseUrl)
+                .append("</request>\n");
     }
 
 
     // OAI helpers: ListRecords
 
     protected static void makeFooterListRecords(String listSize, String newToken, String cursor, StringBuilder buffer) {
-        if (newToken != null && newToken.length() > 0) {
-            buffer.append("        <resumptionToken completeListSize=\"" + listSize + "\"  cursor=\"" + cursor + "\">"
-                    + newToken + "</resumptionToken>\n");
+        if (newToken.length() > 0) {
+            buffer.append("        <resumptionToken completeListSize=\"").append(listSize).append("\"  cursor=\"")
+                    .append(cursor).append("\">").append(newToken).append("</resumptionToken>\n");
         }
     }
 
@@ -244,7 +250,7 @@ public class OaiResponse {
     // OAI helpers: ListIdentifiers
 
     protected static void makeFooterListIdentifiers(String listSize, String newToken, StringBuilder buffer) {
-        if (newToken != null && newToken.length() > 0) {
+        if (newToken.length() > 0) {
             buffer.append("        <resumptionToken completeListSize=\"").append(listSize).append("\">")
                     .append(newToken).append("</resumptionToken>\n");
         }
@@ -263,10 +269,10 @@ public class OaiResponse {
             writeParams = false;
             buffer.append(" resumptionToken=\"").append(oldResumptionToken).append("\" ");
         }
-        if (from != null && (from.length() > 9) && writeParams) {
+        if ((from.length() > 9) && writeParams) {
             buffer.append(" from=\"").append(from).append("\"");
         }
-        if (until != null && (until.length() > 9) && writeParams) {
+        if ((until.length() > 9) && writeParams) {
             buffer.append(" until=\"").append(until).append("\"");
         }
         if (writeParams) {

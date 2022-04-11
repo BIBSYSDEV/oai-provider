@@ -50,6 +50,7 @@ public class OaiProviderHandlerTest {
     public static final String INVALID_IDENTIFIER = "oai:dlr.unit.no:9a1eae92-38bf-4002-a1a9-d21035242d30-36";
     public static final String VALID_IDENTIFIER = "oai:dlr.unit.no:00000000-0000-0000-0000-000000000000";
     public static final String FAULTY_JSON = "faultyJson";
+    public static final String UUID_REGEX = "^/[^/]+/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$";
     private OaiProviderHandler handler;
     private Environment environment;
     private Context context;
@@ -406,6 +407,25 @@ public class OaiProviderHandlerTest {
         assertThat(responseBody, is(containsString("<oai_dc:dc")));
     }
 
+//    @Test
+//    public void shouldReturnDeletedRecordWhenAskedForGetRecordWithExistingWithIdentifierToDeletedRecord()
+//            throws IOException {
+//        init(CLIENT_TYPE_DLR);
+//        mockDeletedRecordResponse();
+//        var output = new ByteArrayOutputStream();
+//        Map<String, String> queryParameters = new HashMap<>();
+//        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+//        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DC.name());
+//        queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER);
+//        var inputStream = handlerInputStream(queryParameters);
+//        handler.handleRequest(inputStream, output, context);
+//        var gatewayResponse = parseSuccessResponse(output.toString());
+//        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+//        var responseBody = gatewayResponse.getBody();
+//        assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
+//        assertThat(responseBody, is(containsString("<header status=\"deleted\">")));
+//    }
+
     @Test
     public void shouldReturnErrorWhenAskedForListRecordsWithNonExistingNVASetSpec() throws IOException {
         init(CLIENT_TYPE_NVA);
@@ -576,14 +596,19 @@ public class OaiProviderHandlerTest {
 
     private void mockRecordResponse() {
         ObjectNode responseBody = createRecordResponse();
-        stubFor(get(urlPathMatching("^/[^/]+/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
-                .willReturn(aResponse().withBody(responseBody
-                        .toPrettyString()).withStatus(HttpURLConnection.HTTP_OK)));
+        stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(aResponse()
+                .withBody(responseBody.toPrettyString()).withStatus(HttpURLConnection.HTTP_OK)));
     }
+
     private void mockFaultyRecordResponse() {
-        String faultyResponseBody = FAULTY_JSON;
-        stubFor(get(urlPathMatching("^/[^/]+/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
-                .willReturn(aResponse().withBody(faultyResponseBody).withStatus(HttpURLConnection.HTTP_OK)));
+        stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(aResponse().withBody(FAULTY_JSON)
+                .withStatus(HttpURLConnection.HTTP_OK)));
+    }
+
+    private void mockDeletedRecordResponse() {
+        ObjectNode deletedResponseBody = createDeletedRecordResponse();
+        stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(aResponse().withBody(deletedResponseBody.toPrettyString())
+                        .withStatus(HttpURLConnection.HTTP_OK)));
     }
 
     private void mockRecordsResponse() {
@@ -594,9 +619,8 @@ public class OaiProviderHandlerTest {
     }
 
     private void mockFaultyRecordsResponse() {
-        String faultyResponseBody = FAULTY_JSON;
         stubFor(get(urlPathMatching("/records"))
-                .willReturn(aResponse().withBody(faultyResponseBody).withStatus(HttpURLConnection.HTTP_OK)));
+                .willReturn(aResponse().withBody(FAULTY_JSON).withStatus(HttpURLConnection.HTTP_OK)));
     }
 
     private ObjectNode createRecordsResponse() {
@@ -635,6 +659,14 @@ public class OaiProviderHandlerTest {
         responseBodyElement.set("creators", responseBodyCreatorsArray);
         var responseBodyContributorsObject = dtoObjectMapper.createArrayNode();
         responseBodyElement.set("contributors", responseBodyContributorsObject);
+        return responseBodyElement;
+    }
+
+    private ObjectNode createDeletedRecordResponse() {
+        var responseBodyElement = dtoObjectMapper.createObjectNode();
+        responseBodyElement.put("identifier", "1234");
+        responseBodyElement.put("dlr_status", "deleted");
+        responseBodyElement.put("dlr_time_updated", "2021-08-09T08:25:22.552Z");
         return responseBodyElement;
     }
 

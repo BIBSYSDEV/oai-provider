@@ -1,5 +1,6 @@
 package no.sikt.oai.service;
 
+import no.sikt.oai.OaiConstants;
 import no.sikt.oai.Verb;
 import no.sikt.oai.adapter.Adapter;
 import no.sikt.oai.exception.OaiException;
@@ -12,6 +13,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import static no.sikt.oai.OaiConstants.ID_DOES_NOT_EXIST;
+import static no.sikt.oai.OaiConstants.NO_RECORDS_MATCH;
 import static no.sikt.oai.OaiConstants.NO_SETS_FOUND;
 import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
 import static no.sikt.oai.OaiConstants.UNKNOWN_IDENTIFIER;
@@ -77,11 +79,11 @@ public class DataProvider {
                     .build();
             HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             if (!responseIsSuccessful(response)) {
-                throw new OaiException(Verb.ListSets.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
+                throw new OaiException(Verb.ListSets.name(), NO_RECORDS_MATCH, OaiConstants.COMBINATION_OF_PARAMS_ERROR);
             }
             return response.body();
         } catch (IOException | InterruptedException e) {
-            throw new OaiException(Verb.ListSets.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
+            throw new OaiException(Verb.ListSets.name(), NO_RECORDS_MATCH, OaiConstants.COMBINATION_OF_PARAMS_ERROR);
         }
     }
 

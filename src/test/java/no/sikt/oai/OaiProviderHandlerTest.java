@@ -26,9 +26,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static no.sikt.oai.MetadataFormat.OAI_DC;
 import static no.sikt.oai.MetadataFormat.QDC;
+import static no.sikt.oai.OaiConstants.*;
 import static no.sikt.oai.OaiConstants.CLIENT_TYPE_DLR;
 import static no.sikt.oai.OaiConstants.CLIENT_TYPE_NVA;
 import static no.sikt.oai.OaiConstants.ID_DOES_NOT_EXIST;
+import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
 import static no.sikt.oai.RestApiConfig.restServiceObjectMapper;
 import static no.unit.nva.commons.json.JsonUtils.dtoObjectMapper;
 import static no.unit.nva.testutils.RandomDataGenerator.randomString;
@@ -66,11 +68,11 @@ public class OaiProviderHandlerTest {
     public void init(String adapter) {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
-        when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn(adapter);
+        when(environment.readEnv(CLIENT_NAME_ENV)).thenReturn(adapter);
         startWiremockServer();
-        when(environment.readEnv(OaiConstants.SETS_URI_ENV)).thenReturn(serverUriSets.toString());
-        when(environment.readEnv(OaiConstants.RECORD_URI_ENV)).thenReturn(serverUriRecord.toString());
-        when(environment.readEnv(OaiConstants.RECORDS_URI_ENV)).thenReturn(serverUriRecords.toString());
+        when(environment.readEnv(SETS_URI_ENV)).thenReturn(serverUriSets.toString());
+        when(environment.readEnv(RECORD_URI_ENV)).thenReturn(serverUriRecord.toString());
+        when(environment.readEnv(RECORDS_URI_ENV)).thenReturn(serverUriRecords.toString());
         context = mock(Context.class);
         mockSetsResponse();
         mockRecordResponse();
@@ -109,7 +111,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.BAD_VERB)));
+        assertThat(responseBody, is(containsString(BAD_VERB)));
     }
 
     @Test
@@ -122,7 +124,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.VERB_IS_MISSING)));
+        assertThat(responseBody, is(containsString(VERB_IS_MISSING)));
     }
 
     @Test
@@ -136,7 +138,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.METADATA_PREFIX_IS_A_REQUIRED)));
+        assertThat(responseBody, is(containsString(METADATA_PREFIX_IS_A_REQUIRED)));
     }
 
     @Test
@@ -152,7 +154,24 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.BAD_ARGUMENT)));
+        assertThat(responseBody, is(containsString(BAD_ARGUMENT)));
+    }
+
+    @Test
+    public void shouldReturnErrorWhenGetRecordWhenApiIsDown() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockErrorRecordResponse();
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER);
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(ID_DOES_NOT_EXIST)));
     }
 
     @Test
@@ -185,7 +204,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.METADATA_FORMAT_NOT_SUPPORTED)));
+        assertThat(responseBody, is(containsString(METADATA_FORMAT_NOT_SUPPORTED)));
     }
 
     @Test
@@ -200,7 +219,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.NOT_A_LEGAL_PARAMETER)));
+        assertThat(responseBody, is(containsString(NOT_A_LEGAL_PARAMETER)));
     }
 
     @Test
@@ -268,6 +287,22 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
+    public void shouldReturnErrorResponseWhenAskedForListSetsButApiIsDown() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockErrorSetsResponse();
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListSets.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DC.name());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(NO_SET_HIERARCHY)));
+    }
+
+    @Test
     public void shouldReturnListIdentifiersResponseWhenAskedForListIdentifiers() throws IOException {
         init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
@@ -328,7 +363,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.METADATA_PREFIX_IS_A_REQUIRED)));
+        assertThat(responseBody, is(containsString(METADATA_PREFIX_IS_A_REQUIRED)));
     }
 
     @Test
@@ -343,7 +378,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.METADATA_FORMAT_NOT_SUPPORTED)));
+        assertThat(responseBody, is(containsString(METADATA_FORMAT_NOT_SUPPORTED)));
     }
 
     @Test
@@ -359,7 +394,24 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.UNKNOWN_SET_NAME)));
+        assertThat(responseBody, is(containsString(UNKNOWN_SET_NAME)));
+    }
+
+    @Test
+    public void shouldReturnErrorWhenAskedForListRecordsAndApiIsDown() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockErrorRecordsResponse();
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadataFormat.OAI_DATACITE.name());
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(NO_RECORDS_MATCH)));
     }
 
     @Test
@@ -460,14 +512,14 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.UNKNOWN_SET_NAME)));
+        assertThat(responseBody, is(containsString(UNKNOWN_SET_NAME)));
     }
 
     @Test
     public void shouldReturnErrorWhenClientNameFromEnvironmentIsUnknown() {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
-        when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn(UNKNOWN_CLIENT_NAME);
+        when(environment.readEnv(CLIENT_NAME_ENV)).thenReturn(UNKNOWN_CLIENT_NAME);
         context = mock(Context.class);
         assertThrows(RuntimeException.class, () ->  handler = new OaiProviderHandler(environment, httpClient));
     }
@@ -500,7 +552,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.ILLEGAL_DATE_FROM)));
+        assertThat(responseBody, is(containsString(ILLEGAL_DATE_FROM)));
     }
 
     @Test
@@ -516,7 +568,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.ILLEGAL_DATE_FROM)));
+        assertThat(responseBody, is(containsString(ILLEGAL_DATE_FROM)));
     }
 
     @Test
@@ -532,7 +584,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.ILLEGAL_DATE_UNTIL)));
+        assertThat(responseBody, is(containsString(ILLEGAL_DATE_UNTIL)));
     }
 
     @Test
@@ -549,7 +601,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.DIFFERENT_DATE_GRANULARITIES)));
+        assertThat(responseBody, is(containsString(DIFFERENT_DATE_GRANULARITIES)));
     }
 
     @Test
@@ -620,6 +672,12 @@ public class OaiProviderHandlerTest {
                 .willReturn(aResponse().withBody(faultyResponseBody).withStatus(HttpURLConnection.HTTP_OK)));
     }
 
+    private void mockErrorSetsResponse() {
+        String faultyResponseBody = FAULTY_JSON;
+        stubFor(get(urlPathMatching("/sets"))
+                .willReturn(aResponse().withBody(faultyResponseBody).withStatus(HttpURLConnection.HTTP_INTERNAL_ERROR)));
+    }
+
     private ObjectNode createSetsResponse() {
         var objectArray = dtoObjectMapper.createArrayNode();
         objectArray.add("bi");
@@ -643,6 +701,11 @@ public class OaiProviderHandlerTest {
                 .withStatus(HttpURLConnection.HTTP_OK)));
     }
 
+    private void mockErrorRecordResponse() {
+        stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(aResponse().withBody(FAULTY_JSON)
+                .withStatus(HttpURLConnection.HTTP_INTERNAL_ERROR)));
+    }
+
     private void mockDeletedRecordResponse() {
         ObjectNode deletedResponseBody = createDeletedRecordResponse();
         stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(aResponse().withBody(deletedResponseBody.toPrettyString())
@@ -659,6 +722,11 @@ public class OaiProviderHandlerTest {
     private void mockFaultyRecordsResponse() {
         stubFor(get(urlPathMatching("/records"))
                 .willReturn(aResponse().withBody(FAULTY_JSON).withStatus(HttpURLConnection.HTTP_OK)));
+    }
+
+    private void mockErrorRecordsResponse() {
+        stubFor(get(urlPathMatching("/records"))
+                .willReturn(aResponse().withBody(FAULTY_JSON).withStatus(HttpURLConnection.HTTP_INTERNAL_ERROR)));
     }
 
     private ObjectNode createRecordsResponse() {

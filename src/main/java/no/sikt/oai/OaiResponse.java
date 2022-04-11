@@ -71,7 +71,7 @@ public class OaiResponse {
         makeVerbStart(ListIdentifiers.name(), buffer);
 
         for (Record record : records) {
-            makeRecordHeader(record.isDeleted, record.identifier, record.lastUpdateDate, setSpec, buffer);
+            makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer);
         }
 
         String newResumptionToken = "";
@@ -205,22 +205,6 @@ public class OaiResponse {
             buffer.append("            </metadata>\n");
         }
         buffer.append("        </record>\n");
-    }
-
-    protected static void makeRecordHeader(boolean isDeleted, String identifier, Date lastUpdateDate, String setSpec,
-                                           StringBuilder buffer) {
-        if (isDeleted) {
-            buffer.append("        <header status=\"deleted\">\n");
-        } else {
-            buffer.append("        <header>\n");
-        }
-        buffer.append("            <identifier>").append(identifier).append("</identifier>\n");
-        buffer.append("            <datestamp>").append(Date2String(lastUpdateDate, FORMAT_ZULU_LONG))
-                .append("</datestamp>\n");
-        if (setSpec.length() > 0) {
-            buffer.append("            <setSpec>").append(setSpec).append("</setSpec>\n");
-        }
-        buffer.append("        </header>\n");
     }
 
     protected static void makeTimeUsed(String verb, long startTime, StringBuilder buffer) {

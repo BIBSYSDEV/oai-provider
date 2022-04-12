@@ -159,7 +159,7 @@ public class DlrAdapter implements Adapter {
                 createRecordContent(resource, metadataPrefix),
                 deleted,
                 getIdentifierPrefix() + resource.identifier,
-                TimeUtils.string2Date(resource.features.get("dlr_time_published"), TimeUtils.FORMAT_ZULU_SHORT));
+                TimeUtils.string2Date(resource.features.get("dlr_time_updated"), TimeUtils.FORMAT_ZULU_SHORT));
     }
 
     private String createRecordContent(Resource resource, String metadataPrefix) {

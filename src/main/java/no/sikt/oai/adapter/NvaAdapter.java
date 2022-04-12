@@ -3,7 +3,6 @@ package no.sikt.oai.adapter;
 import no.sikt.oai.OaiConstants;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
-import no.sikt.oai.exception.OaiException;
 import nva.commons.core.Environment;
 import nva.commons.core.paths.UriWrapper;
 
@@ -41,7 +40,7 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public String getEarliestTimestamp() {
-        return "1976-01-01T00:00:01Z";
+        return "2020-01-31T00:00:01Z";
     }
 
     @Override
@@ -56,7 +55,7 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public String getAdminEmail() {
-        return "nvaadmin@unit.no";
+        return "support@unit.no";
     }
 
     @Override
@@ -75,7 +74,7 @@ public class NvaAdapter implements Adapter {
     }
 
     @Override
-    public List<String> parseInstitutionResponse(String json) throws OaiException {
+    public List<String> parseInstitutionResponse(String json) {
         List<String> list = new ArrayList<>();
         list.add("ntnu");
         list.add("vid");
@@ -94,13 +93,7 @@ public class NvaAdapter implements Adapter {
     public URI getRecordUri(String identifier) {
         return UriWrapper
                 .fromUri(resourceUri)
-                .getUri();
-    }
-
-    @Override
-    public URI getRecordsUri(String identifier) {
-        return UriWrapper
-                .fromUri(resourcesUri)
+                .addChild(identifier)
                 .getUri();
     }
 
@@ -112,13 +105,12 @@ public class NvaAdapter implements Adapter {
     }
 
     @Override
-    public Record parseRecordResponse(String json, String metadataPrefix) throws OaiException {
+    public Record parseRecordResponse(String json, String metadataPrefix) {
         return new Record("", false, "1234", new Date());
     }
 
     @Override
-    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix)
-            throws OaiException {
+    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix) {
         Record record = new Record("", false, "1234", new Date());
         RecordsList records = new RecordsList(1);
         records.add(record);

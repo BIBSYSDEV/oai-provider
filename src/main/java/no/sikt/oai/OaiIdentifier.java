@@ -14,12 +14,12 @@ public class OaiIdentifier {
 
         try {
             if (!identifier.startsWith(prefix)) {
-                throw new OaiException(Verb.GetRecord.name(), BAD_ARGUMENT, ILLEGAL_IDENTIFIER);
+                throw new OaiException(BAD_ARGUMENT, ILLEGAL_IDENTIFIER);
             }
             this.prefix = prefix;
             setIdentifier(identifier.replace(prefix, ""));
         } catch (final Exception e) {
-            throw new OaiException(Verb.GetRecord.name(), BAD_ARGUMENT, String.format(ILLEGAL_IDENTIFIER_PREFIX, prefix));
+            throw new OaiException(BAD_ARGUMENT, String.format(ILLEGAL_IDENTIFIER_PREFIX, prefix));
         }
     }
 

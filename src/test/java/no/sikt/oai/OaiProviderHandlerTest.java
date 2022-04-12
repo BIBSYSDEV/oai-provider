@@ -19,8 +19,33 @@ import java.net.http.HttpClient;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static no.sikt.oai.MetadataFormat.OAI_DC;
 import static no.sikt.oai.MetadataFormat.QDC;
+import static no.sikt.oai.OaiConstants.BAD_ARGUMENT;
+import static no.sikt.oai.OaiConstants.BAD_VERB;
+import static no.sikt.oai.OaiConstants.CLIENT_NAME_ENV;
+import static no.sikt.oai.OaiConstants.CLIENT_TYPE_DLR;
+import static no.sikt.oai.OaiConstants.CLIENT_TYPE_NVA;
+import static no.sikt.oai.OaiConstants.DIFFERENT_DATE_GRANULARITIES;
+import static no.sikt.oai.OaiConstants.ID_DOES_NOT_EXIST;
+import static no.sikt.oai.OaiConstants.ILLEGAL_DATE_FROM;
+import static no.sikt.oai.OaiConstants.ILLEGAL_DATE_UNTIL;
+import static no.sikt.oai.OaiConstants.METADATA_FORMAT_NOT_SUPPORTED;
+import static no.sikt.oai.OaiConstants.METADATA_PREFIX_IS_A_REQUIRED;
+import static no.sikt.oai.OaiConstants.NOT_A_LEGAL_PARAMETER;
+import static no.sikt.oai.OaiConstants.NO_RECORDS_MATCH;
+import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
+import static no.sikt.oai.OaiConstants.RECORDS_URI_ENV;
+import static no.sikt.oai.OaiConstants.RECORD_URI_ENV;
+import static no.sikt.oai.OaiConstants.SETS_URI_ENV;
+import static no.sikt.oai.OaiConstants.UNKNOWN_SET_NAME;
+import static no.sikt.oai.OaiConstants.VERB_IS_MISSING;
 import static no.sikt.oai.RestApiConfig.restServiceObjectMapper;
 import static no.unit.nva.commons.json.JsonUtils.dtoObjectMapper;
 import static no.unit.nva.testutils.RandomDataGenerator.randomString;
@@ -28,18 +53,28 @@ import static nva.commons.apigateway.ApiGatewayHandler.ALLOWED_ORIGIN_ENV;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 public class OaiProviderHandlerTest {
 
     public static final String BLANK = " ";
     public static final String UNKNOWN_CLIENT_NAME = "Unknown client name";
     public static final String UNKNOWN_VERB = "UnknownVerb";
-    public static final String VALID_IDENTIFIER = "oai:dlr.unit.no:00000000-0000-0000-0000-000000000000";
+    public static final String FAKE_OAI_IDENTIFIER_NVA = "oai:nva.unit.no:9a1eae92-38bf-4002-a1a9-d21035242d30";
+    public static final String INVALID_NVA_IDENTIFIER = "oai:nva.unit.no:9a1eae92-38bf-4002-a1a9-d21035242d30-36";
+    public static final String REAL_OAI_IDENTIFIER_DLR = "oai:dlr.unit.no:9a1eae92-38bf-4002-a1a9-d21035242d30";
+    public static final String INVALID_DLR_IDENTIFIER = "oai:dlr.unit.no:9a1eae92-38bf-4002-a1a9-d21035242d30-36";
+    public static final String VALID_DLR_IDENTIFIER = "oai:dlr.unit.no:00000000-0000-0000-0000-000000000000";
+    public static final String FAULTY_JSON = "faultyJson";
+    public static final String UUID_REGEX = "^/[^/]+/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$";
+    public static final String RESUMPTION_TOKEN = "lr~sikt~~~qdc~50";
+    public static final String SET_NAME_SIKT = "sikt";
+    public static final String EXCEPTION = "Exception";
+    private final HttpClient httpClient = WiremockHttpClient.create();
     private OaiProviderHandler handler;
     private Environment environment;
     private Context context;
@@ -51,13 +86,12 @@ public class OaiProviderHandlerTest {
     public void init(String adapter) {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
-        when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn(adapter);
+        when(environment.readEnv(CLIENT_NAME_ENV)).thenReturn(adapter);
         startWiremockServer();
-        when(environment.readEnv(OaiConstants.SETS_URI_ENV)).thenReturn(serverUriSets.toString());
-        when(environment.readEnv(OaiConstants.RECORD_URI_ENV)).thenReturn(serverUriRecord.toString());
-        when(environment.readEnv(OaiConstants.RECORDS_URI_ENV)).thenReturn(serverUriRecords.toString());
+        when(environment.readEnv(SETS_URI_ENV)).thenReturn(serverUriSets.toString());
+        when(environment.readEnv(RECORD_URI_ENV)).thenReturn(serverUriRecord.toString());
+        when(environment.readEnv(RECORDS_URI_ENV)).thenReturn(serverUriRecords.toString());
         context = mock(Context.class);
-        HttpClient httpClient = WiremockHttpClient.create();
         mockSetsResponse();
         mockRecordResponse();
         mockRecordsResponse();
@@ -72,8 +106,8 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void handleRequestReturnsIdentifyOaiResponse() throws IOException {
-        init("DLR");
+    public void handleRequestReturnsIdentifyOaiResponseDLR() throws IOException {
+        init(CLIENT_TYPE_DLR);;
         TimeUtils timeUtils = new TimeUtils();
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
@@ -86,8 +120,22 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWithUnknownVerb() throws IOException {
-        init("DLR");
+    public void handleRequestReturnsIdentifyOaiResponseNVA() throws IOException {
+        init(CLIENT_TYPE_NVA);;
+        TimeUtils.date2String(null, null);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.Identify.name());
+        handler.handleRequest(handlerInputStream(queryParameters), output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.Identify.name())));
+    }
+
+    @Test
+    public void shouldReturnErrorWithUnknownVerb() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, UNKNOWN_VERB);
@@ -95,12 +143,12 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.BAD_VERB)));
+        assertThat(responseBody, is(containsString(BAD_VERB)));
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWithMissingVerb() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWithMissingVerb() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, BLANK);
@@ -108,12 +156,12 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.VERB_IS_MISSING)));
+        assertThat(responseBody, is(containsString(VERB_IS_MISSING)));
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenListRecordsWithoutResumptionToken() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenListRecordsWithoutResumptionToken() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -122,12 +170,12 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.METADATA_PREFIX_IS_A_REQUIRED)));
+        assertThat(responseBody, is(containsString(METADATA_PREFIX_IS_A_REQUIRED)));
     }
 
     @Test
-    public void shouldBadArgumentErrorWhenGetRecordWithInvalidIdentifier() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenGetRecordWithInvalidIdentifier() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -138,27 +186,80 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.BAD_ARGUMENT)));
+        assertThat(responseBody, is(containsString(BAD_ARGUMENT)));
     }
 
     @Test
-    public void shouldReturnCannotDisseminateFormatErrorWhenGetRecordWithoutMetadataPrefix() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenGetRecordWhenApiIsDown() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockErrorRecordResponse();
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
-        queryParameters.put(ValidParameterKey.IDENTIFIER.key, VALID_IDENTIFIER);
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER_DLR);
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.METADATA_FORMAT_NOT_SUPPORTED)));
+        assertThat(responseBody, is(containsString(ID_DOES_NOT_EXIST)));
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenRequestWithInvalidQueryParam() throws IOException {
-        init("DLR");
+    public void shouldReturnExceptionWhenGetRecordWhenComunicationCrashes() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        when(environment.readEnv(RECORD_URI_ENV)).thenReturn(FAULTY_JSON);
+        handler = new OaiProviderHandler(environment, httpClient);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER_DLR);
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_UNAVAILABLE, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(EXCEPTION)));
+    }
+
+    @Test
+    public void shouldReturnExceptionWhenGetRecordWithFaultyJsonResponse() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockFaultyRecordResponse();
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER_DLR);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_UNAVAILABLE, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(FAULTY_JSON)));
+    }
+
+    @Test
+    public void shouldReturnCannotDisseminateFormatErrorWhenGetRecordWithoutMetadataPrefix() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, VALID_DLR_IDENTIFIER);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(METADATA_FORMAT_NOT_SUPPORTED)));
+    }
+
+    @Test
+    public void shouldReturnErrorWhenRequestWithInvalidQueryParam() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -168,18 +269,18 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.NOT_A_LEGAL_PARAMETER)));
+        assertThat(responseBody, is(containsString(NOT_A_LEGAL_PARAMETER)));
     }
 
     @Test
     public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefixAndIdentifier() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
-        queryParameters.put(ValidParameterKey.SET.key, "sikt");
-        queryParameters.put(ValidParameterKey.IDENTIFIER.key, "oai:dlr.unit.no:9a1eae92-38bf-4002-a1a9-d21035242d30");
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER_DLR);
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -189,8 +290,59 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
+    public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefixAndIdentifierNVA() throws IOException {
+        init(CLIENT_TYPE_NVA);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, FAKE_OAI_IDENTIFIER_NVA);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
+    }
+
+    @Test
+    public void shouldReturnErrorResponseWhenAskedForGetRecordWithInvalidIdentifier() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, INVALID_DLR_IDENTIFIER);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(ID_DOES_NOT_EXIST)));
+    }
+
+    @Test
+    public void shouldReturnErrorResponseWhenAskedForGetRecordWithInvalidIdentifierNVA() throws IOException {
+        init(CLIENT_TYPE_NVA);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, INVALID_NVA_IDENTIFIER);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(ID_DOES_NOT_EXIST)));
+    }
+
+    @Test
     public void shouldReturnListMetadataFormatsResponseWhenAskedForListMetadataFormats() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListMetadataFormats.name());
@@ -205,11 +357,11 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListSetsResponseWhenAskedForListSets() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListSets.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DC.name());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -219,13 +371,47 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
+    public void shouldReturnErrorResponseWhenAskedForListSetsButApiIsDown() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockErrorSetsResponse();
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListSets.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DC.name());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(NO_SET_HIERARCHY)));
+    }
+
+    @Test
+    public void shouldReturnErrorResponseWhenAskedForListSetsButSomeMisbehaviorInServerCommunication()
+            throws IOException {
+        init(CLIENT_TYPE_DLR);
+        when(environment.readEnv(SETS_URI_ENV)).thenReturn(FAULTY_JSON);
+        handler = new OaiProviderHandler(environment, httpClient);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListSets.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DC.name());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_UNAVAILABLE, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(EXCEPTION)));
+    }
+
+    @Test
     public void shouldReturnListIdentifiersResponseWhenAskedForListIdentifiers() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
-        queryParameters.put(ValidParameterKey.SET.key, "sikt");
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -235,8 +421,42 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedForListIdentifiersWithoutMetadataPrefix() throws IOException {
-        init("DLR");
+    public void shouldReturnListIdentifiersResponseWhenAskedForListIdentifiersWithValidResumptionToken() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        queryParameters.put(ValidParameterKey.RESUMPTIONTOKEN.key, RESUMPTION_TOKEN);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.ListIdentifiers.name())));
+    }
+
+    @Test
+    public void shouldReturnErrorResponseWhenAskedForListIdentifiersButListSetResponseIsFaulty() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockFaultySetsResponse();
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_UNAVAILABLE, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(FAULTY_JSON)));
+    }
+
+    @Test
+    public void shouldReturnErrorWhenAskedForListIdentifiersWithoutMetadataPrefix() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
@@ -245,12 +465,12 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.METADATA_PREFIX_IS_A_REQUIRED)));
+        assertThat(responseBody, is(containsString(METADATA_PREFIX_IS_A_REQUIRED)));
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedForListRecordsWithNonExistingMetadataFormat() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenAskedForGettRecordWithNonExistingMetadataFormat() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -260,12 +480,12 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.METADATA_FORMAT_NOT_SUPPORTED)));
+        assertThat(responseBody, is(containsString(METADATA_FORMAT_NOT_SUPPORTED)));
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedForListRecordsWithNonExistingSetSpec() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenAskedForListRecordsWithNonExistingSetSpec() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -276,12 +496,47 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.UNKNOWN_SET_NAME)));
+        assertThat(responseBody, is(containsString(UNKNOWN_SET_NAME)));
+    }
+
+    @Test
+    public void shouldReturnErrorWhenAskedForListRecordsAndApiIsDown() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockErrorRecordsResponse();
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadataFormat.OAI_DATACITE.name());
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(NO_RECORDS_MATCH)));
+    }
+
+    @Test
+    public void shouldReturnExceptionWhenAskedForListRecordsAndServerCommunicationFails() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        when(environment.readEnv(RECORDS_URI_ENV)).thenReturn(FAULTY_JSON);
+        handler = new OaiProviderHandler(environment, httpClient);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadataFormat.OAI_DATACITE.name());
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_UNAVAILABLE, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(EXCEPTION)));
     }
 
     @Test
     public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingSetSpec() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -295,8 +550,24 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
+    public void shouldReturnExceptionWhenAskedForListRecordsWithFaultyJsonResponse() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockFaultyRecordsResponse();
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadataFormat.OAI_DATACITE.name());
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_UNAVAILABLE, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(FAULTY_JSON)));
+    }
+
+    @Test
     public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingNVASetSpec() throws IOException {
-        init("NVA");
+        init(CLIENT_TYPE_NVA);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -311,8 +582,46 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedForListRecordsWithNonExistingNVASetSpec() throws IOException {
-        init("NVA");
+    public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingNVASetSpecAndOaiDcMetadataPrefix()
+            throws IOException {
+        init(CLIENT_TYPE_DLR);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DC.name());
+        queryParameters.put(ValidParameterKey.SET.key, "BI");
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.ListRecords.name())));
+        assertThat(responseBody, is(containsString("<oai_dc:dc")));
+    }
+
+    @Test
+    public void shouldReturnDeletedRecordWhenAskedForGetRecordWithExistingWithIdentifierToDeletedRecord()
+            throws IOException {
+        init(CLIENT_TYPE_DLR);
+        mockDeletedRecordResponse();
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DC.name());
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER_DLR);
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
+        assertThat(responseBody, is(containsString("<header status=\"deleted\">")));
+        assertThat(responseBody, is(not(containsString("<metadata>"))));
+    }
+
+    @Test
+    public void shouldReturnErrorWhenAskedForListRecordsWithNonExistingNVASetSpec() throws IOException {
+        init(CLIENT_TYPE_NVA);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -323,25 +632,25 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.UNKNOWN_SET_NAME)));
+        assertThat(responseBody, is(containsString(UNKNOWN_SET_NAME)));
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenClientNameFromEnvironmentIsUnknown() {
+    public void shouldReturnErrorWhenClientNameFromEnvironmentIsUnknown() {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
-        when(environment.readEnv(OaiConstants.CLIENT_NAME_ENV)).thenReturn(UNKNOWN_CLIENT_NAME);
+        when(environment.readEnv(CLIENT_NAME_ENV)).thenReturn(UNKNOWN_CLIENT_NAME);
         context = mock(Context.class);
-        assertThrows(RuntimeException.class, () ->  handler = new OaiProviderHandler(environment));
+        assertThrows(RuntimeException.class, () ->  handler = new OaiProviderHandler(environment, httpClient));
     }
 
     @Test
     public void shouldReturnListRecordsResponseWhenAskedForListRecordsWithResumptionToken() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
-        queryParameters.put(ValidParameterKey.RESUMPTIONTOKEN.key, "lr~sikt~~~qdc~50");
+        queryParameters.put(ValidParameterKey.RESUMPTIONTOKEN.key, RESUMPTION_TOKEN);
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -351,8 +660,8 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedWithInvalidFromParam() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenAskedWithInvalidFromParam() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -363,12 +672,12 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.ILLEGAL_DATE_FROM)));
+        assertThat(responseBody, is(containsString(ILLEGAL_DATE_FROM)));
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedWithNullFromParam() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenAskedWithNullFromParam() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -379,12 +688,12 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.ILLEGAL_DATE_FROM)));
+        assertThat(responseBody, is(containsString(ILLEGAL_DATE_FROM)));
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedWithInvalidUntilParam() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenAskedWithInvalidUntilParam() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -395,12 +704,12 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.ILLEGAL_DATE_UNTIL)));
+        assertThat(responseBody, is(containsString(ILLEGAL_DATE_UNTIL)));
     }
 
     @Test
-    public void shouldReturnBadArgumentErrorWhenAskedWithDifferentLengthFromUntilParam() throws IOException {
-        init("DLR");
+    public void shouldReturnErrorWhenAskedWithDifferentLengthFromUntilParam() throws IOException {
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -412,18 +721,35 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(OaiConstants.DIFFERENT_DATE_GRANULARITIES)));
+        assertThat(responseBody, is(containsString(DIFFERENT_DATE_GRANULARITIES)));
     }
 
     @Test
     public void shouldReturnListRecordsResponseWhenAskedWithSameLengthFromUntilParam() throws IOException {
-        init("DLR");
+        init(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  QDC.name());
         queryParameters.put(ValidParameterKey.FROM.key, "2006-06-06");
         queryParameters.put(ValidParameterKey.UNTIL.key, "2007-06-06");
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.ListRecords.name())));
+    }
+
+    @Test
+    public void shouldReturnListRecordsResponseWhenAskedWithOnlyFromParam() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        var output = new ByteArrayOutputStream();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  QDC.name());
+        queryParameters.put(ValidParameterKey.FROM.key, "2006-06-06");
+        queryParameters.put(ValidParameterKey.UNTIL.key, "");
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -455,9 +781,46 @@ public class OaiProviderHandlerTest {
 
     private void mockSetsResponse() {
         ObjectNode responseBody = createSetsResponse();
-        stubFor(get(urlPathMatching("/sets"))
-                .willReturn(aResponse().withBody(responseBody
-                        .toPrettyString()).withStatus(HttpURLConnection.HTTP_OK)));
+        stubFor(get(urlPathMatching("/sets")).willReturn(ok().withBody(responseBody.toPrettyString())));
+    }
+
+    private void mockFaultySetsResponse() {
+        stubFor(get(urlPathMatching("/sets")).willReturn(ok().withBody(FAULTY_JSON)));
+    }
+
+    private void mockErrorSetsResponse() {
+        stubFor(get(urlPathMatching("/sets")).willReturn(serverError()));
+    }
+
+    private void mockRecordResponse() {
+        ObjectNode responseBody = createRecordResponse();
+        stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(ok().withBody(responseBody.toPrettyString())));
+    }
+
+    private void mockFaultyRecordResponse() {
+        stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(ok().withBody(FAULTY_JSON)));
+    }
+
+    private void mockErrorRecordResponse() {
+        stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(serverError()));
+    }
+
+    private void mockDeletedRecordResponse() {
+        ObjectNode deletedResponseBody = createDeletedRecordResponse();
+        stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(ok().withBody(deletedResponseBody.toPrettyString())));
+    }
+
+    private void mockRecordsResponse() {
+        ObjectNode responseBody = createRecordsResponse();
+        stubFor(get(urlPathMatching("/records")).willReturn(ok().withBody(responseBody.toPrettyString())));
+    }
+
+    private void mockFaultyRecordsResponse() {
+        stubFor(get(urlPathMatching("/records")).willReturn(ok().withBody(FAULTY_JSON)));
+    }
+
+    private void mockErrorRecordsResponse() {
+        stubFor(get(urlPathMatching("/records")).willReturn(serverError()));
     }
 
     private ObjectNode createSetsResponse() {
@@ -465,25 +828,11 @@ public class OaiProviderHandlerTest {
         objectArray.add("bi");
         objectArray.add("diku");
         objectArray.add("ntnu");
-        objectArray.add("sikt");
+        objectArray.add(SET_NAME_SIKT);
         objectArray.add("uit");
         var responseBodyElement = dtoObjectMapper.createObjectNode();
         responseBodyElement.set("institutions", objectArray);
         return responseBodyElement;
-    }
-
-    private void mockRecordsResponse() {
-        ObjectNode responseBody = createRecordsResponse();
-        stubFor(get(urlPathMatching("/records"))
-                .willReturn(aResponse().withBody(responseBody
-                        .toPrettyString()).withStatus(HttpURLConnection.HTTP_OK)));
-    }
-
-    private void mockRecordResponse() {
-        ObjectNode responseBody = createRecordResponse();
-        stubFor(get(urlPathMatching("^/[^/]+/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
-                .willReturn(aResponse().withBody(responseBody
-                        .toPrettyString()).withStatus(HttpURLConnection.HTTP_OK)));
     }
 
     private ObjectNode createRecordsResponse() {
@@ -512,6 +861,32 @@ public class OaiProviderHandlerTest {
         responseBodyFeaturesObject.put("dlr_time_published", "2021-08-12T08:45:42.154Z");
         responseBodyFeaturesObject.put("dlr_identifier_handle", "https://hdl.handle.net/11250.1/1234");
         responseBodyFeaturesObject.put("dlr_identifier_doi", "10.123/SIKT");
+        responseBodyElement.set("features", responseBodyFeaturesObject);
+        var responseBodyCreatorsArray = dtoObjectMapper.createArrayNode();
+        var responseBodyCreatorObject = dtoObjectMapper.createObjectNode();
+        var responseBodyCreatorFeaturesObject = dtoObjectMapper.createObjectNode();
+        responseBodyCreatorFeaturesObject.put("dlr_creator_name", "Nikoli Fixe");
+        responseBodyCreatorObject.set("features", responseBodyCreatorFeaturesObject);
+        responseBodyCreatorsArray.add(responseBodyCreatorObject);
+        responseBodyElement.set("creators", responseBodyCreatorsArray);
+        var responseBodyContributorsObject = dtoObjectMapper.createArrayNode();
+        responseBodyElement.set("contributors", responseBodyContributorsObject);
+        return responseBodyElement;
+    }
+
+    private ObjectNode createDeletedRecordResponse() {
+        var responseBodyElement = dtoObjectMapper.createObjectNode();
+        responseBodyElement.put("identifier", "1234");
+        var responseBodyFeaturesObject = dtoObjectMapper.createObjectNode();
+        responseBodyFeaturesObject.put("dlr_title", "title");
+        responseBodyFeaturesObject.put("dlr_description", "description");
+        responseBodyFeaturesObject.put("dlr_rights_license_name", "CC BY 4.0");
+        responseBodyFeaturesObject.put("dlr_time_created", "2021-08-09T08:25:22.552Z");
+        responseBodyFeaturesObject.put("dlr_time_published", "2021-08-12T08:45:42.154Z");
+        responseBodyFeaturesObject.put("dlr_time_updated", "2022-03-12T08:45:42.154Z");
+        responseBodyFeaturesObject.put("dlr_identifier_handle", "https://hdl.handle.net/11250.1/1234");
+        responseBodyFeaturesObject.put("dlr_identifier_doi", "10.123/SIKT");
+        responseBodyFeaturesObject.put("dlr_status_deleted", "true");
         responseBodyElement.set("features", responseBodyFeaturesObject);
         var responseBodyCreatorsArray = dtoObjectMapper.createArrayNode();
         var responseBodyCreatorObject = dtoObjectMapper.createObjectNode();

@@ -6,10 +6,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import no.sikt.oai.MetadataFormat;
 import no.sikt.oai.TimeUtils;
-import no.sikt.oai.Verb;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
-import no.sikt.oai.exception.OaiException;
+import no.sikt.oai.exception.InternalOaiException;
 import nva.commons.core.Environment;
 import nva.commons.core.paths.UriWrapper;
 
@@ -17,7 +16,10 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import static no.sikt.oai.OaiConstants.*;
+import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
+import static no.sikt.oai.OaiConstants.RECORDS_URI_ENV;
+import static no.sikt.oai.OaiConstants.RECORD_URI_ENV;
+import static no.sikt.oai.OaiConstants.SETS_URI_ENV;
 
 public class DlrAdapter implements Adapter {
 
@@ -49,7 +51,7 @@ public class DlrAdapter implements Adapter {
 
     @Override
     public String getEarliestTimestamp() {
-        return "1976-01-01T00:00:01Z";
+        return "2014-08-19T15:47:16Z";
     }
 
     @Override
@@ -83,27 +85,28 @@ public class DlrAdapter implements Adapter {
     }
 
     @Override
-    public List<String> parseInstitutionResponse(String json) throws OaiException {
+    public List<String> parseInstitutionResponse(String json) throws InternalOaiException {
         mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
         try {
             return mapper.readValue(json, Institutions.class).institutions;
         } catch (JsonProcessingException e) {
-            throw new OaiException(Verb.ListSets.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
+            throw new InternalOaiException(e, HTTP_UNAVAILABLE);
         }
     }
 
     @Override
-    public Record parseRecordResponse(String json, String metadataPrefix) throws OaiException {
+    public Record parseRecordResponse(String json, String metadataPrefix) throws InternalOaiException {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         try {
             return createRecordFromResource(mapper.readValue(json, Resource.class), metadataPrefix);
         } catch (JsonProcessingException e) {
-            throw new OaiException(Verb.GetRecord.name(), NO_SET_HIERARCHY, NO_SETS_FOUND);
+            throw new InternalOaiException(e, HTTP_UNAVAILABLE);
         }
     }
 
     @Override
-    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix) throws OaiException {
+    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix)
+            throws InternalOaiException {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         try {
             ResourceSearchResponse resourceSearchResponse = mapper.readValue(json, ResourceSearchResponse.class);
@@ -113,7 +116,7 @@ public class DlrAdapter implements Adapter {
             }
             return records;
         } catch (JsonProcessingException e) {
-            throw new OaiException(verb, NO_SET_HIERARCHY, NO_SETS_FOUND);
+            throw new InternalOaiException(e, HTTP_UNAVAILABLE);
         }
     }
 
@@ -128,14 +131,6 @@ public class DlrAdapter implements Adapter {
     public URI getRecordUri(String identifier) {
         return UriWrapper
                 .fromUri(resourceUri)
-                .addChild(identifier)
-                .getUri();
-    }
-
-    @Override
-    public URI getRecordsUri(String identifier) {
-        return UriWrapper
-                .fromUri(resourcesUri)
                 .addChild(identifier)
                 .getUri();
     }
@@ -159,11 +154,12 @@ public class DlrAdapter implements Adapter {
     }
 
     private Record createRecordFromResource(Resource resource, String metadataPrefix) {
+        boolean deleted = Boolean.parseBoolean(resource.features.get("dlr_status_deleted"));
         return new Record(
                 createRecordContent(resource, metadataPrefix),
-                false,
+                deleted,
                 getIdentifierPrefix() + resource.identifier,
-                TimeUtils.String2Date(resource.features.get("dlr_time_published"), TimeUtils.FORMAT_ZULU_SHORT));
+                TimeUtils.string2Date(resource.features.get("dlr_time_published"), TimeUtils.FORMAT_ZULU_SHORT));
     }
 
     private String createRecordContent(Resource resource, String metadataPrefix) {

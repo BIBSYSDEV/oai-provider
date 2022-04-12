@@ -8,7 +8,7 @@ import nva.commons.core.JacocoGenerated;
 import java.util.Date;
 import java.util.List;
 
-import static no.sikt.oai.TimeUtils.Date2String;
+import static no.sikt.oai.TimeUtils.date2String;
 import static no.sikt.oai.TimeUtils.FORMAT_ZULU_LONG;
 import static no.sikt.oai.Verb.GetRecord;
 import static no.sikt.oai.Verb.Identify;
@@ -188,7 +188,7 @@ public class OaiResponse {
             buffer.append("            <header>\n");
         }
         buffer.append("                <identifier>").append(identifier).append("</identifier>\n");
-        buffer.append("                <datestamp>").append(Date2String(lastUpdateDate, FORMAT_ZULU_LONG))
+        buffer.append("                <datestamp>").append(date2String(lastUpdateDate, FORMAT_ZULU_LONG))
                 .append("</datestamp>\n");
         if (setSpec.length() > 0) {
             buffer.append("                <setSpec>").append(setSpec).append("</setSpec>\n");

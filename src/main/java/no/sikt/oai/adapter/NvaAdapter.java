@@ -40,7 +40,7 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public String getEarliestTimestamp() {
-        return "1976-01-01T00:00:01Z";
+        return "2020-01-31T00:00:01Z";
     }
 
     @Override
@@ -55,7 +55,7 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public String getAdminEmail() {
-        return "nvaadmin@unit.no";
+        return "support@unit.no";
     }
 
     @Override
@@ -93,6 +93,7 @@ public class NvaAdapter implements Adapter {
     public URI getRecordUri(String identifier) {
         return UriWrapper
                 .fromUri(resourceUri)
+                .addChild(identifier)
                 .getUri();
     }
 

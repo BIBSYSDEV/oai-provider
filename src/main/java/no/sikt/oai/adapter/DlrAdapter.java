@@ -51,7 +51,7 @@ public class DlrAdapter implements Adapter {
 
     @Override
     public String getEarliestTimestamp() {
-        return "1976-01-01T00:00:01Z";
+        return "2014-08-19T15:47:16Z";
     }
 
     @Override
@@ -159,7 +159,7 @@ public class DlrAdapter implements Adapter {
                 createRecordContent(resource, metadataPrefix),
                 deleted,
                 getIdentifierPrefix() + resource.identifier,
-                TimeUtils.String2Date(resource.features.get("dlr_time_published"), TimeUtils.FORMAT_ZULU_SHORT));
+                TimeUtils.string2Date(resource.features.get("dlr_time_published"), TimeUtils.FORMAT_ZULU_SHORT));
     }
 
     private String createRecordContent(Resource resource, String metadataPrefix) {

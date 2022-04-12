@@ -100,14 +100,15 @@ public class OaiProviderHandlerTest {
 
     @AfterEach
     public void tearDown() {
-        if(httpServer != null && httpServer.isRunning()) {
+        if (httpServer != null && httpServer.isRunning()) {
             httpServer.stop();
         }
     }
 
     @Test
     public void handleRequestReturnsIdentifyOaiResponseDLR() throws IOException {
-        init(CLIENT_TYPE_DLR);;
+        init(CLIENT_TYPE_DLR);
+        ;
         TimeUtils timeUtils = new TimeUtils();
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
@@ -121,7 +122,8 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void handleRequestReturnsIdentifyOaiResponseNVA() throws IOException {
-        init(CLIENT_TYPE_NVA);;
+        init(CLIENT_TYPE_NVA);
+        ;
         TimeUtils.date2String(null, null);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
@@ -263,7 +265,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
-        queryParameters.put(randomString(),  randomString());
+        queryParameters.put(randomString(), randomString());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -641,7 +643,7 @@ public class OaiProviderHandlerTest {
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
         when(environment.readEnv(CLIENT_NAME_ENV)).thenReturn(UNKNOWN_CLIENT_NAME);
         context = mock(Context.class);
-        assertThrows(RuntimeException.class, () ->  handler = new OaiProviderHandler(environment, httpClient));
+        assertThrows(RuntimeException.class, () -> handler = new OaiProviderHandler(environment, httpClient));
     }
 
     @Test
@@ -666,7 +668,7 @@ public class OaiProviderHandlerTest {
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
-        queryParameters.put(ValidParameterKey.FROM.key,  randomString());
+        queryParameters.put(ValidParameterKey.FROM.key, randomString());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -698,7 +700,7 @@ public class OaiProviderHandlerTest {
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
-        queryParameters.put(ValidParameterKey.UNTIL.key,  randomString());
+        queryParameters.put(ValidParameterKey.UNTIL.key, randomString());
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
         var gatewayResponse = parseSuccessResponse(output.toString());
@@ -730,7 +732,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  QDC.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
         queryParameters.put(ValidParameterKey.FROM.key, "2006-06-06");
         queryParameters.put(ValidParameterKey.UNTIL.key, "2007-06-06");
         var inputStream = handlerInputStream(queryParameters);
@@ -747,7 +749,7 @@ public class OaiProviderHandlerTest {
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key,  QDC.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
         queryParameters.put(ValidParameterKey.FROM.key, "2006-06-06");
         queryParameters.put(ValidParameterKey.UNTIL.key, "");
         var inputStream = handlerInputStream(queryParameters);
@@ -842,10 +844,67 @@ public class OaiProviderHandlerTest {
         responseBodyElement.put("numFound", 4);
         responseBodyElement.put("queryTime", 0);
         var objectArray = dtoObjectMapper.createArrayNode();
-        objectArray.add("{\"identifier\":\"fc2eff7c-5061-47d1-9828-7b3f64c57c67\",\"features\":{\"dlr_access\":\"open\",\"dlr_app\":\"learning\",\"dlr_content\":\"masse_text.txt\",\"dlr_content_type\":\"file\",\"dlr_description\":\"Redigert etter padfasd f\\nlisering\",\"dlr_identifier\":\"fc2eff7c-5061-47d1-9828-7b3f64c57c67\",\"dlr_licensehelper_contains_other_peoples_work\":\"no\",\"dlr_resource\":\"true\",\"dlr_resource_learning\":\"true\",\"dlr_rights_license_name\":\"CC BY 4.0\",\"dlr_status_published\":\"true\",\"dlr_storage_id\":\"unit\",\"dlr_submitter_email\":\"billyga@ntnu.no\",\"dlr_time_created\":\"2021-05-05T09:15:40.028Z\",\"dlr_time_published\":\"2021-05-05T09:16:02.045Z\",\"dlr_title\":\"masse text redigert 3\",\"dlr_type\":\"Presentation\"},\"subjects\":[],\"courses\":[],\"tags\":[\"Nytt emneord\",\"test\"],\"types\":[\"learning\"],\"projects\":[],\"funders\":[],\"geographicalCoverages\":[],\"observationalUnits\":[],\"processMethods\":[],\"creators\":[{\"features\":{\"dlr_creator_identifier\":\"b72c3dad-e671-40c2-8f8d-5dfd3f52b41f\",\"dlr_creator_name\":\"Redigert etter publisering\",\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":\"2021-06-08T10:12:37.836Z\"}},{\"features\":{\"dlr_creator_identifier\":\"7c9b3e91-faf1-4eef-9f35-b7ea9f9683ad\",\"dlr_creator_name\":\"Anette Olli Siiri\",\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":\"2021-05-05T09:15:42.259Z\"}},{\"features\":{\"dlr_creator_identifier\":\"dece511f-5ee7-48a6-ab48-551aa51122e7\",\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":\"2021-07-02T13:54:50.427Z\"}}],\"contributors\":[{\"features\":{\"dlr_contributor_identifier\":\"af822c16-1825-4aaf-a15d-63dffcb8640b\",\"dlr_contributor_name\":\"Redigert etter publisering\",\"dlr_contributor_time_created\":\"2021-06-08T10:12:48.121Z\",\"dlr_contributor_type\":\"Producer\"}},{\"features\":{\"dlr_contributor_identifier\":\"2832c74a-7aac-4277-95b2-cc9dd59bd1ff\",\"dlr_contributor_name\":\"unit\",\"dlr_contributor_time_created\":\"2021-05-05T09:15:40.798Z\",\"dlr_contributor_type\":\"HostingInstitution\"}}],\"accessRead\":[],\"accessWrite\":[\"billyga@ntnu.no\"]}");
-        objectArray.add("{\"identifier\":\"3ccd8a0f-f831-485b-ab0c-7fd023fe76ab\",\"features\":{\"dlr_access\":\"open\",\"dlr_app\":\"learning\",\"dlr_content\":\"https://adressa.no\",\"dlr_content_type\":\"link\",\"dlr_description\":\"Siste nytt innen nyheter, sport, fotball, økonomi, kultur, reise, jobb og mye \\n\\n\\nnfdsfsdfds\\n\\n\\ner fra Norges eldste dagsavis\",\"dlr_identifier\":\"3ccd8a0f-f831-485b-ab0c-7fd023fe76ab\",\"dlr_licensehelper_can_be_used_commercially\":\"undefined\",\"dlr_licensehelper_contains_other_peoples_work\":\"no\",\"dlr_licensehelper_others_can_modify_and_build_upon\":\"undefined\",\"dlr_licensehelper_resource_restriction\":\"CC BY 4.0\",\"dlr_resource\":\"true\",\"dlr_resource_learning\":\"true\",\"dlr_rights_license_name\":\"CC BY 4.0\",\"dlr_status_published\":\"true\",\"dlr_storage_id\":\"unit\",\"dlr_submitter_email\":\"nr@unit.no\",\"dlr_time_created\":\"2022-02-02T08:45:43.422Z\",\"dlr_time_published\":\"2022-02-02T08:46:16.878Z\",\"dlr_title\":\"Adressa.no\",\"dlr_type\":\"Document\"},\"subjects\":[],\"courses\":[],\"tags\":[\"dødsfall\",\"eadressa\",\"nyheter\",\"skattelister\",\"trafikk\",\"trondheim\",\"trønder\",\"ukeadressa\"],\"types\":[\"learning\"],\"projects\":[],\"funders\":[],\"geographicalCoverages\":[],\"observationalUnits\":[],\"processMethods\":[],\"creators\":[{\"features\":{\"dlr_creator_identifier\":\"cc5b0211-4956-4845-94f2-be2e67d3e503\",\"dlr_creator_name\":\"Nikolai Fikse Raanes\",\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":\"2022-02-02T08:45:47.469Z\"}}],\"contributors\":[{\"features\":{\"dlr_contributor_identifier\":\"48811385-070c-40c5-befe-50501cf50d2f\",\"dlr_contributor_name\":\"Handelshøyskolen BI\",\"dlr_contributor_time_created\":\"2022-02-02T08:47:53.056Z\",\"dlr_contributor_type\":\"HostingInstitution\"}},{\"features\":{\"dlr_contributor_identifier\":\"3b8d343a-6275-4480-9040-4b0325aca7a9\",\"dlr_contributor_name\":\"BIBSYS\",\"dlr_contributor_time_created\":\"2022-02-02T08:48:26.797Z\",\"dlr_contributor_type\":\"HostingInstitution\"}}],\"accessRead\":[],\"accessWrite\":[\"nr@unit.no\"]}");
-        objectArray.add("{\"identifier\":\"342cfbae-4844-476d-8516-f112861d8dec\",\"features\":{\"dlr_access\":\"open\",\"dlr_app\":\"learning\",\"dlr_content\":\"https://www.facebook.com/NTNUbibliotek/posts/2917760898259307\",\"dlr_content_type\":\"link\",\"dlr_description\":\"See posts, photos and more on Fafsldøflsdæfl\\n\\nfsdkølfsdkøflsdkø\\n\\n\\nkfsdølkfscebook.\",\"dlr_identifier\":\"342cfbae-4844-476d-8516-f112861d8dec\",\"dlr_licensehelper_can_be_used_commercially\":\"undefined\",\"dlr_licensehelper_contains_other_peoples_work\":\"no\",\"dlr_licensehelper_others_can_modify_and_build_upon\":\"undefined\",\"dlr_licensehelper_resource_restriction\":\"CC BY 4.0\",\"dlr_resource\":\"true\",\"dlr_resource_learning\":\"true\",\"dlr_rights_license_name\":\"CC BY 4.0\",\"dlr_status_published\":\"true\",\"dlr_storage_id\":\"unit\",\"dlr_submitter_email\":\"pcb@unit.no\",\"dlr_time_created\":\"2022-02-10T11:19:59.537Z\",\"dlr_time_published\":\"2022-02-10T11:20:30.304Z\",\"dlr_title\":\"Log in or sign up to view\",\"dlr_type\":\"Document\"},\"subjects\":[],\"courses\":[],\"tags\":[],\"types\":[\"learning\"],\"projects\":[],\"funders\":[],\"geographicalCoverages\":[],\"observationalUnits\":[],\"processMethods\":[],\"creators\":[{\"features\":{\"dlr_creator_identifier\":\"a129a11f-dcce-4b34-bcc0-f9f64629e170\",\"dlr_creator_name\":\"Per Christian Bjelke\",\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":\"2022-02-10T11:20:03.925Z\"}}],\"contributors\":[{\"features\":{\"dlr_contributor_identifier\":\"224742ba-4df0-4501-8601-9a965b445188\",\"dlr_contributor_name\":\"UNIT\",\"dlr_contributor_time_created\":\"2022-02-10T11:20:01.244Z\",\"dlr_contributor_type\":\"HostingInstitution\"}}],\"accessRead\":[],\"accessWrite\":[\"pcb@unit.no\"]}");
-        objectArray.add("{\"identifier\":\"ce2e98d1-4df3-4ce9-a42f-182218beca3e\",\"features\":{\"dlr_access\":\"private\",\"dlr_app\":\"learning\",\"dlr_content\":\"pug2.jpeg\",\"dlr_content_type\":\"file\",\"dlr_identifier\":\"ce2e98d1-4df3-4ce9-a42f-182218beca3e\",\"dlr_licensehelper_contains_other_peoples_work\":\"yes\",\"dlr_licensehelper_usage_cleared_with_owner\":\"no_clearance\",\"dlr_resource\":\"true\",\"dlr_resource_learning\":\"true\",\"dlr_rights_license_name\":\"CC BY-NC-SA 4.0\",\"dlr_status_published\":\"true\",\"dlr_storage_id\":\"unit\",\"dlr_submitter_email\":\"ansi@unit.no\",\"dlr_time_created\":\"2022-03-21T09:22:03.509Z\",\"dlr_time_published\":\"2022-03-22T09:51:08.677Z\",\"dlr_title\":\"pug2\",\"dlr_type\":\"Image\"},\"subjects\":[],\"courses\":[],\"tags\":[],\"types\":[\"learning\"],\"projects\":[],\"funders\":[],\"geographicalCoverages\":[],\"observationalUnits\":[],\"processMethods\":[],\"creators\":[{\"features\":{\"dlr_creator_identifier\":\"2ef37cbe-3fda-4d7d-84c2-1442101428f8\",\"dlr_creator_name\":\"Anette Olli Siiri\",\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":\"2022-03-21T09:22:06.950Z\"}}],\"contributors\":[{\"features\":{\"dlr_contributor_identifier\":\"9b4cd8fe-b78f-485d-a0cd-f94edf21daeb\",\"dlr_contributor_name\":\"UNIT\",\"dlr_contributor_time_created\":\"2022-03-21T09:22:04.845Z\",\"dlr_contributor_type\":\"HostingInstitution\"}}],\"accessRead\":[],\"accessWrite\":[\"ansi@unit.no\"]}");
+        objectArray.add("{\"identifier\":\"fc2eff7c-5061-47d1-9828-7b3f64c57c67\"," +
+                "\"features\":{\"dlr_access\":\"open\",\"dlr_app\":\"learning\",\"dlr_content\":\"masse_text.txt\"," +
+                "\"dlr_content_type\":\"file\",\"dlr_description\":\"Redigert etter padfasd f\\nlisering\"," +
+                "\"dlr_identifier\":\"fc2eff7c-5061-47d1-9828-7b3f64c57c67\"," +
+                "\"dlr_licensehelper_contains_other_peoples_work\":\"no\",\"dlr_resource\":\"true\"," +
+                "\"dlr_resource_learning\":\"true\",\"dlr_rights_license_name\":\"CC BY 4.0\"," +
+                "\"dlr_status_published\":\"true\",\"dlr_storage_id\":\"unit\",\"dlr_submitter_email\":" +
+                "\"billyga@ntnu.no\",\"dlr_time_created\":\"2021-05-05T09:15:40.028Z\",\"dlr_time_published\":" +
+                "\"2021-05-05T09:16:02.045Z\",\"dlr_time_updated\":\"2021-05-05T09:15:40.798Z\",\"dlr_title\":" +
+                "\"masse text redigert 3\",\"dlr_type\":\"Presentation\"}," +
+                "\"subjects\":[],\"courses\":[],\"tags\":[\"Nytt emneord\",\"test\"],\"types\":[\"learning\"]," +
+                "\"projects\":[],\"funders\":[],\"geographicalCoverages\":[],\"observationalUnits\":[]," +
+                "\"processMethods\":[],\"creators\":[{\"features\":{\"dlr_creator_identifier\":" +
+                "\"b72c3dad-e671-40c2-8f8d-5dfd3f52b41f\",\"dlr_creator_name\":\"Redigert etter publisering\"," +
+                "\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":\"2021-06-08T10:12:37.836Z\"}}," +
+                "{\"features\":{\"dlr_creator_identifier\":\"7c9b3e91-faf1-4eef-9f35-b7ea9f9683ad\"," +
+                "\"dlr_creator_name\":\"Anette Olli Siiri\",\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":" +
+                "\"2021-05-05T09:15:42.259Z\"}},{\"features\":{\"dlr_creator_identifier\":" +
+                "\"dece511f-5ee7-48a6-ab48-551aa51122e7\",\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":" +
+                "\"2021-07-02T13:54:50.427Z\"}}],\"contributors\":[{\"features\":{\"dlr_contributor_identifier\":" +
+                "\"af822c16-1825-4aaf-a15d-63dffcb8640b\",\"dlr_contributor_name\":\"Redigert etter publisering\"," +
+                "\"dlr_contributor_time_created\":\"2021-06-08T10:12:48.121Z\",\"dlr_contributor_type\":\"Producer\"}}," +
+                "{\"features\":{\"dlr_contributor_identifier\":\"2832c74a-7aac-4277-95b2-cc9dd59bd1ff\"," +
+                "\"dlr_contributor_name\":\"unit\"," +
+                "\"dlr_contributor_time_created\":\"2021-05-05T09:15:40.798Z\",\"dlr_contributor_type\":" +
+                "\"HostingInstitution\"}}],\"accessRead\":[],\"accessWrite\":[\"billyga@ntnu.no\"]}");
+        objectArray.add("{\"identifier\":\"3ccd8a0f-f831-485b-ab0c-7fd023fe76ab\"," +
+                "\"features\":{\"dlr_access\":\"open\",\"dlr_app\":\"learning\",\"dlr_content\":\"https://adressa" +
+                ".no\",\"dlr_content_type\":\"link\",\"dlr_description\":\"Siste nytt innen nyheter, sport, fotball, " +
+                "økonomi, kultur, reise, jobb og mye \\n\\n\\nnfdsfsdfds\\n\\n\\ner fra Norges eldste dagsavis\"," +
+                "\"dlr_identifier\":\"3ccd8a0f-f831-485b-ab0c-7fd023fe76ab\"," +
+                "\"dlr_licensehelper_can_be_used_commercially\":\"undefined\",\"dlr_licensehelper_contains_other_peoples_work\":\"no\",\"dlr_licensehelper_others_can_modify_and_build_upon\":\"undefined\",\"dlr_licensehelper_resource_restriction\":\"CC BY 4.0\",\"dlr_resource\":\"true\",\"dlr_resource_learning\":\"true\",\"dlr_rights_license_name\":\"CC BY 4.0\",\"dlr_status_published\":\"true\",\"dlr_storage_id\":\"unit\",\"dlr_submitter_email\":\"nr@unit.no\",\"dlr_time_created\":\"2022-02-02T08:45:43.422Z\",\"dlr_time_updated\":\"2022-02-02T08:45:43.422Z\",\"dlr_time_published\":\"2022-02-02T08:46:16.878Z\",\"dlr_title\":\"Adressa.no\",\"dlr_type\":\"Document\"},\"subjects\":[],\"courses\":[],\"tags\":[\"dødsfall\",\"eadressa\",\"nyheter\",\"skattelister\",\"trafikk\",\"trondheim\",\"trønder\",\"ukeadressa\"],\"types\":[\"learning\"],\"projects\":[],\"funders\":[],\"geographicalCoverages\":[],\"observationalUnits\":[],\"processMethods\":[],\"creators\":[{\"features\":{\"dlr_creator_identifier\":\"cc5b0211-4956-4845-94f2-be2e67d3e503\",\"dlr_creator_name\":\"Nikolai Fikse Raanes\",\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":\"2022-02-02T08:45:47.469Z\"}}],\"contributors\":[{\"features\":{\"dlr_contributor_identifier\":\"48811385-070c-40c5-befe-50501cf50d2f\",\"dlr_contributor_name\":\"Handelshøyskolen BI\",\"dlr_contributor_time_created\":\"2022-02-02T08:47:53.056Z\",\"dlr_contributor_type\":\"HostingInstitution\"}},{\"features\":{\"dlr_contributor_identifier\":\"3b8d343a-6275-4480-9040-4b0325aca7a9\",\"dlr_contributor_name\":\"BIBSYS\",\"dlr_contributor_time_created\":\"2022-02-02T08:48:26.797Z\",\"dlr_contributor_type\":\"HostingInstitution\"}}],\"accessRead\":[],\"accessWrite\":[\"nr@unit.no\"]}");
+        objectArray.add("{\"identifier\":\"342cfbae-4844-476d-8516-f112861d8dec\"," +
+                "\"features\":{\"dlr_access\":\"open\",\"dlr_app\":\"learning\",\"dlr_content\":\"https://www" +
+                ".facebook.com/NTNUbibliotek/posts/2917760898259307\",\"dlr_content_type\":\"link\"," +
+                "\"dlr_description\":\"See posts, photos and more on " +
+                "Fafsldøflsdæfl\\n\\nfsdkølfsdkøflsdkø\\n\\n\\nkfsdølkfscebook.\"," +
+                "\"dlr_identifier\":\"342cfbae-4844-476d-8516-f112861d8dec\"," +
+                "\"dlr_licensehelper_can_be_used_commercially\":\"undefined\"," +
+                "\"dlr_licensehelper_contains_other_peoples_work\":\"no\"," +
+                "\"dlr_licensehelper_others_can_modify_and_build_upon\":\"undefined\"," +
+                "\"dlr_licensehelper_resource_restriction\":\"CC BY 4.0\",\"dlr_resource\":\"true\"," +
+                "\"dlr_resource_learning\":\"true\",\"dlr_rights_license_name\":\"CC BY 4.0\",\"dlr_status_published\":" +
+                "\"true\",\"dlr_storage_id\":\"unit\",\"dlr_submitter_email\":\"pcb@unit.no\"," +
+                "\"dlr_time_created\":\"2022-02-10T11:19:59.537Z\",\"dlr_time_published\":\"2022-02-10T11:20:30" +
+                ".304Z\",\"dlr_time_updated\":\"2022-02-10T11:20:30.304Z\"," +
+                "\"dlr_title\":\"Log in or sign up to view\",\"dlr_type\":\"Document\"},\"subjects\":[],\"courses\":[]," +
+                "\"tags\":[],\"types\":[\"learning\"],\"projects\":[],\"funders\":[],\"geographicalCoverages\":[]," +
+                "\"observationalUnits\":[],\"processMethods\":[],\"creators\":[{\"features\":{\"dlr_creator_identifier\"" +
+                ":\"a129a11f-dcce-4b34-bcc0-f9f64629e170\",\"dlr_creator_name\":\"Per Christian Bjelke\"," +
+                "\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":\"2022-02-10T11:20:03.925Z\"," +
+                "\"dlr_creator_time_updated\":\"2022-02-10T11:20:03.925Z\"}}],\"contributors\":" +
+                "[{\"features\":{\"dlr_contributor_identifier\":\"224742ba-4df0-4501-8601-9a965b445188\"," +
+                "\"dlr_contributor_name\":\"UNIT\",\"dlr_contributor_time_created\":\"2022-02-10T11:20:01.244Z\"," +
+                "\"dlr_contributor_type\":\"HostingInstitution\"}}],\"accessRead\":[],\"accessWrite\":[\"pcb@unit.no\"]}");
+        objectArray.add("{\"identifier\":\"ce2e98d1-4df3-4ce9-a42f-182218beca3e\"," +
+                "\"features\":{\"dlr_access\":\"private\",\"dlr_app\":\"learning\",\"dlr_content\":\"pug2.jpeg\"," +
+                "\"dlr_content_type\":\"file\",\"dlr_identifier\":\"ce2e98d1-4df3-4ce9-a42f-182218beca3e\"," +
+                "\"dlr_licensehelper_contains_other_peoples_work\":\"yes\"," +
+                "\"dlr_licensehelper_usage_cleared_with_owner\":\"no_clearance\",\"dlr_resource\":\"true\"," +
+                "\"dlr_resource_learning\":\"true\",\"dlr_rights_license_name\":\"CC BY-NC-SA 4.0\",\"dlr_status_published\":\"true\",\"dlr_storage_id\":\"unit\",\"dlr_submitter_email\":\"ansi@unit.no\",\"dlr_time_created\":\"2022-03-21T09:22:03.509Z\",\"dlr_time_updated\":\"2022-03-21T09:22:03.509Z\",\"dlr_time_published\":\"2022-03-22T09:51:08.677Z\",\"dlr_title\":\"pug2\",\"dlr_type\":\"Image\"},\"subjects\":[],\"courses\":[],\"tags\":[],\"types\":[\"learning\"],\"projects\":[],\"funders\":[],\"geographicalCoverages\":[],\"observationalUnits\":[],\"processMethods\":[],\"creators\":[{\"features\":{\"dlr_creator_identifier\":\"2ef37cbe-3fda-4d7d-84c2-1442101428f8\",\"dlr_creator_name\":\"Anette Olli Siiri\",\"dlr_creator_order\":\"0\",\"dlr_creator_time_created\":\"2022-03-21T09:22:06.950Z\"}}],\"contributors\":[{\"features\":{\"dlr_contributor_identifier\":\"9b4cd8fe-b78f-485d-a0cd-f94edf21daeb\",\"dlr_contributor_name\":\"UNIT\",\"dlr_contributor_time_created\":\"2022-03-21T09:22:04.845Z\",\"dlr_contributor_type\":\"HostingInstitution\"}}],\"accessRead\":[],\"accessWrite\":[\"ansi@unit.no\"]}");
         responseBodyElement.set("resourcesAsJson", objectArray);
         return responseBodyElement;
     }
@@ -859,6 +918,7 @@ public class OaiProviderHandlerTest {
         responseBodyFeaturesObject.put("dlr_rights_license_name", "CC BY 4.0");
         responseBodyFeaturesObject.put("dlr_time_created", "2021-08-09T08:25:22.552Z");
         responseBodyFeaturesObject.put("dlr_time_published", "2021-08-12T08:45:42.154Z");
+        responseBodyFeaturesObject.put("dlr_time_updated", "2022-03-12T08:45:42.154Z");
         responseBodyFeaturesObject.put("dlr_identifier_handle", "https://hdl.handle.net/11250.1/1234");
         responseBodyFeaturesObject.put("dlr_identifier_doi", "10.123/SIKT");
         responseBodyElement.set("features", responseBodyFeaturesObject);

@@ -17,6 +17,18 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<String>
     Default: 'OAI_CLIENT_NAME'
     Description: DLR/NVA defines adapter for oai-data-mapping
+  SetsUri:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: 'oai_sets_uri'
+    Description: uri for api endpoint to retrieve sets (customers/institions)
+  RecordUri:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: 'oai_record_uri'
+    Description: uri for api endpoint to get single record
+  RecordsUri:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: 'oai_records_uri'
+    Description: uri for api endpoint to search for records
 
 Conditions:
   HasDomainName: !Not [!Equals [!Ref CustomDomain, '']]
@@ -124,6 +136,9 @@ Resources:
         Variables:
           ALLOWED_ORIGIN: '*'
           OAI_CLIENT_NAME: !Ref OaiClientName
+          SETS_URI: !Ref SetsUri
+          RECORD_URI: !Ref RecordUri
+          RECORDS_URI: !Ref RecordsUri
       Events:
         OaiProviderEvent:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api

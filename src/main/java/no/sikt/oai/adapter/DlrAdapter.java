@@ -24,14 +24,14 @@ import static no.sikt.oai.OaiConstants.SETS_URI_ENV;
 public class DlrAdapter implements Adapter {
 
     private final ObjectMapper mapper = new ObjectMapper();
-    private String resourcesUri = "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resources";
-    private String resourceUri = "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resource";
+    private String recordsUri = "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resources";
+    private String recordUri = "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resource";
     private String setsUri = "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/institutions";
 
     public DlrAdapter(Environment environment) {
         setsUri = environment.readEnv(SETS_URI_ENV);
-        resourceUri = environment.readEnv(RECORD_URI_ENV);
-        resourcesUri = environment.readEnv(RECORDS_URI_ENV);
+        recordUri = environment.readEnv(RECORD_URI_ENV);
+        recordsUri = environment.readEnv(RECORDS_URI_ENV);
     }
 
     @Override
@@ -130,14 +130,14 @@ public class DlrAdapter implements Adapter {
     @Override
     public URI getRecordUri(String identifier) {
         return UriWrapper
-                .fromUri(resourceUri)
+                .fromUri(recordUri)
                 .addChild(identifier)
                 .getUri();
     }
 
     @Override
     public URI getRecordsListUri(String from, String until, String institution, int startPosition) {
-        UriWrapper uriWrapper = UriWrapper.fromUri(resourcesUri);
+        UriWrapper uriWrapper = UriWrapper.fromUri(recordsUri);
         if (!"".equalsIgnoreCase(institution)) {
             uriWrapper = uriWrapper.addQueryParameter("filter", "facet_institution::" + institution);
         }
@@ -159,7 +159,7 @@ public class DlrAdapter implements Adapter {
                 createRecordContent(resource, metadataPrefix),
                 deleted,
                 getIdentifierPrefix() + resource.identifier,
-                TimeUtils.string2Date(resource.features.get("dlr_time_published"), TimeUtils.FORMAT_ZULU_SHORT));
+                TimeUtils.string2Date(resource.features.get("dlr_time_updated"), TimeUtils.FORMAT_ZULU_SHORT));
     }
 
     private String createRecordContent(Resource resource, String metadataPrefix) {

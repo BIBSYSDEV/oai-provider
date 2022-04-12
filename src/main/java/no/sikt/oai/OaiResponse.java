@@ -54,7 +54,7 @@ public class OaiResponse {
         makeHeader(buffer);
         makeHeaderRequestGetRecord(GetRecord.name(), metadataPrefix, identifier, baseUrl, buffer);
         makeVerbStart(GetRecord.name(), buffer);
-        makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer);
+        makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer, true);
         makeVerbEnd(GetRecord.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(GetRecord.name(), startTime, buffer);
@@ -71,7 +71,8 @@ public class OaiResponse {
         makeVerbStart(ListIdentifiers.name(), buffer);
 
         for (Record record : records) {
-            makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer);
+            makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer,
+                    false);
         }
 
         String newResumptionToken = "";
@@ -101,7 +102,8 @@ public class OaiResponse {
         makeVerbStart(ListRecords.name(), buffer);
 
         for (Record record : records) {
-            makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer);
+            makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer,
+                    true);
         }
 
         long recordsRemaining = records.numFound() - (startPosition + records.size());
@@ -180,7 +182,7 @@ public class OaiResponse {
     }
 
     protected static void makeRecord(boolean isDeleted, String identifier, Date lastUpdateDate, String xmlContent,
-                                     String setSpec, StringBuilder buffer) {
+                                     String setSpec, StringBuilder buffer, boolean showMetadata) {
         buffer.append("        <record>\n");
         if (isDeleted) {
             buffer.append("            <header status=\"deleted\">\n");
@@ -194,7 +196,7 @@ public class OaiResponse {
             buffer.append("                <setSpec>").append(setSpec).append("</setSpec>\n");
         }
         buffer.append("            </header>\n");
-        if (!isDeleted) {
+        if (!isDeleted && showMetadata) {
             buffer.append("            <metadata>\n");
 
             // Kun for å få riktig innrykk...

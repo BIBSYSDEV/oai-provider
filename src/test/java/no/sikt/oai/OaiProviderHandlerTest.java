@@ -74,6 +74,7 @@ public class OaiProviderHandlerTest {
     public static final String RESUMPTION_TOKEN = "lr~sikt~~~qdc~50";
     public static final String SET_NAME_SIKT = "sikt";
     public static final String EXCEPTION = "Exception";
+    public static final String METADATA_TAG = "<metadata>";
     private final HttpClient httpClient = WiremockHttpClient.create();
     private OaiProviderHandler handler;
     private Environment environment;
@@ -420,6 +421,7 @@ public class OaiProviderHandlerTest {
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
         assertThat(responseBody, is(containsString(Verb.ListIdentifiers.name())));
+        assertThat(responseBody, is(not(containsString(METADATA_TAG))));
     }
 
     @Test
@@ -618,7 +620,7 @@ public class OaiProviderHandlerTest {
         var responseBody = gatewayResponse.getBody();
         assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
         assertThat(responseBody, is(containsString("<header status=\"deleted\">")));
-        assertThat(responseBody, is(not(containsString("<metadata>"))));
+        assertThat(responseBody, is(not(containsString(METADATA_TAG))));
     }
 
     @Test

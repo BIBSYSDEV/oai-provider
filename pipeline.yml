@@ -351,6 +351,9 @@ Resources:
       Source:
         Type: GITHUB
         Location: https://github.com/BIBSYSDEV/oai-provider.git
+        Auth:
+          Type: OAUTH
+          Resource: !Ref GitHubOAuthToken
       Triggers:
         Webhook: true
       TimeoutInMinutes: 30

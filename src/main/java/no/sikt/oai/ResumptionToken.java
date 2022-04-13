@@ -53,7 +53,8 @@ public class ResumptionToken {
 	}
 
 
-	public ResumptionToken(String command, long timestamp, String setSpec, String from, String until, String metadataPrefix, String startPosition) {
+	public ResumptionToken(String command, long timestamp, String setSpec, String from, String until,
+						   String metadataPrefix, String startPosition) {
 
 		this.command = command;
 		this.timestamp = timestamp;
@@ -66,7 +67,8 @@ public class ResumptionToken {
 
 
 	public String asString() {
-		final String newToken = command + TOK_SEP + setSpec + TOK_SEP + from + TOK_SEP + until + TOK_SEP + metadataPrefix + TOK_SEP + startPosition;
+		final String newToken = command + TOK_SEP + setSpec + TOK_SEP + from + TOK_SEP + until + TOK_SEP
+				+ metadataPrefix + TOK_SEP + startPosition;
 		return newToken;
 	}
 

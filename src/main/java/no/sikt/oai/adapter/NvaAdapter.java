@@ -13,9 +13,9 @@ import java.util.List;
 
 public class NvaAdapter implements Adapter {
 
-    private String resourceUri;
-    private String resourcesUri;
-    private String setsUri = "https://api.dev.nva.aws.unit.no/customer/";
+    private transient final String resourceUri;
+    private transient final String resourcesUri;
+    private transient final String setsUri; // "https://api.dev.nva.aws.unit.no/customer/";
 
     public NvaAdapter(Environment environment) {
         setsUri = environment.readEnv(OaiConstants.SETS_URI_ENV);

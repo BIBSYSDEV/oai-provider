@@ -68,7 +68,6 @@ checkstyle {
 }
 
 tasks.withType(Checkstyle) {
-    exclude { 'no/sikt/oai/temp/*' }
     reports {
         xml.enabled false
         html.enabled true
@@ -76,20 +75,11 @@ tasks.withType(Checkstyle) {
     }
 }
 
-tasks.withType(Pmd) {
-    exclude { 'no/sikt/oai/temp/*' }
-}
-
 jacocoTestReport {
     reports {
         xml.enabled false
         csv.enabled false
         html.destination file("${buildDir}/reports/jacoco")
-    }
-    afterEvaluate {
-        getClassDirectories().setFrom(classDirectories.files.collect {
-            fileTree(dir: it, exclude:  'no/sikt/oai/temp/*')
-        })
     }
 }
 
@@ -117,11 +107,6 @@ jacocoTestCoverageVerification {
                 minimum = 1.00
             }
         }
-    }
-    afterEvaluate {
-        getClassDirectories().setFrom(classDirectories.files.collect {
-            fileTree(dir: it, exclude: 'no/sikt/oai/temp/*')
-        })
     }
 }
 

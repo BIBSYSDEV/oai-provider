@@ -76,7 +76,7 @@ public class OaiResponse {
         }
 
         String newResumptionToken = "";
-        long recordsRemaining = records.numFound() - startPosition + records.size();
+        long recordsRemaining = records.getNumFound() - startPosition + records.size();
 
         if (recordsRemaining > 0) {
             ResumptionToken nyTok = new ResumptionToken("lr", System.currentTimeMillis(), setSpec,
@@ -84,7 +84,7 @@ public class OaiResponse {
                     startPosition + records.size() + "");
             newResumptionToken = nyTok.asString();
         }
-        makeFooterListIdentifiers(records.numFound() + "", newResumptionToken, buffer);
+        makeFooterListIdentifiers(records.getNumFound() + "", newResumptionToken, buffer);
         makeVerbEnd(ListIdentifiers.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(ListIdentifiers.name(), startTime, buffer);
@@ -106,14 +106,14 @@ public class OaiResponse {
                     true);
         }
 
-        long recordsRemaining = records.numFound() - (startPosition + records.size());
+        long recordsRemaining = records.getNumFound() - (startPosition + records.size());
 
         if (recordsRemaining > 0) {
             ResumptionToken nyTok = new ResumptionToken("lr", System.currentTimeMillis(), setSpec,
                     ((from == null) ? "" : from), ((until == null) ? "" : until), metadataPrefix, startPosition + records.size() + "");
             newResumptionToken = nyTok.asString();
         }
-        makeFooterListRecords(records.numFound() + "", newResumptionToken, startPosition + records.size()
+        makeFooterListRecords(records.getNumFound() + "", newResumptionToken, startPosition + records.size()
                 + "", buffer);
         makeVerbEnd(ListRecords.name(), buffer);
         makeFooter(buffer);

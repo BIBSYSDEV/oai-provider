@@ -22,9 +22,8 @@ import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 
 public class DataProvider {
 
-
-    private final HttpClient client;
-    private final Adapter adapter;
+    private transient final HttpClient client;
+    private transient final Adapter adapter;
 
     public DataProvider(HttpClient client, Adapter adapter) {
         this.client = client;

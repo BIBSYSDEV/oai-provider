@@ -1,15 +1,16 @@
 package no.sikt.oai;
 
+import org.junit.jupiter.api.Assertions;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.X509ExtendedTrustManager;
 import java.net.Socket;
 import java.net.http.HttpClient;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.X509ExtendedTrustManager;
-import org.junit.jupiter.api.Assertions;
 
 public final class WiremockHttpClient {
 
@@ -46,35 +47,29 @@ public final class WiremockHttpClient {
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket)
                     throws CertificateException {
-
-            }
-
-            @Override
-            public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket)
-                    throws CertificateException {
-
             }
 
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine)
                     throws CertificateException {
+            }
 
+            @Override
+            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket)
+                    throws CertificateException {
             }
 
             @Override
             public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine)
                     throws CertificateException {
-
-            }
-
-            @Override
-            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-
             }
 
             @Override
             public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-
             }
 
             @Override

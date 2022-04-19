@@ -67,12 +67,12 @@ public class OaiResponse {
         StringBuilder buffer = new StringBuilder();
         makeHeader(buffer);
         makeHeaderRequestListRecordsIdentifiers(ListIdentifiers.name(), resumptionToken, from, until, metadataPrefix,
-                baseUrl, buffer);
+                                                baseUrl, buffer);
         makeVerbStart(ListIdentifiers.name(), buffer);
 
         for (Record record : records) {
             makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer,
-                    false);
+                       false);
         }
 
         String newResumptionToken = "";
@@ -80,8 +80,9 @@ public class OaiResponse {
 
         if (recordsRemaining > 0) {
             ResumptionToken nyTok = new ResumptionToken("lr", System.currentTimeMillis(), setSpec,
-                    from == null ? "" : from, until == null ? "" : until, metadataPrefix,
-                    Integer.toString(startPosition + records.size()));
+                                                        from == null ? "" : from, until == null ? "" : until,
+                                                        metadataPrefix,
+                                                        Integer.toString(startPosition + records.size()));
             newResumptionToken = nyTok.asString();
         }
         makeFooterListIdentifiers(records.getNumFound(), newResumptionToken, buffer);
@@ -98,24 +99,24 @@ public class OaiResponse {
         String newResumptionToken = "";
         makeHeader(buffer);
         makeHeaderRequestListRecordsIdentifiers(ListRecords.name(), resumptionToken, from, until, metadataPrefix,
-                baseUrl, buffer);
+                                                baseUrl, buffer);
         makeVerbStart(ListRecords.name(), buffer);
 
         for (Record record : records) {
             makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer,
-                    true);
+                       true);
         }
 
         long recordsRemaining = records.getNumFound() - (startPosition + records.size());
 
         if (recordsRemaining > 0) {
             ResumptionToken nyTok = new ResumptionToken("lr", System.currentTimeMillis(), setSpec,
-                    from == null ? "" : from, until == null ? "" : until, metadataPrefix,
-                    Integer.toString(startPosition + records.size()));
+                                                        from == null ? "" : from, until == null ? "" : until,
+                                                        metadataPrefix,
+                                                        Integer.toString(startPosition + records.size()));
             newResumptionToken = nyTok.asString();
         }
-        makeFooterListRecords(records.getNumFound(), newResumptionToken, startPosition + records.size()
-                , buffer);
+        makeFooterListRecords(records.getNumFound(), newResumptionToken, startPosition + records.size(), buffer);
         makeVerbEnd(ListRecords.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(ListRecords.name(), startTime, buffer);
@@ -150,13 +151,13 @@ public class OaiResponse {
     @SuppressWarnings({"PMD.ConsecutiveLiteralAppends"})
     protected static void makeHeader(StringBuilder buffer) {
         buffer.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" + "\n")
-                .append("<OAI-PMH  xmlns=\"http://www.openarchives.org/OAI/2.0/\" ")
-                .append("xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ")
-                .append("xsi:schemaLocation=")
-                .append("\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd")
-                .append("\">\n")
-                .append("    <responseDate>").append(TimeUtils.getResponseTime()).append("</responseDate>")
-                .append('\n');
+            .append("<OAI-PMH  xmlns=\"http://www.openarchives.org/OAI/2.0/\" ")
+            .append("xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ")
+            .append("xsi:schemaLocation=")
+            .append("\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd")
+            .append("\">\n")
+            .append("    <responseDate>").append(TimeUtils.getResponseTime()).append("</responseDate>")
+            .append('\n');
     }
 
     protected static void makeFooter(StringBuilder buffer) {
@@ -181,7 +182,7 @@ public class OaiResponse {
 
     protected static void makeError(String errorCode, String errorMessage, StringBuilder stringBuilder) {
         stringBuilder.append("    <error code=\"").append(errorCode).append("\">").append(errorMessage)
-                .append("</error>\n");
+            .append("</error>\n");
     }
 
     @SuppressWarnings({"PMD.ConsecutiveLiteralAppends"})
@@ -194,8 +195,8 @@ public class OaiResponse {
             buffer.append("            <header>\n");
         }
         buffer.append("                <identifier>").append(identifier).append("</identifier>\n")
-                .append("                <datestamp>").append(date2String(lastUpdateDate, FORMAT_ZULU_LONG))
-                .append("</datestamp>\n");
+            .append("                <datestamp>").append(date2String(lastUpdateDate, FORMAT_ZULU_LONG))
+            .append("</datestamp>\n");
         if (setSpec.length() > 0) {
             buffer.append("                <setSpec>").append(setSpec).append("</setSpec>\n");
         }
@@ -218,36 +219,32 @@ public class OaiResponse {
         buffer.append("\n<!-- Time used ").append(verb).append(' ').append(timeUsed).append(" ms. -->");
     }
 
-
     // OAI helpers: GetRecord
 
     protected static void makeHeaderRequestGetRecord(String verb, String metadataPrefix, String identifier,
                                                      String baseUrl, StringBuilder buffer) {
         buffer.append("    <request verb=\"").append(verb).append("\" identifier=\"").append(identifier)
-                .append("\" metadataPrefix=\"").append(metadataPrefix).append("\">").append(baseUrl)
-                .append("</request>\n");
+            .append("\" metadataPrefix=\"").append(metadataPrefix).append("\">").append(baseUrl)
+            .append("</request>\n");
     }
-
 
     // OAI helpers: ListRecords
 
     protected static void makeFooterListRecords(long listSize, String newToken, int cursor, StringBuilder buffer) {
         if (newToken.length() > 0) {
             buffer.append("        <resumptionToken completeListSize=\"").append(listSize).append("\"  cursor=\"")
-                    .append(cursor).append("\">").append(newToken).append("</resumptionToken>\n");
+                .append(cursor).append("\">").append(newToken).append("</resumptionToken>\n");
         }
     }
-
 
     // OAI helpers: ListIdentifiers
 
     protected static void makeFooterListIdentifiers(long listSize, String newToken, StringBuilder buffer) {
         if (newToken.length() > 0) {
             buffer.append("        <resumptionToken completeListSize=\"").append(listSize).append("\">")
-                    .append(newToken).append("</resumptionToken>\n");
+                .append(newToken).append("</resumptionToken>\n");
         }
     }
-
 
     // OAI helpers: ListRecords & ListItentifiers
 
@@ -278,27 +275,25 @@ public class OaiResponse {
     @SuppressWarnings({"PMD.ConsecutiveLiteralAppends"})
     protected static void makeListSets(String setSpec, String setName, StringBuilder buffer) {
         buffer.append("        <set>\n")
-                .append("            <setSpec>").append(setSpec).append("</setSpec>\n")
-                .append("            <setName>").append(setName).append("</setName>\n")
-                .append("        </set>\n");
+            .append("            <setSpec>").append(setSpec).append("</setSpec>\n")
+            .append("            <setName>").append(setName).append("</setName>\n")
+            .append("        </set>\n");
     }
-
 
     // OAI helpers: Identify
 
     @SuppressWarnings({"PMD.ConsecutiveLiteralAppends"})
     protected static void makeIdentify(Adapter adapter, StringBuilder buffer) {
         buffer.append("        <repositoryName>").append(adapter.getRepositoryName()).append("</repositoryName>\n")
-                .append("        <baseURL>").append(adapter.getBaseUrl()).append("</baseURL>\n")
-                .append("        <protocolVersion>").append(adapter.getProtocolVersion()).append("</protocolVersion>\n")
-                .append("        <adminEmail>").append(adapter.getAdminEmail()).append("</adminEmail>\n")
-                .append("        <earliestDatestamp>").append(adapter.getEarliestTimestamp())
-                .append("</earliestDatestamp>\n")
-                .append("        <deletedRecord>").append(adapter.getDeletedRecord()).append("</deletedRecord>\n")
-                .append("        <granularity>").append(adapter.getDateGranularity()).append("</granularity>\n")
-                .append("        <description>").append(adapter.getDescription()).append("</description>\n");
+            .append("        <baseURL>").append(adapter.getBaseUrl()).append("</baseURL>\n")
+            .append("        <protocolVersion>").append(adapter.getProtocolVersion()).append("</protocolVersion>\n")
+            .append("        <adminEmail>").append(adapter.getAdminEmail()).append("</adminEmail>\n")
+            .append("        <earliestDatestamp>").append(adapter.getEarliestTimestamp())
+            .append("</earliestDatestamp>\n")
+            .append("        <deletedRecord>").append(adapter.getDeletedRecord()).append("</deletedRecord>\n")
+            .append("        <granularity>").append(adapter.getDateGranularity()).append("</granularity>\n")
+            .append("        <description>").append(adapter.getDescription()).append("</description>\n");
     }
-
 
     // OAI helpers: ListMetadataFormats
 
@@ -306,10 +301,9 @@ public class OaiResponse {
     protected static void makeListMetadataFormats(String metadataPrefix, String schema, String metadataNamespace,
                                                   StringBuilder buffer) {
         buffer.append("        <metadataFormat>\n")
-                .append("            <metadataPrefix>)").append(metadataPrefix).append("</metadataPrefix>\n")
-                .append("            <schema>").append(schema).append("</schema>\n")
-                .append("            <metadataNamespace>").append(metadataNamespace).append("</metadataNamespace>\n")
-                .append("        </metadataFormat>\n");
+            .append("            <metadataPrefix>)").append(metadataPrefix).append("</metadataPrefix>\n")
+            .append("            <schema>").append(schema).append("</schema>\n")
+            .append("            <metadataNamespace>").append(metadataNamespace).append("</metadataNamespace>\n")
+            .append("        </metadataFormat>\n");
     }
-
 }

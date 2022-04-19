@@ -20,13 +20,13 @@ public class TimeUtils {
     public TimeUtils() {
     }
 
-    public static Date string2Date(String sDato, String format) {
+    public static Date string2Date(String stringDate, String format) {
         SimpleDateFormat sf = new SimpleDateFormat(format, Locale.getDefault());
         sf.setLenient(false);
         Date myDate = null;
 
         try {
-            myDate = sf.parse(sDato);
+            myDate = sf.parse(stringDate);
             return myDate;
         } catch (ParseException var5) {
             LOG.debug("", var5);

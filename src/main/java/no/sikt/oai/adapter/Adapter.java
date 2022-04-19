@@ -34,7 +34,7 @@ public interface Adapter {
     Record parseRecordResponse(String json, String metadataPrefix) throws InternalOaiException;
 
     RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix)
-     throws InternalOaiException;
+        throws InternalOaiException;
 
     URI getSetsUri();
 
@@ -43,6 +43,7 @@ public interface Adapter {
     URI getRecordsListUri(String from, String until, String institution, int startPosition);
 
     class OaiSet {
+
         public String setName;
         public String setSpec;
 

@@ -23,10 +23,10 @@ import nva.commons.core.paths.UriWrapper;
 
 public class DlrAdapter implements Adapter {
 
-    private transient final ObjectMapper mapper = new ObjectMapper();
-    private transient final String recordsUri; // "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resources";
-    private transient final String recordUri; // "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resource";
-    private transient final String setsUri; // "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/institutions";
+    private final transient ObjectMapper mapper = new ObjectMapper();
+    private final transient String recordsUri; // "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resources";
+    private final transient String recordUri; // "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resource";
+    private final transient String setsUri; // "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/institutions";
 
     public DlrAdapter(Environment environment) {
         setsUri = environment.readEnv(SETS_URI_ENV);
@@ -315,9 +315,9 @@ public class DlrAdapter implements Adapter {
         @JsonProperty("resourcesAsJson")
         /* default */ transient List<String> resourcesAsJson;
         @JsonProperty("facet_counts")
-        /* default */ transient List<Map<String, String>> facet_counts;
+        /* default */ transient List<Map<String, String>> facetCounts;
         @JsonProperty("spellcheck_suggestions")
-        /* default */ transient List<String> spellcheck_suggestions;
+        /* default */ transient List<String> spellcheckSuggestions;
     }
 
 }

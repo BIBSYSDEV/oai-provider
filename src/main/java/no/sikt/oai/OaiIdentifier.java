@@ -1,8 +1,9 @@
 package no.sikt.oai;
 
+import static no.sikt.oai.OaiConstants.BAD_ARGUMENT;
+import static no.sikt.oai.OaiConstants.ILLEGAL_IDENTIFIER;
+import static no.sikt.oai.OaiConstants.ILLEGAL_IDENTIFIER_PREFIX;
 import no.sikt.oai.exception.OaiException;
-
-import static no.sikt.oai.OaiConstants.*;
 
 public class OaiIdentifier {
 

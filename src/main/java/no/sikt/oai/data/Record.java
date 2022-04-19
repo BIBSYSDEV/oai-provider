@@ -4,10 +4,10 @@ import java.util.Date;
 
 public class Record {
 
-    public transient final String content;
-    public transient final boolean isDeleted;
-    public transient final String identifier;
-    public transient final Date lastUpdateDate;
+    public final transient String content;
+    public final transient boolean isDeleted;
+    public final transient String identifier;
+    public final transient Date lastUpdateDate;
 
     public Record(String content, boolean isDeleted, String identifier, Date lastUpdateDate) {
         this.content = content;

@@ -1,21 +1,20 @@
 package no.sikt.oai;
 
-import no.sikt.oai.adapter.Adapter;
-import no.sikt.oai.data.Record;
-import no.sikt.oai.data.RecordsList;
-import nva.commons.core.JacocoGenerated;
-
-import java.util.Date;
-import java.util.List;
-
-import static no.sikt.oai.TimeUtils.date2String;
 import static no.sikt.oai.TimeUtils.FORMAT_ZULU_LONG;
+import static no.sikt.oai.TimeUtils.date2String;
 import static no.sikt.oai.Verb.GetRecord;
 import static no.sikt.oai.Verb.Identify;
 import static no.sikt.oai.Verb.ListIdentifiers;
 import static no.sikt.oai.Verb.ListMetadataFormats;
 import static no.sikt.oai.Verb.ListRecords;
 import static no.sikt.oai.Verb.ListSets;
+import java.util.Date;
+import java.util.List;
+import no.sikt.oai.adapter.Adapter;
+import no.sikt.oai.adapter.Adapter.OaiSet;
+import no.sikt.oai.data.Record;
+import no.sikt.oai.data.RecordsList;
+import nva.commons.core.JacocoGenerated;
 
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals"})
 public class OaiResponse {
@@ -123,13 +122,13 @@ public class OaiResponse {
         return buffer.toString();
     }
 
-    public static String listSets(String baseUrl, List<String> setList, long startTime) {
+    public static String listSets(String baseUrl, List<OaiSet> setList, long startTime) {
         StringBuilder buffer = new StringBuilder(1000);
         makeHeader(buffer);
         makeHeaderRequest(ListSets.name(), baseUrl, buffer);
         makeVerbStart(ListSets.name(), buffer);
-        for (String set : setList) {
-            makeListSets(set, set, buffer);
+        for (OaiSet set : setList) {
+            makeListSets(set.setSpec, set.setName, buffer);
         }
         makeVerbEnd(ListSets.name(), buffer);
         makeFooter(buffer);

@@ -1,9 +1,17 @@
 package no.sikt.oai.adapter;
 
+import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
+import static no.sikt.oai.OaiConstants.RECORDS_URI_ENV;
+import static no.sikt.oai.OaiConstants.RECORD_URI_ENV;
+import static no.sikt.oai.OaiConstants.SETS_URI_ENV;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import no.sikt.oai.MetadataFormat;
 import no.sikt.oai.TimeUtils;
 import no.sikt.oai.data.Record;
@@ -12,15 +20,6 @@ import no.sikt.oai.exception.InternalOaiException;
 import nva.commons.core.Environment;
 import nva.commons.core.StringUtils;
 import nva.commons.core.paths.UriWrapper;
-
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
-
-import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
-import static no.sikt.oai.OaiConstants.RECORDS_URI_ENV;
-import static no.sikt.oai.OaiConstants.RECORD_URI_ENV;
-import static no.sikt.oai.OaiConstants.SETS_URI_ENV;
 
 public class DlrAdapter implements Adapter {
 
@@ -86,10 +85,11 @@ public class DlrAdapter implements Adapter {
     }
 
     @Override
-    public List<String> parseInstitutionResponse(String json) throws InternalOaiException {
+    public List<OaiSet> parseSetsResponse(String json) throws InternalOaiException {
         mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
         try {
-            return mapper.readValue(json, Institutions.class).institutionList;
+            List<String> institutionList = mapper.readValue(json, Institutions.class).institutionList;
+            return institutionList.stream().map(inst -> new OaiSet(inst, inst)).collect(Collectors.toList());
         } catch (JsonProcessingException e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
         }

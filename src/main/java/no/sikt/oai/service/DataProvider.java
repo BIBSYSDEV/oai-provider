@@ -1,17 +1,5 @@
 package no.sikt.oai.service;
 
-import no.sikt.oai.OaiConstants;
-import no.sikt.oai.adapter.Adapter;
-import no.sikt.oai.exception.InternalOaiException;
-import no.sikt.oai.exception.OaiException;
-import nva.commons.core.JacocoGenerated;
-import org.apache.http.HttpStatus;
-
-import java.net.HttpURLConnection;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-
 import static no.sikt.oai.OaiConstants.ID_DOES_NOT_EXIST;
 import static no.sikt.oai.OaiConstants.NO_RECORDS_MATCH;
 import static no.sikt.oai.OaiConstants.NO_SETS_FOUND;
@@ -19,11 +7,21 @@ import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
 import static no.sikt.oai.OaiConstants.UNKNOWN_IDENTIFIER;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
+import java.net.HttpURLConnection;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import no.sikt.oai.OaiConstants;
+import no.sikt.oai.adapter.Adapter;
+import no.sikt.oai.exception.InternalOaiException;
+import no.sikt.oai.exception.OaiException;
+import nva.commons.core.JacocoGenerated;
+import org.apache.http.HttpStatus;
 
 public class DataProvider {
 
-    private transient final HttpClient client;
-    private transient final Adapter adapter;
+    private final transient HttpClient client;
+    private final transient Adapter adapter;
 
     public DataProvider(HttpClient client, Adapter adapter) {
         this.client = client;

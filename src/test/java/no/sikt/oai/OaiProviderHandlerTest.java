@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static no.sikt.oai.MetadataFormat.OAI_DC;
@@ -74,6 +75,8 @@ public class OaiProviderHandlerTest {
     public static final String SET_NAME_SIKT = "sikt";
     public static final String EXCEPTION = "Exception";
     public static final String METADATA_TAG = "<metadata>";
+    public static final String UIO_CUSTUMER_ID = "https://api.dev.nva.aws.unit"
+                                                 + ".no/customer/1bd2e3f7-a570-442a-b444-cb02e6cc70e4";
     private final HttpClient httpClient = WiremockHttpClient.create();
     private OaiProviderHandler handler;
     private Environment environment;
@@ -87,12 +90,12 @@ public class OaiProviderHandlerTest {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
         when(environment.readEnv(CLIENT_NAME_ENV)).thenReturn(adapter);
-        startWiremockServer();
+        startWiremockServer(adapter);
         when(environment.readEnv(SETS_URI_ENV)).thenReturn(serverUriSets.toString());
         when(environment.readEnv(RECORD_URI_ENV)).thenReturn(serverUriRecord.toString());
         when(environment.readEnv(RECORDS_URI_ENV)).thenReturn(serverUriRecords.toString());
         context = mock(Context.class);
-        mockSetsResponse();
+        mockSetsResponse(adapter);
         mockRecordResponse();
         mockRecordsResponse();
         handler = new OaiProviderHandler(environment, httpClient);
@@ -376,7 +379,7 @@ public class OaiProviderHandlerTest {
     @Test
     public void shouldReturnErrorResponseWhenAskedForListSetsButApiIsDown() throws IOException {
         init(CLIENT_TYPE_DLR);
-        mockErrorSetsResponse();
+        mockErrorSetsResponse(CLIENT_TYPE_DLR);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListSets.name());
@@ -445,7 +448,7 @@ public class OaiProviderHandlerTest {
     @Test
     public void shouldReturnErrorResponseWhenAskedForListIdentifiersButListSetResponseIsFaulty() throws IOException {
         init(CLIENT_TYPE_DLR);
-        mockFaultySetsResponse();
+        mockFaultySetsResponse(CLIENT_TYPE_DLR);
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListIdentifiers.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
@@ -576,7 +579,7 @@ public class OaiProviderHandlerTest {
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadataFormat.OAI_DATACITE.name());
-        queryParameters.put(ValidParameterKey.SET.key, "BI");
+        queryParameters.put(ValidParameterKey.SET.key, UIO_CUSTUMER_ID);
         var output = new ByteArrayOutputStream();
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
@@ -587,7 +590,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingNvaSetSpecAndOaiDcMetadataPrefix()
+    public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingDlrSetSpecAndOaiDcMetadataPrefix()
         throws IOException {
         init(CLIENT_TYPE_DLR);
         Map<String, String> queryParameters = new HashMap<>();
@@ -776,25 +779,25 @@ public class OaiProviderHandlerTest {
         return restServiceObjectMapper.readValue(output, typeRef);
     }
 
-    private void startWiremockServer() {
+    private void startWiremockServer(String adapter) {
         httpServer = new WireMockServer(options().dynamicHttpsPort());
         httpServer.start();
-        serverUriSets = URI.create(httpServer.baseUrl() + "/sets");
+        serverUriSets = URI.create(httpServer.baseUrl() + "/" + adapter + "/sets");
         serverUriRecord = URI.create(httpServer.baseUrl() + "/record");
         serverUriRecords = URI.create(httpServer.baseUrl() + "/records");
     }
 
-    private void mockSetsResponse() {
-        ObjectNode responseBody = createSetsResponse();
-        stubFor(get(urlPathMatching("/sets")).willReturn(ok().withBody(responseBody.toPrettyString())));
+    private void mockSetsResponse(String adapter) {
+        ObjectNode responseBody = createSetsResponse(adapter);
+        stubFor(get(urlPathEqualTo("/" + adapter + "/sets")).willReturn(ok().withBody(responseBody.toPrettyString())));
     }
 
-    private void mockFaultySetsResponse() {
-        stubFor(get(urlPathMatching("/sets")).willReturn(ok().withBody(FAULTY_JSON)));
+    private void mockFaultySetsResponse(String adapter) {
+        stubFor(get(urlPathMatching("/" + adapter + "/sets")).willReturn(ok().withBody(FAULTY_JSON)));
     }
 
-    private void mockErrorSetsResponse() {
-        stubFor(get(urlPathMatching("/sets")).willReturn(serverError()));
+    private void mockErrorSetsResponse(String adapter) {
+        stubFor(get(urlPathMatching("/" + adapter + "/sets")).willReturn(serverError()));
     }
 
     private void mockRecordResponse() {
@@ -828,16 +831,36 @@ public class OaiProviderHandlerTest {
         stubFor(get(urlPathMatching("/records")).willReturn(serverError()));
     }
 
-    private ObjectNode createSetsResponse() {
-        var objectArray = dtoObjectMapper.createArrayNode();
-        objectArray.add("bi");
-        objectArray.add("diku");
-        objectArray.add("ntnu");
-        objectArray.add(SET_NAME_SIKT);
-        objectArray.add("uit");
-        var responseBodyElement = dtoObjectMapper.createObjectNode();
-        responseBodyElement.set("institutions", objectArray);
-        return responseBodyElement;
+    private ObjectNode createSetsResponse(String adapter) {
+        if (CLIENT_TYPE_DLR.equalsIgnoreCase(adapter)) {
+            var objectArray = dtoObjectMapper.createArrayNode();
+            objectArray.add("bi");
+            objectArray.add("diku");
+            objectArray.add("ntnu");
+            objectArray.add(SET_NAME_SIKT);
+            objectArray.add("uit");
+            var responseBodyElement = dtoObjectMapper.createObjectNode();
+            responseBodyElement.set("institutions", objectArray);
+            return responseBodyElement;
+        } else if (CLIENT_TYPE_NVA.equalsIgnoreCase(adapter)) {
+            var objectNode1 = dtoObjectMapper.createObjectNode();
+            objectNode1.put("createdDate", "2022-04-05T21:08:30.971981Z");
+            objectNode1.put("displayName", "Sikt");
+            objectNode1.put("id", "https://api.dev.nva.aws.unit.no/customer/f50dff3a-e244-48c7-891d-cc4d75597321");
+            var objectArray = dtoObjectMapper.createArrayNode();
+            objectArray.add(objectNode1);
+            var objectNode2 = dtoObjectMapper.createObjectNode();
+            objectNode2.put("createdDate", "2022-04-06T06:28:59.673041Z");
+            objectNode2.put("displayName", "Universitetet i Oslo");
+            objectNode2.put("id", UIO_CUSTUMER_ID);
+            objectArray.add(objectNode2);
+            var responseBodyElement = dtoObjectMapper.createObjectNode();
+            responseBodyElement.put("@context", "https://bibsysdev.github.io/src/customer-context.json");
+            responseBodyElement.set("customers", objectArray);
+            responseBodyElement.put("id", "https://api.dev.nva.aws.unit.no/customer");
+            return responseBodyElement;
+        }
+        return null;
     }
 
     private ObjectNode createRecordsResponse() {

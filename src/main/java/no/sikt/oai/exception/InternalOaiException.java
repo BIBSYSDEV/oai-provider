@@ -4,7 +4,7 @@ import nva.commons.apigateway.exceptions.ApiGatewayException;
 
 public class InternalOaiException extends ApiGatewayException {
 
-    private transient final int status;
+    private final transient int status;
 
     public InternalOaiException(Exception e, int statusCode) {
         super(e);

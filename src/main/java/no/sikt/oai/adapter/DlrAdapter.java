@@ -184,20 +184,21 @@ public class DlrAdapter implements Adapter {
                 .append(" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/")
                 .append(" http://www.openarchives.org/OAI/2.0/oai_dc.xsd\">\n")
                 .append("    <dc:title>").append(resource.features.get("dlr_title")).append("</dc:title>\n")
-                .append("    <dc:description>").append(resource.features.get("dlr_description"))
+                .append("    <dc:description>").append(resource.features.getOrDefault("dlr_description", ""))
                 .append("</dc:description>\n");
         for (ResourceCreator creator : resource.creators) {
-            buffer.append("    <dc:creator>").append(creator.features.get("dlr_creator_name"))
+            buffer.append("    <dc:creator>").append(creator.features.getOrDefault("dlr_creator_name", ""))
                     .append("</dc:creator>\n");
         }
         for (ResourceContributor contributor : resource.contributors) {
-            buffer.append("    <dc:contributor>").append(contributor.features.get("dlr_contributor_name"))
+            buffer.append("    <dc:contributor>").append(contributor.features.getOrDefault("dlr_contributor_name", ""))
                     .append("</dc:contributor>\n");
         }
         buffer.append("    <dc:rights>").append(resource.features.get("dlr_rights_license_name"))
                 .append("</dc:rights>\n")
                 .append("    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n")
-                .append("    <dc:publisher>").append(resource.features.get("dlr_storage_id")).append("</dc:publisher>\n")
+                .append("    <dc:publisher>").append(resource.features.get("dlr_storage_id"))
+                .append("</dc:publisher>\n")
                 .append("    <dc:date>").append(resource.features.get("dlr_time_created")).append("</dc:date>\n")
                 .append("    <dc:date>").append(resource.features.get("dlr_time_published")).append("</dc:date>\n")
                 .append("    <dc:identifier>").append(resource.features.get("dlr_identifier_handle"))
@@ -220,22 +221,24 @@ public class DlrAdapter implements Adapter {
                 .append(" http://dspace.org/qualifieddc/")
                 .append("http://www.ukoln.ac.uk/metadata/dcmi/xmlschema/qualifieddc.xsd\">\n")
                 .append("    <dc:title>").append(resource.features.get("dlr_title")).append("</dc:title>\n")
-                .append("    <dc:description>").append(resource.features.get("dlr_description"))
+                .append("    <dc:description>").append(resource.features.getOrDefault("dlr_description", ""))
                 .append("</dc:description>\n");
         for (ResourceCreator creator : resource.creators) {
             buffer.append("    <dc:creator>")
-                    .append(creator.features.get("dlr_creator_name"))
+                    .append(creator.features.getOrDefault("dlr_creator_name", ""))
                     .append("</dc:creator>\n");
         }
         for (ResourceContributor contributor : resource.contributors) {
             buffer.append("    <dc:contributor>")
-                    .append(contributor.features.get("dlr_contributor_name"))
+                    .append(contributor.features.getOrDefault("dlr_contributor_name", ""))
                     .append("</dc:contributor>\n");
         }
         buffer.append("    <dc:rights>").append(resource.features.get("dlr_rights_license_name"))
                 .append("</dc:rights>\n")
-                .append("    <dcterms:accessRights>").append(resource.features.get("dlr_access")).append("</dcterms:accessRights>\n")
-                .append("    <dc:publisher>").append(resource.features.get("dlr_storage_id")).append("</dc:publisher>\n")
+                .append("    <dcterms:accessRights>").append(resource.features.get("dlr_access"))
+                .append("</dcterms:accessRights>\n")
+                .append("    <dc:publisher>").append(resource.features.get("dlr_storage_id"))
+                .append("</dc:publisher>\n")
                 .append("    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n")
                 .append("    <dcterms:created>").append(resource.features.get("dlr_time_created"))
                 .append("</dcterms:created>\n")
@@ -261,14 +264,15 @@ public class DlrAdapter implements Adapter {
                 .append("        <datacite:title>").append(resource.features.get("dlr_title"))
                 .append("</datacite:title>\n")
                 .append("    </datacite:titles>\n")
-                .append("    <dc:description>").append(resource.features.get("dlr_description"))
+                .append("    <dc:description>").append(resource.features.getOrDefault("dlr_description", ""))
                 .append("</dc:description>\n")
                 .append("    <dc:publisher>").append(resource.features.get("dlr_storage_id"))
                 .append("</dc:publisher>\n");
         for (ResourceCreator creator : resource.creators) {
             buffer.append("    <datacite:creators>\n")
                     .append("        <datacite:creator>\n")
-                    .append("            <datacite:creatorName>").append(creator.features.get("dlr_creator_name"))
+                    .append("            <datacite:creatorName>")
+                    .append(creator.features.getOrDefault("dlr_creator_name", ""))
                     .append("</datacite:creatorName>\n")
                     .append("        </datacite:creator>\n")
                     .append("    </datacite:creators>\n");

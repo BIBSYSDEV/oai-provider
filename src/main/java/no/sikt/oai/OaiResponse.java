@@ -74,16 +74,10 @@ public class OaiResponse {
                        false);
         }
 
-        String newResumptionToken = "";
         long recordsRemaining = records.getNumFound() - startPosition + records.size();
 
-        if (recordsRemaining > 0) {
-            ResumptionToken nyTok = new ResumptionToken("lr", System.currentTimeMillis(), setSpec,
-                                                        from == null ? "" : from, until == null ? "" : until,
-                                                        metadataPrefix,
-                                                        Integer.toString(startPosition + records.size()));
-            newResumptionToken = nyTok.asString();
-        }
+        String newResumptionToken = createNewResumptionToken(from, until, resumptionToken, metadataPrefix,
+                startPosition, setSpec, records, recordsRemaining);
         makeFooterListIdentifiers(records.getNumFound(), newResumptionToken, buffer);
         makeVerbEnd(ListIdentifiers.name(), buffer);
         makeFooter(buffer);
@@ -95,7 +89,6 @@ public class OaiResponse {
                                      String baseUrl, int startPosition, String setSpec, RecordsList records,
                                      long startTime) {
         StringBuilder buffer = new StringBuilder();
-        String newResumptionToken = "";
         makeHeader(buffer);
         makeHeaderRequestListRecordsIdentifiers(ListRecords.name(), resumptionToken, from, until, metadataPrefix,
                                                 baseUrl, buffer);
@@ -108,18 +101,34 @@ public class OaiResponse {
 
         long recordsRemaining = records.getNumFound() - (startPosition + records.size());
 
-        if (recordsRemaining > 0) {
-            ResumptionToken nyTok = new ResumptionToken("lr", System.currentTimeMillis(), setSpec,
-                                                        from == null ? "" : from, until == null ? "" : until,
-                                                        metadataPrefix,
-                                                        Integer.toString(startPosition + records.size()));
-            newResumptionToken = nyTok.asString();
-        }
+        String newResumptionToken = createNewResumptionToken(from, until, resumptionToken, metadataPrefix,
+                startPosition, setSpec, records, recordsRemaining);
+
         makeFooterListRecords(records.getNumFound(), newResumptionToken, startPosition + records.size(), buffer);
         makeVerbEnd(ListRecords.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(ListRecords.name(), startTime, buffer);
         return buffer.toString();
+    }
+
+    private static String createNewResumptionToken(String from, String until, String resumptionToken,
+                                                   String metadataPrefix, int startPosition, String setSpec,
+                                                   RecordsList records, long recordsRemaining) {
+        if (recordsRemaining > 0) {
+            ResumptionToken newToken;
+            if (resumptionToken.length() > 0) {
+                newToken = new ResumptionToken(resumptionToken);
+                newToken.timestamp = System.currentTimeMillis();
+                newToken.startPosition = Integer.toString(startPosition + records.size());
+            } else {
+                newToken = new ResumptionToken("lr", System.currentTimeMillis(), setSpec,
+                        from == null ? "" : from, until == null ? "" : until,
+                        metadataPrefix,
+                        Integer.toString(startPosition + records.size()));
+            }
+            return newToken.asString();
+        }
+        return "";
     }
 
     public static String listSets(String baseUrl, List<OaiSet> setList, long startTime) {

@@ -4,11 +4,11 @@ import java.util.Locale;
 
 public enum MetadataFormat {
 
-    /** OAI DC */
+    /* OAI DC */
     OAI_DC,
-    /** qualified dublin core */
+    /* qualified dublin core */
     QDC,
-    /** openAire 4.0 */
+    /* openAire 4.0 */
     OAI_DATACITE;
 
     public static boolean isValid(String value) {

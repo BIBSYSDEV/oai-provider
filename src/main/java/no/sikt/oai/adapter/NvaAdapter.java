@@ -1,21 +1,26 @@
 package no.sikt.oai.adapter;
 
+import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 import no.sikt.oai.OaiConstants;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
+import no.sikt.oai.exception.InternalOaiException;
 import nva.commons.core.Environment;
 import nva.commons.core.paths.UriWrapper;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 public class NvaAdapter implements Adapter {
 
-    private String resourceUri;
-    private String resourcesUri;
-    private String setsUri = "https://api.dev.nva.aws.unit.no/customer/";
+    private final transient ObjectMapper mapper = new ObjectMapper();
+    private final transient String resourceUri;
+    private final transient String resourcesUri;
+    private final transient String setsUri; // "https://api.dev.nva.aws.unit.no/customer/";
 
     public NvaAdapter(Environment environment) {
         setsUri = environment.readEnv(OaiConstants.SETS_URI_ENV);
@@ -74,34 +79,37 @@ public class NvaAdapter implements Adapter {
     }
 
     @Override
-    public List<String> parseInstitutionResponse(String json) {
-        List<String> list = new ArrayList<>();
-        list.add("ntnu");
-        list.add("vid");
-        list.add("bi");
-        return list;
+    public List<OaiSet> parseSetsResponse(String json) throws InternalOaiException {
+        try {
+            List<Customer> customerList = mapper.readValue(json, Customers.class).customerList;
+            return customerList.stream()
+                .map(customer -> new OaiSet(customer.displayName, customer.id))
+                .collect(Collectors.toList());
+        } catch (JsonProcessingException e) {
+            throw new InternalOaiException(e, HTTP_UNAVAILABLE);
+        }
     }
 
     @Override
     public URI getSetsUri() {
         return UriWrapper
-                .fromUri(setsUri)
-                .getUri();
+            .fromUri(setsUri)
+            .getUri();
     }
 
     @Override
     public URI getRecordUri(String identifier) {
         return UriWrapper
-                .fromUri(resourceUri)
-                .addChild(identifier)
-                .getUri();
+            .fromUri(resourceUri)
+            .addChild(identifier)
+            .getUri();
     }
 
     @Override
     public URI getRecordsListUri(String from, String until, String institution, int startPosition) {
         return UriWrapper
-                .fromUri(resourcesUri)
-                .getUri();
+            .fromUri(resourcesUri)
+            .getUri();
     }
 
     @Override
@@ -117,4 +125,23 @@ public class NvaAdapter implements Adapter {
         return records;
     }
 
+    private static class Customers {
+
+        @JsonProperty("@context")
+        /* default */ transient String context;
+        @JsonProperty("customers")
+        /* default */ transient List<Customer> customerList;
+        @JsonProperty("id")
+        /* default */ transient String id;
+    }
+
+    private static class Customer {
+
+        @JsonProperty("createdDate")
+        /* default */ transient String createdDate;
+        @JsonProperty("displayName")
+        /* default */ transient String displayName;
+        @JsonProperty("id")
+        /* default */ transient String id;
+    }
 }

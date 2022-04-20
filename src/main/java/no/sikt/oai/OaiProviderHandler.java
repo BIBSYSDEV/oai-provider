@@ -1,8 +1,16 @@
 package no.sikt.oai;
 
+import static com.google.common.net.MediaType.APPLICATION_XML_UTF_8;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.google.common.net.MediaType;
+import java.net.HttpURLConnection;
+import java.net.http.HttpClient;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 import no.sikt.oai.adapter.Adapter;
+import no.sikt.oai.adapter.Adapter.OaiSet;
 import no.sikt.oai.adapter.DlrAdapter;
 import no.sikt.oai.adapter.NvaAdapter;
 import no.sikt.oai.data.Record;
@@ -15,15 +23,9 @@ import nva.commons.apigateway.RequestInfo;
 import nva.commons.apigateway.exceptions.ApiGatewayException;
 import nva.commons.core.Environment;
 import nva.commons.core.JacocoGenerated;
+import nva.commons.core.StringUtils;
 
-import java.net.HttpURLConnection;
-import java.net.http.HttpClient;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-import static com.google.common.net.MediaType.APPLICATION_XML_UTF_8;
-
+@SuppressWarnings({"PMD.GodClass"})
 public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     public static final String EMPTY_STRING = "";
@@ -87,7 +89,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                     } else {
                         validateMetadataPrefix(verb, metadataPrefix);
                         validateFromAndUntilParameters(verb, from, until);
-                        validateSet(verb, setSpec);
+                        validateSet(setSpec);
                     }
                     recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, resumptionToken, 0);
                     response = OaiResponse.listRecords(from, until, resumptionToken, metadataPrefix,
@@ -100,7 +102,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                     } else {
                         validateMetadataPrefix(verb, metadataPrefix);
                         validateFromAndUntilParameters(verb, from, until);
-                        validateSet(verb, setSpec);
+                        validateSet(setSpec);
                     }
                     recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, resumptionToken, 0);
                     response = OaiResponse.listIdentifiers(from, until, metadataPrefix, resumptionToken,
@@ -111,8 +113,8 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                             startTime);
                     break;
                 case ListSets:
-                    List<String> institutionList = this.getInstitutionList();
-                    response = OaiResponse.listSets(adapter.getBaseUrl(), institutionList, startTime);
+                    List<OaiSet> setsList = this.getSetsList();
+                    response = OaiResponse.listSets(adapter.getBaseUrl(), setsList, startTime);
                     break;
                 case Identify:
                 default:
@@ -159,7 +161,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     protected void validateVerb(String verb)
             throws OaiException {
-        if (verb.trim().isEmpty()) {
+        if (StringUtils.isBlank(verb)) {
             throw new OaiException(OaiConstants.BAD_VERB, OaiConstants.VERB_IS_MISSING);
         }
         if (!Verb.isValid(verb)) {
@@ -181,22 +183,21 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         if (until.length() > 0 && !TimeUtils.isUTCdate(until)) {
             throw new OaiException(OaiConstants.BAD_ARGUMENT, OaiConstants.ILLEGAL_DATE_UNTIL);
         }
-        if (from.length() > 0 && until.length() > 0) {
-            if (from.length() != until.length()) {
-                throw new OaiException(OaiConstants.BAD_ARGUMENT, OaiConstants.DIFFERENT_DATE_GRANULARITIES);
-            }
+        if (from.length() > 0 && until.length() > 0 && from.length() != until.length()) {
+            throw new OaiException(OaiConstants.BAD_ARGUMENT, OaiConstants.DIFFERENT_DATE_GRANULARITIES);
         }
     }
 
-    protected void validateSet(String verb, String setSpec) throws OaiException, InternalOaiException {
-        if (setSpec.length() > 0 && !getInstitutionList().contains(setSpec)) {
+    protected void validateSet(String setSpec) throws OaiException, InternalOaiException {
+        List<String> setSpecList = getSetsList().stream().map(sets -> sets.setSpec).collect(Collectors.toList());
+        if (setSpec.length() > 0 && !setSpecList.contains(setSpec)) {
             throw new OaiException(OaiConstants.BAD_ARGUMENT, OaiConstants.UNKNOWN_SET_NAME + setSpec);
         }
     }
 
-    private List<String> getInstitutionList() throws OaiException, InternalOaiException {
+    private List<OaiSet> getSetsList() throws OaiException, InternalOaiException {
         String json = dataProvider.getSetsList();
-        return adapter.parseInstitutionResponse(json);
+        return adapter.parseSetsResponse(json);
     }
 
     private Record getRecord(String identifier, String metadataPrefix) throws InternalOaiException, OaiException {
@@ -220,7 +221,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     protected void validateResumptionToken(String verb, String resumptionToken)
             throws OaiException, InternalOaiException {
-        validateSet(verb, new ResumptionToken(resumptionToken).setSpec);
+        validateSet(new ResumptionToken(resumptionToken).setSpec);
     }
 
     protected void validateMetadataPrefix(String verb, String metadataPrefix)

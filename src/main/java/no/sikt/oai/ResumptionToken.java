@@ -8,7 +8,7 @@ public class ResumptionToken {
     public String from = "";
     public String until = "";
     public String metadataPrefix = "";
-    public String startPosition;
+    public String startPosition = "0";
 
     public static final String TOK_SEP = "~";
 

@@ -36,8 +36,7 @@ phases:
     commands:
       - echo Build started on `date`
       # Use AWS SAM to build and package the application by using AWS CloudFormation
-      - sdk use gradle 7.3.1
-      - gradle wrapper
+      - gradle wrapper --gradle-version 7.3.1 --distribution-type all
       - sam build
       - sam package --s3-bucket $S3_BUCKET --output-template-file packaged.yml
 

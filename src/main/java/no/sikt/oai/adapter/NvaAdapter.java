@@ -1,16 +1,32 @@
 package no.sikt.oai.adapter;
 
-import no.sikt.oai.data.Record;
-import no.sikt.oai.data.RecordsList;
-import no.sikt.oai.exception.OaiException;
-import nva.commons.core.paths.UriWrapper;
-
+import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+import no.sikt.oai.OaiConstants;
+import no.sikt.oai.data.Record;
+import no.sikt.oai.data.RecordsList;
+import no.sikt.oai.exception.InternalOaiException;
+import nva.commons.core.Environment;
+import nva.commons.core.paths.UriWrapper;
 
 public class NvaAdapter implements Adapter {
+
+    private final transient ObjectMapper mapper = new ObjectMapper();
+    private final transient String resourceUri;
+    private final transient String resourcesUri;
+    private final transient String setsUri; // "https://api.dev.nva.aws.unit.no/customer/";
+
+    public NvaAdapter(Environment environment) {
+        setsUri = environment.readEnv(OaiConstants.SETS_URI_ENV);
+        resourceUri = environment.readEnv(OaiConstants.RECORD_URI_ENV);
+        resourcesUri = environment.readEnv(OaiConstants.RECORDS_URI_ENV);
+    }
 
     @Override
     public boolean isValidIdentifier(String identifier) {
@@ -29,7 +45,7 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public String getEarliestTimestamp() {
-        return "1976-01-01T00:00:01Z";
+        return "2020-01-31T00:00:01Z";
     }
 
     @Override
@@ -44,7 +60,7 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public String getAdminEmail() {
-        return "nvaadmin@unit.no";
+        return "support@unit.no";
     }
 
     @Override
@@ -63,47 +79,69 @@ public class NvaAdapter implements Adapter {
     }
 
     @Override
-    public List<String> parseInstitutionResponse(String json) throws OaiException {
-        List<String> list = new ArrayList<>();
-        list.add("ntnu");
-        list.add("vid");
-        list.add("bi");
-        return list;
+    public List<OaiSet> parseSetsResponse(String json) throws InternalOaiException {
+        try {
+            List<Customer> customerList = mapper.readValue(json, Customers.class).customerList;
+            return customerList.stream()
+                .map(customer -> new OaiSet(customer.displayName, customer.id))
+                .collect(Collectors.toList());
+        } catch (JsonProcessingException e) {
+            throw new InternalOaiException(e, HTTP_UNAVAILABLE);
+        }
     }
 
     @Override
-    public URI getInstitutionsUri() {
+    public URI getSetsUri() {
         return UriWrapper
-                .fromUri("https://api.dev.nva.aws.unit.no/customer/")
-                .getUri();
+            .fromUri(setsUri)
+            .getUri();
     }
 
     @Override
     public URI getRecordUri(String identifier) {
         return UriWrapper
-                .fromUri("https://api.dev.nva.aws.unit.no/customer/")
-                .getUri();
+            .fromUri(resourceUri)
+            .addChild(identifier)
+            .getUri();
     }
 
     @Override
     public URI getRecordsListUri(String from, String until, String institution, int startPosition) {
         return UriWrapper
-                .fromUri("https://api.dev.nva.aws.unit.no/customer/")
-                .getUri();
+            .fromUri(resourcesUri)
+            .getUri();
     }
 
     @Override
-    public Record parseRecordResponse(String json, String metadataPrefix) throws OaiException {
+    public Record parseRecordResponse(String json, String metadataPrefix) {
         return new Record("", false, "1234", new Date());
     }
 
     @Override
-    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix)
-            throws OaiException {
+    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix) {
         Record record = new Record("", false, "1234", new Date());
         RecordsList records = new RecordsList(1);
         records.add(record);
         return records;
     }
 
+    private static class Customers {
+
+        @JsonProperty("@context")
+        /* default */ transient String context;
+        @JsonProperty("customers")
+        /* default */ transient List<Customer> customerList;
+        @JsonProperty("id")
+        /* default */ transient String id;
+    }
+
+    private static class Customer {
+
+        @JsonProperty("createdDate")
+        /* default */ transient String createdDate;
+        @JsonProperty("displayName")
+        /* default */ transient String displayName;
+        @JsonProperty("id")
+        /* default */ transient String id;
+    }
 }

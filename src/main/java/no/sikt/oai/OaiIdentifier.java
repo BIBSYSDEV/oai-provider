@@ -1,8 +1,9 @@
 package no.sikt.oai;
 
+import static no.sikt.oai.OaiConstants.BAD_ARGUMENT;
+import static no.sikt.oai.OaiConstants.ILLEGAL_IDENTIFIER;
+import static no.sikt.oai.OaiConstants.ILLEGAL_IDENTIFIER_PREFIX;
 import no.sikt.oai.exception.OaiException;
-
-import static no.sikt.oai.OaiConstants.*;
 
 public class OaiIdentifier {
 
@@ -14,12 +15,12 @@ public class OaiIdentifier {
 
         try {
             if (!identifier.startsWith(prefix)) {
-                throw new OaiException(Verb.GetRecord.name(), BAD_ARGUMENT, ILLEGAL_IDENTIFIER);
+                throw new OaiException(BAD_ARGUMENT, ILLEGAL_IDENTIFIER);
             }
             this.prefix = prefix;
             setIdentifier(identifier.replace(prefix, ""));
         } catch (final Exception e) {
-            throw new OaiException(Verb.GetRecord.name(), BAD_ARGUMENT, String.format(ILLEGAL_IDENTIFIER_PREFIX, prefix));
+            throw new OaiException(BAD_ARGUMENT, String.format(ILLEGAL_IDENTIFIER_PREFIX, prefix));
         }
     }
 

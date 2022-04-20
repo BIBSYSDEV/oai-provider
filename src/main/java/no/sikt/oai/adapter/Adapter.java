@@ -2,43 +2,54 @@ package no.sikt.oai.adapter;
 
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
-import no.sikt.oai.exception.OaiException;
+import no.sikt.oai.exception.InternalOaiException;
 
 import java.net.URI;
 import java.util.List;
 
 public interface Adapter {
 
-    public boolean isValidIdentifier(String identifier);
+    boolean isValidIdentifier(String identifier);
 
-    public String getDescription();
+    String getDescription();
 
-    public String getDateGranularity();
+    String getDateGranularity();
 
-    public String getEarliestTimestamp();
+    String getEarliestTimestamp();
 
-    public String getDeletedRecord();
+    String getDeletedRecord();
 
-    public String getProtocolVersion();
+    String getProtocolVersion();
 
-    public String getAdminEmail();
+    String getAdminEmail();
 
-    public String getRepositoryName();
+    String getRepositoryName();
 
-    public String getBaseUrl();
+    String getBaseUrl();
 
-    public String getIdentifierPrefix();
+    String getIdentifierPrefix();
 
-    public List<String> parseInstitutionResponse(String json) throws OaiException;
+    List<OaiSet> parseSetsResponse(String json) throws InternalOaiException;
 
-    public Record parseRecordResponse(String json, String metadataPrefix) throws OaiException;
+    Record parseRecordResponse(String json, String metadataPrefix) throws InternalOaiException;
 
-    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix)
-            throws OaiException;
+    RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix)
+        throws InternalOaiException;
 
-    public URI getInstitutionsUri();
+    URI getSetsUri();
 
-    public URI getRecordUri(String identifier);
+    URI getRecordUri(String identifier);
 
-    public URI getRecordsListUri(String from, String until, String institution, int startPosition);
+    URI getRecordsListUri(String from, String until, String institution, int startPosition);
+
+    class OaiSet {
+
+        public String setName;
+        public String setSpec;
+
+        public OaiSet(String displayName, String id) {
+            setName = displayName;
+            setSpec = id;
+        }
+    }
 }

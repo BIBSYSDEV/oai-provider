@@ -37,6 +37,7 @@ dependencies {
     testImplementation group: 'org.hamcrest', name: 'hamcrest', version: '2.2'
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.1.0'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.8.2'
+    testImplementation group: 'com.github.tomakehurst', name: 'wiremock-jre8', version: '2.32.0'
 
     shadowJar {
         archiveClassifier.set('')
@@ -67,7 +68,6 @@ checkstyle {
 }
 
 tasks.withType(Checkstyle) {
-    exclude { 'no/sikt/oai/temp/*' }
     reports {
         xml.enabled false
         html.enabled true
@@ -75,20 +75,11 @@ tasks.withType(Checkstyle) {
     }
 }
 
-tasks.withType(Pmd) {
-    exclude { 'no/sikt/oai/temp/*' }
-}
-
 jacocoTestReport {
     reports {
         xml.enabled false
         csv.enabled false
         html.destination file("${buildDir}/reports/jacoco")
-    }
-    afterEvaluate {
-        getClassDirectories().setFrom(classDirectories.files.collect {
-            fileTree(dir: it, exclude:  'no/sikt/oai/temp/*')
-        })
     }
 }
 
@@ -105,7 +96,7 @@ jacocoTestCoverageVerification {
             limit {
                 counter = 'METHOD'
                 value = 'COVEREDRATIO'
-                minimum = 0.84
+                minimum = 1.00
             }
         }
 
@@ -113,14 +104,9 @@ jacocoTestCoverageVerification {
             limit {
                 counter = 'CLASS'
                 value = 'COVEREDRATIO'
-                minimum = 0.90
+                minimum = 1.00
             }
         }
-    }
-    afterEvaluate {
-        getClassDirectories().setFrom(classDirectories.files.collect {
-            fileTree(dir: it, exclude: 'no/sikt/oai/temp/*')
-        })
     }
 }
 

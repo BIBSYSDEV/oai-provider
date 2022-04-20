@@ -35,13 +35,12 @@ public class OaiResponse {
         return buffer.toString();
     }
 
-    public static String listMetadataFormats(String baseUrl, String metadataPrefix, String schema,
-                                             String metadataNamespace, long startTime) {
+    public static String listMetadataFormats(String baseUrl, long startTime) {
         StringBuilder buffer = new StringBuilder();
         makeHeader(buffer);
         makeHeaderRequest(ListMetadataFormats.name(), baseUrl, buffer);
         makeVerbStart(ListMetadataFormats.name(), buffer);
-        makeListMetadataFormats(metadataPrefix, schema, metadataNamespace, buffer);
+        makeListMetadataFormats(buffer);
         makeVerbEnd(ListMetadataFormats.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(ListMetadataFormats.name(), startTime, buffer);
@@ -298,12 +297,21 @@ public class OaiResponse {
     // OAI helpers: ListMetadataFormats
 
     @SuppressWarnings({"PMD.ConsecutiveLiteralAppends"})
-    protected static void makeListMetadataFormats(String metadataPrefix, String schema, String metadataNamespace,
-                                                  StringBuilder buffer) {
+    protected static void makeListMetadataFormats(StringBuilder buffer) {
         buffer.append("        <metadataFormat>\n")
-            .append("            <metadataPrefix>)").append(metadataPrefix).append("</metadataPrefix>\n")
-            .append("            <schema>").append(schema).append("</schema>\n")
-            .append("            <metadataNamespace>").append(metadataNamespace).append("</metadataNamespace>\n")
+            .append("            <metadataPrefix>)").append("qdc").append("</metadataPrefix>\n")
+            .append("            <schema>").append("http://dublincore.org/schemas/xmls/qdc/2006/01/06/dcterms.xsd").append("</schema>\n")
+            .append("            <metadataNamespace>").append("http://purl.org/dc/terms/").append("</metadataNamespace>\n")
+            .append("        </metadataFormat>\n")
+            .append("        <metadataFormat>\n")
+            .append("            <metadataPrefix>)").append("oai_dc").append("</metadataPrefix>\n")
+            .append("            <schema>").append("http://www.openarchives.org/OAI/2.0/oai_dc.xsd").append("</schema>\n")
+            .append("            <metadataNamespace>").append("http://www.openarchives.org/OAI/2.0/oai_dc/").append("</metadataNamespace>\n")
+            .append("        </metadataFormat>\n")
+            .append("        <metadataFormat>\n")
+            .append("            <metadataPrefix>)").append("oai_datacite").append("</metadataPrefix>\n")
+            .append("            <schema>").append("http://namespace.openaire.eu/schema/oaire/ https://www.openaire.eu/schema/repo-lit/4.0/openaire.xsd").append("</schema>\n")
+            .append("            <metadataNamespace>").append("http://namespace.openaire.eu/schema/oaire/ https://www.openaire.eu/schema/repo-lit/4.0/openaire.xsd\n").append("</metadataNamespace>\n")
             .append("        </metadataFormat>\n");
     }
 }

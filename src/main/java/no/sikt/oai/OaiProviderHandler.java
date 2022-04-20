@@ -109,8 +109,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                             adapter.getBaseUrl(), setSpec, 0, recordsList, startTime);
                     break;
                 case ListMetadataFormats:
-                    response = OaiResponse.listMetadataFormats(adapter.getBaseUrl(), metadataPrefix, null, null,
-                            startTime);
+                    response = OaiResponse.listMetadataFormats(adapter.getBaseUrl(), startTime);
                     break;
                 case ListSets:
                     List<OaiSet> setsList = this.getSetsList();

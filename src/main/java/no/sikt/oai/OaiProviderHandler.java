@@ -189,7 +189,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     protected void validateSet(String setSpec) throws OaiException, InternalOaiException {
         List<String> setSpecList = getSetsList().stream().map(sets -> sets.setSpec).collect(Collectors.toList());
-        if (setSpec.length() > 0 && !setSpecList.contains(setSpec) && !setSpec.equalsIgnoreCase("*")) {
+        if (setSpec.length() > 0 && !setSpecList.contains(setSpec) && !"*".equalsIgnoreCase(setSpec)) {
             throw new OaiException(OaiConstants.BAD_ARGUMENT, OaiConstants.UNKNOWN_SET_NAME + setSpec);
         }
     }

@@ -73,11 +73,12 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
             long startTime = System.currentTimeMillis();
 
             RecordsList recordsList;
+
             switch (Verb.valueOf(verb)) {
                 case GetRecord:
-                    validateMetadataPrefix(verb, metadataPrefix);
+                    validateMetadataPrefix(metadataPrefix);
                     OaiIdentifier oaiIdentifier = new OaiIdentifier(identifier, adapter.getIdentifierPrefix());
-                    validateIdentifier(verb, oaiIdentifier.getIdentifier(), adapter.getRepositoryName());
+                    validateIdentifier(oaiIdentifier.getIdentifier(), adapter.getRepositoryName());
                     Record record = getRecord(oaiIdentifier.getIdentifier(), metadataPrefix);
                     response = OaiResponse.getRecord(record, oaiIdentifier.toString(), metadataPrefix, setSpec,
                             adapter.getBaseUrl(), startTime);
@@ -85,32 +86,31 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                 case ListRecords:
                     validateRequiredParameters(verb, resumptionToken, metadataPrefix);
                     if (resumptionToken.length() > 0) {
-                        validateResumptionToken(verb, resumptionToken);
+                        validateResumptionToken(resumptionToken);
                     } else {
-                        validateMetadataPrefix(verb, metadataPrefix);
-                        validateFromAndUntilParameters(verb, from, until);
+                        validateMetadataPrefix(metadataPrefix);
+                        validateFromAndUntilParameters(from, until);
                         validateSet(setSpec);
                     }
-                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, resumptionToken, 0);
+                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, resumptionToken);
                     response = OaiResponse.listRecords(from, until, resumptionToken, metadataPrefix,
-                            adapter.getBaseUrl(), 0, setSpec, recordsList, startTime);
+                            adapter.getBaseUrl(), getStartPosition(resumptionToken), setSpec, recordsList, startTime);
                     break;
                 case ListIdentifiers:
                     validateRequiredParameters(verb, resumptionToken, metadataPrefix);
                     if (resumptionToken.length() > 0) {
-                        validateResumptionToken(verb, resumptionToken);
+                        validateResumptionToken(resumptionToken);
                     } else {
-                        validateMetadataPrefix(verb, metadataPrefix);
-                        validateFromAndUntilParameters(verb, from, until);
+                        validateMetadataPrefix(metadataPrefix);
+                        validateFromAndUntilParameters(from, until);
                         validateSet(setSpec);
                     }
-                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, resumptionToken, 0);
+                    recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, resumptionToken);
                     response = OaiResponse.listIdentifiers(from, until, metadataPrefix, resumptionToken,
-                            adapter.getBaseUrl(), setSpec, 0, recordsList, startTime);
+                            adapter.getBaseUrl(), setSpec, getStartPosition(resumptionToken), recordsList, startTime);
                     break;
                 case ListMetadataFormats:
-                    response = OaiResponse.listMetadataFormats(adapter.getBaseUrl(), metadataPrefix, null, null,
-                            startTime);
+                    response = OaiResponse.listMetadataFormats(adapter.getBaseUrl(), startTime);
                     break;
                 case ListSets:
                     List<OaiSet> setsList = this.getSetsList();
@@ -176,7 +176,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         }
     }
 
-    protected void validateFromAndUntilParameters(String verb, String from, String until) throws OaiException {
+    protected void validateFromAndUntilParameters(String from, String until) throws OaiException {
         if (from.length() > 0 && !TimeUtils.isUTCdate(from)) {
             throw new OaiException(OaiConstants.BAD_ARGUMENT, OaiConstants.ILLEGAL_DATE_FROM);
         }
@@ -190,7 +190,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     protected void validateSet(String setSpec) throws OaiException, InternalOaiException {
         List<String> setSpecList = getSetsList().stream().map(sets -> sets.setSpec).collect(Collectors.toList());
-        if (setSpec.length() > 0 && !setSpecList.contains(setSpec)) {
+        if (setSpec.length() > 0 && !setSpecList.contains(setSpec) && !"all".equalsIgnoreCase(setSpec)) {
             throw new OaiException(OaiConstants.BAD_ARGUMENT, OaiConstants.UNKNOWN_SET_NAME + setSpec);
         }
     }
@@ -206,25 +206,26 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     }
 
     private RecordsList getRecordsList(String verb, String from, String until, String setSpec, String metadataPrefix,
-                                       String resumptionToken, int startPosition)
+                                       String resumptionToken)
             throws OaiException, InternalOaiException {
         String json;
         if (resumptionToken.length() > 0) {
             ResumptionToken token = new ResumptionToken(resumptionToken);
             json = dataProvider.getRecordsList(token.from, token.until, token.setSpec,
                     Integer.parseInt(token.startPosition));
+            return adapter.parseRecordsListResponse(verb, json, token.metadataPrefix);
         } else {
-            json = dataProvider.getRecordsList(from, until, setSpec, startPosition);
+            json = dataProvider.getRecordsList(from, until, setSpec, 0);
+            return adapter.parseRecordsListResponse(verb, json, metadataPrefix);
         }
-        return adapter.parseRecordsListResponse(verb, json, metadataPrefix);
     }
 
-    protected void validateResumptionToken(String verb, String resumptionToken)
+    protected void validateResumptionToken(String resumptionToken)
             throws OaiException, InternalOaiException {
         validateSet(new ResumptionToken(resumptionToken).setSpec);
     }
 
-    protected void validateMetadataPrefix(String verb, String metadataPrefix)
+    protected void validateMetadataPrefix(String metadataPrefix)
             throws OaiException {
         if (!MetadataFormat.isValid(metadataPrefix)) {
             throw new OaiException(OaiConstants.CANNOT_DISSEMINATE_FORMAT,
@@ -232,10 +233,17 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         }
     }
 
-    protected void validateIdentifier(String verb, String identifier, String repositoryName)
+    protected void validateIdentifier(String identifier, String repositoryName)
             throws OaiException {
         if (!adapter.isValidIdentifier(identifier)) {
             throw new OaiException(OaiConstants.ID_DOES_NOT_EXIST, NO_MATCHING_IDENTIFIER + repositoryName);
         }
+    }
+
+    private int getStartPosition(String resumptionToken) {
+        if (resumptionToken.length() > 0) {
+            return Integer.parseInt(new ResumptionToken(resumptionToken).startPosition);
+        }
+        return 0;
     }
 }

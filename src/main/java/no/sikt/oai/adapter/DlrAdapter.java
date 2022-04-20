@@ -197,6 +197,7 @@ public class DlrAdapter implements Adapter {
         buffer.append("    <dc:rights>").append(resource.features.get("dlr_rights_license_name"))
                 .append("</dc:rights>\n")
                 .append("    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n")
+                .append("    <dc:publisher>").append(resource.features.get("dlr_storage_id")).append("</dc:publisher>\n")
                 .append("    <dc:date>").append(resource.features.get("dlr_time_created")).append("</dc:date>\n")
                 .append("    <dc:date>").append(resource.features.get("dlr_time_published")).append("</dc:date>\n")
                 .append("    <dc:identifier>").append(resource.features.get("dlr_identifier_handle"))
@@ -233,6 +234,7 @@ public class DlrAdapter implements Adapter {
         }
         buffer.append("    <dc:rights>").append(resource.features.get("dlr_rights_license_name"))
                 .append("</dc:rights>\n")
+                .append("    <dc:publisher>").append(resource.features.get("dlr_storage_id")).append("</dc:publisher>\n")
                 .append("    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n")
                 .append("    <dcterms:created>").append(resource.features.get("dlr_time_created"))
                 .append("</dcterms:created>\n")
@@ -259,7 +261,9 @@ public class DlrAdapter implements Adapter {
                 .append("</datacite:title>\n")
                 .append("    </datacite:titles>\n")
                 .append("    <dc:description>").append(resource.features.get("dlr_description"))
-                .append("</dc:description>\n");
+                .append("</dc:description>\n")
+                .append("    <dc:publisher>").append(resource.features.get("dlr_storage_id"))
+                .append("</dc:publisher>\n");
         for (ResourceCreator creator : resource.creators) {
             buffer.append("    <datacite:creators>\n")
                     .append("        <datacite:creator>\n")

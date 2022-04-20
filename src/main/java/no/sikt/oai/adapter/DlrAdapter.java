@@ -234,6 +234,7 @@ public class DlrAdapter implements Adapter {
         }
         buffer.append("    <dc:rights>").append(resource.features.get("dlr_rights_license_name"))
                 .append("</dc:rights>\n")
+                .append("    <dcterms:accessRights>").append(resource.features.get("dlr_access")).append("</dcterms:accessRights>\n")
                 .append("    <dc:publisher>").append(resource.features.get("dlr_storage_id")).append("</dc:publisher>\n")
                 .append("    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n")
                 .append("    <dcterms:created>").append(resource.features.get("dlr_time_created"))

@@ -72,7 +72,7 @@ public class OaiResponse {
             makeRecord(record, buffer, false);
         }
 
-        long recordsRemaining = records.getNumFound() - startPosition + records.size();
+        long recordsRemaining = records.getNumFound() - (startPosition + records.size());
 
         String newResumptionToken = createNewResumptionToken(from, until, resumptionToken, metadataPrefix,
                 startPosition, setSpec, records, recordsRemaining);

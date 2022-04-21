@@ -8,7 +8,6 @@ import static no.sikt.oai.Verb.ListIdentifiers;
 import static no.sikt.oai.Verb.ListMetadataFormats;
 import static no.sikt.oai.Verb.ListRecords;
 import static no.sikt.oai.Verb.ListSets;
-import java.util.Date;
 import java.util.List;
 import no.sikt.oai.adapter.Adapter;
 import no.sikt.oai.adapter.Adapter.OaiSet;
@@ -53,8 +52,7 @@ public class OaiResponse {
         makeHeader(buffer);
         makeHeaderRequestGetRecord(GetRecord.name(), metadataPrefix, identifier, baseUrl, buffer);
         makeVerbStart(GetRecord.name(), buffer);
-        makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, record.setSpecs, buffer,
-                true);
+        makeRecord(record, buffer, true);
         makeVerbEnd(GetRecord.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(GetRecord.name(), startTime, buffer);
@@ -71,8 +69,7 @@ public class OaiResponse {
         makeVerbStart(ListIdentifiers.name(), buffer);
 
         for (Record record : records) {
-            makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, record.setSpecs,
-                    buffer, false);
+            makeRecord(record, buffer, false);
         }
 
         long recordsRemaining = records.getNumFound() - startPosition + records.size();
@@ -96,8 +93,7 @@ public class OaiResponse {
         makeVerbStart(ListRecords.name(), buffer);
 
         for (Record record : records) {
-            makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, record.setSpecs,
-                    buffer, true);
+            makeRecord(record, buffer, true);
         }
 
         long recordsRemaining = records.getNumFound() - (startPosition + records.size());
@@ -195,26 +191,25 @@ public class OaiResponse {
     }
 
     @SuppressWarnings({"PMD.ConsecutiveLiteralAppends"})
-    protected static void makeRecord(boolean isDeleted, String identifier, Date lastUpdateDate, String xmlContent,
-                                     List<String> setSpecs, StringBuilder buffer, boolean showMetadata) {
+    protected static void makeRecord(Record record, StringBuilder buffer, boolean showMetadata) {
         buffer.append("        <record>\n");
-        if (isDeleted) {
+        if (record.isDeleted()) {
             buffer.append("            <header status=\"deleted\">\n");
         } else {
             buffer.append("            <header>\n");
         }
-        buffer.append("                <identifier>").append(identifier).append("</identifier>\n")
-            .append("                <datestamp>").append(date2String(lastUpdateDate, FORMAT_ZULU_LONG))
+        buffer.append("                <identifier>").append(record.getIdentifier()).append("</identifier>\n")
+            .append("                <datestamp>").append(date2String(record.getLastUpdateDate(), FORMAT_ZULU_LONG))
             .append("</datestamp>\n");
-        for (String setSpec : setSpecs) {
+        for (String setSpec : record.getSetSpecs()) {
             buffer.append("                <setSpec>").append(setSpec).append("</setSpec>\n");
         }
         buffer.append("            </header>\n");
-        if (!isDeleted && showMetadata) {
+        if (!record.isDeleted() && showMetadata) {
             buffer.append("            <metadata>\n");
 
             // Kun for å få riktig innrykk...
-            String[] recordXml = xmlContent.split("\\r?\\n");
+            String[] recordXml = record.getContent().split("\\r?\\n");
             for (String recordXmlPart : recordXml) {
                 buffer.append("                ").append(recordXmlPart).append('\n');
             }

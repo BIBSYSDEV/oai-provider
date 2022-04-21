@@ -206,9 +206,9 @@ public class DlrAdapter implements Adapter {
                 .append("    <dc:date>").append(resource.features.get("dlr_time_published")).append("</dc:date>\n")
                 .append("    <dc:identifier>").append(resource.features.get("dlr_identifier_handle"))
                 .append("</dc:identifier>\n")
-                .append("    <dc:identifier>").append(resource.identifier).append("</dc:identifier>\n")
-                .append("</oai_dc:dc>\n");
+                .append("    <dc:identifier>").append(resource.identifier).append("</dc:identifier>\n");
         appendCreatorsDc(resource, buffer);
+        buffer.append("</oai_dc:dc>\n");
         return buffer.toString();
     }
 
@@ -231,10 +231,10 @@ public class DlrAdapter implements Adapter {
                 .append("</dcterms:created>\n")
                 .append("    <dcterms:identifier xsi:type=\"dcterms:URI\">")
                 .append(resource.features.get("dlr_identifier_handle")).append("</dcterms:identifier>\n")
-                .append("    <dcterms:identifier>").append(resource.identifier).append("</dcterms:identifier>\n")
-                .append("</qdc:qualifieddc>\n");
+                .append("    <dcterms:identifier>").append(resource.identifier).append("</dcterms:identifier>\n");
         appendCreatorsDc(resource, buffer);
         appendContributorsDc(resource, buffer);
+        buffer.append("</qdc:qualifieddc>\n");
         return buffer.toString();
     }
 
@@ -255,9 +255,9 @@ public class DlrAdapter implements Adapter {
                 .append("        <datacite:date dateType=\"Issued\">")
                 .append(resource.features.get("dlr_time_published"))
                 .append("</datacite:date>\n")
-                .append("    </datacite:dates>\n")
-                .append("</oaire:resource>\n");
+                .append("    </datacite:dates>\n");
         appendCreatorsDatacite(resource, buffer);
+        buffer.append("</oaire:resource>\n");
         return buffer.toString();
     }
 

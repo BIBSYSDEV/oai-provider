@@ -106,7 +106,7 @@ public class DlrAdapter implements Adapter {
     public Record parseRecordResponse(String json, String metadataPrefix, String setSpec) throws InternalOaiException {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         try {
-            return createRecordFromResource(mapper.readValue(json, Resource.class), metadataPrefix, setSpec);
+            return createRecordFromResource(mapper.readValue(json, Resource.class), metadataPrefix);
         } catch (JsonProcessingException e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
         }
@@ -120,8 +120,7 @@ public class DlrAdapter implements Adapter {
             ResourceSearchResponse resourceSearchResponse = mapper.readValue(json, ResourceSearchResponse.class);
             RecordsList records = new RecordsList(resourceSearchResponse.numFound);
             for (String resourceString : resourceSearchResponse.resourcesAsJson) {
-                records.add(createRecordFromResource(mapper.readValue(resourceString, Resource.class), metadataPrefix,
-                        setSpec));
+                records.add(createRecordFromResource(mapper.readValue(resourceString, Resource.class), metadataPrefix));
             }
             return records;
         } catch (JsonProcessingException e) {
@@ -162,11 +161,10 @@ public class DlrAdapter implements Adapter {
         return uriWrapper.getUri();
     }
 
-    private Record createRecordFromResource(Resource resource, String metadataPrefix, String setSpec) {
+    private Record createRecordFromResource(Resource resource, String metadataPrefix) {
         List<String> setSpecs = new ArrayList<>();
         setSpecs.add(ALL_SET_NAME);
-        if (!ALL_SET_NAME.equalsIgnoreCase(setSpec)
-                && !NULL_STRING.equalsIgnoreCase(resource.features.get(STORAGE_ID_KEY))) {
+        if (!NULL_STRING.equalsIgnoreCase(resource.features.get(STORAGE_ID_KEY))) {
             setSpecs.add(resource.features.get(STORAGE_ID_KEY));
         }
         boolean deleted = Boolean.parseBoolean(resource.features.get("dlr_status_deleted"));
@@ -260,7 +258,6 @@ public class DlrAdapter implements Adapter {
         buffer.append("</oaire:resource>\n");
         return buffer.toString();
     }
-
 
     @SuppressWarnings("PMD.ConsecutiveLiteralAppends")
     private void appendOaiDcHeader(StringBuilder buffer) {

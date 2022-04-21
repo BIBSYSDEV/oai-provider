@@ -8,7 +8,6 @@ import static no.sikt.oai.Verb.ListIdentifiers;
 import static no.sikt.oai.Verb.ListMetadataFormats;
 import static no.sikt.oai.Verb.ListRecords;
 import static no.sikt.oai.Verb.ListSets;
-import java.util.Date;
 import java.util.List;
 import no.sikt.oai.adapter.Adapter;
 import no.sikt.oai.adapter.Adapter.OaiSet;
@@ -47,13 +46,13 @@ public class OaiResponse {
         return buffer.toString();
     }
 
-    public static String getRecord(Record record, String identifier, String metadataPrefix, String setSpec,
-                                   String baseUrl, long startTime) {
+    public static String getRecord(Record record, String identifier, String metadataPrefix, String baseUrl,
+                                   long startTime) {
         StringBuilder buffer = new StringBuilder(1000);
         makeHeader(buffer);
         makeHeaderRequestGetRecord(GetRecord.name(), metadataPrefix, identifier, baseUrl, buffer);
         makeVerbStart(GetRecord.name(), buffer);
-        makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer, true);
+        makeRecord(record, buffer, true);
         makeVerbEnd(GetRecord.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(GetRecord.name(), startTime, buffer);
@@ -70,20 +69,13 @@ public class OaiResponse {
         makeVerbStart(ListIdentifiers.name(), buffer);
 
         for (Record record : records) {
-            makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer,
-                       false);
+            makeRecord(record, buffer, false);
         }
 
-        String newResumptionToken = "";
         long recordsRemaining = records.getNumFound() - startPosition + records.size();
 
-        if (recordsRemaining > 0) {
-            ResumptionToken nyTok = new ResumptionToken("lr", System.currentTimeMillis(), setSpec,
-                                                        from == null ? "" : from, until == null ? "" : until,
-                                                        metadataPrefix,
-                                                        Integer.toString(startPosition + records.size()));
-            newResumptionToken = nyTok.asString();
-        }
+        String newResumptionToken = createNewResumptionToken(from, until, resumptionToken, metadataPrefix,
+                startPosition, setSpec, records, recordsRemaining);
         makeFooterListIdentifiers(records.getNumFound(), newResumptionToken, buffer);
         makeVerbEnd(ListIdentifiers.name(), buffer);
         makeFooter(buffer);
@@ -95,31 +87,45 @@ public class OaiResponse {
                                      String baseUrl, int startPosition, String setSpec, RecordsList records,
                                      long startTime) {
         StringBuilder buffer = new StringBuilder();
-        String newResumptionToken = "";
         makeHeader(buffer);
         makeHeaderRequestListRecordsIdentifiers(ListRecords.name(), resumptionToken, from, until, metadataPrefix,
                                                 baseUrl, buffer);
         makeVerbStart(ListRecords.name(), buffer);
 
         for (Record record : records) {
-            makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer,
-                       true);
+            makeRecord(record, buffer, true);
         }
 
         long recordsRemaining = records.getNumFound() - (startPosition + records.size());
 
-        if (recordsRemaining > 0) {
-            ResumptionToken nyTok = new ResumptionToken("lr", System.currentTimeMillis(), setSpec,
-                                                        from == null ? "" : from, until == null ? "" : until,
-                                                        metadataPrefix,
-                                                        Integer.toString(startPosition + records.size()));
-            newResumptionToken = nyTok.asString();
-        }
+        String newResumptionToken = createNewResumptionToken(from, until, resumptionToken, metadataPrefix,
+                startPosition, setSpec, records, recordsRemaining);
+
         makeFooterListRecords(records.getNumFound(), newResumptionToken, startPosition + records.size(), buffer);
         makeVerbEnd(ListRecords.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(ListRecords.name(), startTime, buffer);
         return buffer.toString();
+    }
+
+    private static String createNewResumptionToken(String from, String until, String resumptionToken,
+                                                   String metadataPrefix, int startPosition, String setSpec,
+                                                   RecordsList records, long recordsRemaining) {
+        if (recordsRemaining > 0) {
+            ResumptionToken newToken;
+            if (resumptionToken.length() > 0) {
+                newToken = new ResumptionToken(resumptionToken);
+                newToken.timestamp = System.currentTimeMillis();
+                newToken.startPosition = Integer.toString(startPosition + records.size());
+            } else {
+                newToken = new ResumptionToken("lr", System.currentTimeMillis(), setSpec,
+                        from == null ? "" : from, until == null ? "" : until,
+                        metadataPrefix,
+                        Integer.toString(startPosition + records.size()));
+            }
+            return newToken.asString();
+        }
+        return "";
     }
 
     public static String listSets(String baseUrl, List<OaiSet> setList, long startTime) {
@@ -185,26 +191,25 @@ public class OaiResponse {
     }
 
     @SuppressWarnings({"PMD.ConsecutiveLiteralAppends"})
-    protected static void makeRecord(boolean isDeleted, String identifier, Date lastUpdateDate, String xmlContent,
-                                     String setSpec, StringBuilder buffer, boolean showMetadata) {
+    protected static void makeRecord(Record record, StringBuilder buffer, boolean showMetadata) {
         buffer.append("        <record>\n");
-        if (isDeleted) {
+        if (record.isDeleted()) {
             buffer.append("            <header status=\"deleted\">\n");
         } else {
             buffer.append("            <header>\n");
         }
-        buffer.append("                <identifier>").append(identifier).append("</identifier>\n")
-            .append("                <datestamp>").append(date2String(lastUpdateDate, FORMAT_ZULU_LONG))
+        buffer.append("                <identifier>").append(record.getIdentifier()).append("</identifier>\n")
+            .append("                <datestamp>").append(date2String(record.getLastUpdateDate(), FORMAT_ZULU_LONG))
             .append("</datestamp>\n");
-        if (setSpec.length() > 0) {
+        for (String setSpec : record.getSetSpecs()) {
             buffer.append("                <setSpec>").append(setSpec).append("</setSpec>\n");
         }
         buffer.append("            </header>\n");
-        if (!isDeleted && showMetadata) {
+        if (!record.isDeleted() && showMetadata) {
             buffer.append("            <metadata>\n");
 
             // Kun for å få riktig innrykk...
-            String[] recordXml = xmlContent.split("\\r?\\n");
+            String[] recordXml = record.getContent().split("\\r?\\n");
             for (String recordXmlPart : recordXml) {
                 buffer.append("                ").append(recordXmlPart).append('\n');
             }
@@ -299,17 +304,17 @@ public class OaiResponse {
     @SuppressWarnings({"PMD.ConsecutiveLiteralAppends"})
     protected static void makeListMetadataFormats(StringBuilder buffer) {
         buffer.append("        <metadataFormat>\n")
-            .append("            <metadataPrefix>)").append("qdc").append("</metadataPrefix>\n")
+            .append("            <metadataPrefix>").append("qdc").append("</metadataPrefix>\n")
             .append("            <schema>").append("http://dublincore.org/schemas/xmls/qdc/2006/01/06/dcterms.xsd").append("</schema>\n")
             .append("            <metadataNamespace>").append("http://purl.org/dc/terms/").append("</metadataNamespace>\n")
             .append("        </metadataFormat>\n")
             .append("        <metadataFormat>\n")
-            .append("            <metadataPrefix>)").append("oai_dc").append("</metadataPrefix>\n")
+            .append("            <metadataPrefix>").append("oai_dc").append("</metadataPrefix>\n")
             .append("            <schema>").append("http://www.openarchives.org/OAI/2.0/oai_dc.xsd").append("</schema>\n")
             .append("            <metadataNamespace>").append("http://www.openarchives.org/OAI/2.0/oai_dc/").append("</metadataNamespace>\n")
             .append("        </metadataFormat>\n")
             .append("        <metadataFormat>\n")
-            .append("            <metadataPrefix>)").append("oai_datacite").append("</metadataPrefix>\n")
+            .append("            <metadataPrefix>").append("oai_datacite").append("</metadataPrefix>\n")
             .append("            <schema>").append("http://namespace.openaire.eu/schema/oaire/ https://www.openaire.eu/schema/repo-lit/4.0/openaire.xsd").append("</schema>\n")
             .append("            <metadataNamespace>").append("http://namespace.openaire.eu/schema/oaire/ https://www.openaire.eu/schema/repo-lit/4.0/openaire.xsd\n").append("</metadataNamespace>\n")
             .append("        </metadataFormat>\n");

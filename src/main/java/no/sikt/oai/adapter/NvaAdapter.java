@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -113,13 +114,13 @@ public class NvaAdapter implements Adapter {
     }
 
     @Override
-    public Record parseRecordResponse(String json, String metadataPrefix) {
-        return new Record("", false, "1234", new Date());
+    public Record parseRecordResponse(String json, String metadataPrefix, String setSpec) {
+        return new Record("", false, "1234", new Date(), Collections.emptyList());
     }
 
     @Override
-    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix) {
-        Record record = new Record("", false, "1234", new Date());
+    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix, String setSpec) {
+        Record record = new Record("", false, "1234", new Date(), Collections.emptyList());
         RecordsList records = new RecordsList(1);
         records.add(record);
         return records;

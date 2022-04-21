@@ -164,7 +164,8 @@ public class DlrAdapter implements Adapter {
     private Record createRecordFromResource(Resource resource, String metadataPrefix) {
         List<String> setSpecs = new ArrayList<>();
         setSpecs.add(ALL_SET_NAME);
-        if (!NULL_STRING.equalsIgnoreCase(resource.features.get(STORAGE_ID_KEY))) {
+        if (!resource.features.getOrDefault(STORAGE_ID_KEY, EMPTY_STRING).isEmpty()
+                && !NULL_STRING.equalsIgnoreCase(resource.features.get(STORAGE_ID_KEY))) {
             setSpecs.add(resource.features.get(STORAGE_ID_KEY));
         }
         boolean deleted = Boolean.parseBoolean(resource.features.get("dlr_status_deleted"));

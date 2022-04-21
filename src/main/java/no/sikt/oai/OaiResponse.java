@@ -111,7 +111,7 @@ public class OaiResponse {
     private static String createNewResumptionToken(String from, String until, String resumptionToken,
                                                    String metadataPrefix, int startPosition, String setSpec,
                                                    RecordsList records, long recordsRemaining) {
-        if (recordsRemaining > 0) {
+        if (recordsRemaining > 50) {
             ResumptionToken newToken;
             if (resumptionToken.length() > 0) {
                 newToken = new ResumptionToken(resumptionToken);

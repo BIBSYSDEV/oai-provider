@@ -316,7 +316,7 @@ public class OaiResponse {
             .append("        <metadataFormat>\n")
             .append("            <metadataPrefix>").append("oai_datacite").append("</metadataPrefix>\n")
             .append("            <schema>").append("http://namespace.openaire.eu/schema/oaire/ https://www.openaire.eu/schema/repo-lit/4.0/openaire.xsd").append("</schema>\n")
-            .append("            <metadataNamespace>").append("http://namespace.openaire.eu/schema/oaire/ https://www.openaire.eu/schema/repo-lit/4.0/openaire.xsd\n").append("</metadataNamespace>\n")
+            .append("            <metadataNamespace>").append("http://namespace.openaire.eu/schema/oaire/ https://www.openaire.eu/schema/repo-lit/4.0/openaire.xsd").append("</metadataNamespace>\n")
             .append("        </metadataFormat>\n");
     }
 }

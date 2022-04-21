@@ -79,8 +79,8 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                     validateMetadataPrefix(metadataPrefix);
                     OaiIdentifier oaiIdentifier = new OaiIdentifier(identifier, adapter.getIdentifierPrefix());
                     validateIdentifier(oaiIdentifier.getIdentifier(), adapter.getRepositoryName());
-                    Record record = getRecord(oaiIdentifier.getIdentifier(), metadataPrefix);
-                    response = OaiResponse.getRecord(record, oaiIdentifier.toString(), metadataPrefix, setSpec,
+                    Record record = getRecord(oaiIdentifier.getIdentifier(), metadataPrefix, setSpec);
+                    response = OaiResponse.getRecord(record, oaiIdentifier.toString(), metadataPrefix,
                             adapter.getBaseUrl(), startTime);
                     break;
                 case ListRecords:
@@ -200,9 +200,10 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         return adapter.parseSetsResponse(json);
     }
 
-    private Record getRecord(String identifier, String metadataPrefix) throws InternalOaiException, OaiException {
+    private Record getRecord(String identifier, String metadataPrefix, String setSpec) throws InternalOaiException,
+            OaiException {
         String json = dataProvider.getRecord(identifier);
-        return adapter.parseRecordResponse(json, metadataPrefix);
+        return adapter.parseRecordResponse(json, metadataPrefix, setSpec);
     }
 
     private RecordsList getRecordsList(String verb, String from, String until, String setSpec, String metadataPrefix,
@@ -213,10 +214,10 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
             ResumptionToken token = new ResumptionToken(resumptionToken);
             json = dataProvider.getRecordsList(token.from, token.until, token.setSpec,
                     Integer.parseInt(token.startPosition));
-            return adapter.parseRecordsListResponse(verb, json, token.metadataPrefix);
+            return adapter.parseRecordsListResponse(verb, json, token.metadataPrefix, token.setSpec);
         } else {
             json = dataProvider.getRecordsList(from, until, setSpec, 0);
-            return adapter.parseRecordsListResponse(verb, json, metadataPrefix);
+            return adapter.parseRecordsListResponse(verb, json, metadataPrefix, setSpec);
         }
     }
 

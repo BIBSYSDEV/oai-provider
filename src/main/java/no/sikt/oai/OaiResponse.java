@@ -47,13 +47,14 @@ public class OaiResponse {
         return buffer.toString();
     }
 
-    public static String getRecord(Record record, String identifier, String metadataPrefix, String setSpec,
-                                   String baseUrl, long startTime) {
+    public static String getRecord(Record record, String identifier, String metadataPrefix, String baseUrl,
+                                   long startTime) {
         StringBuilder buffer = new StringBuilder(1000);
         makeHeader(buffer);
         makeHeaderRequestGetRecord(GetRecord.name(), metadataPrefix, identifier, baseUrl, buffer);
         makeVerbStart(GetRecord.name(), buffer);
-        makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer, true);
+        makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, record.setSpecs, buffer,
+                true);
         makeVerbEnd(GetRecord.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(GetRecord.name(), startTime, buffer);
@@ -70,8 +71,8 @@ public class OaiResponse {
         makeVerbStart(ListIdentifiers.name(), buffer);
 
         for (Record record : records) {
-            makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer,
-                       false);
+            makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, record.setSpecs,
+                    buffer, false);
         }
 
         long recordsRemaining = records.getNumFound() - startPosition + records.size();
@@ -95,8 +96,8 @@ public class OaiResponse {
         makeVerbStart(ListRecords.name(), buffer);
 
         for (Record record : records) {
-            makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, setSpec, buffer,
-                       true);
+            makeRecord(record.isDeleted, record.identifier, record.lastUpdateDate, record.content, record.setSpecs,
+                    buffer, true);
         }
 
         long recordsRemaining = records.getNumFound() - (startPosition + records.size());
@@ -195,7 +196,7 @@ public class OaiResponse {
 
     @SuppressWarnings({"PMD.ConsecutiveLiteralAppends"})
     protected static void makeRecord(boolean isDeleted, String identifier, Date lastUpdateDate, String xmlContent,
-                                     String setSpec, StringBuilder buffer, boolean showMetadata) {
+                                     List<String> setSpecs, StringBuilder buffer, boolean showMetadata) {
         buffer.append("        <record>\n");
         if (isDeleted) {
             buffer.append("            <header status=\"deleted\">\n");
@@ -205,7 +206,7 @@ public class OaiResponse {
         buffer.append("                <identifier>").append(identifier).append("</identifier>\n")
             .append("                <datestamp>").append(date2String(lastUpdateDate, FORMAT_ZULU_LONG))
             .append("</datestamp>\n");
-        if (setSpec.length() > 0) {
+        for (String setSpec : setSpecs) {
             buffer.append("                <setSpec>").append(setSpec).append("</setSpec>\n");
         }
         buffer.append("            </header>\n");

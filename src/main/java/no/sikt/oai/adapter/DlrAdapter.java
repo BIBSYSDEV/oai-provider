@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -23,10 +24,12 @@ import nva.commons.core.paths.UriWrapper;
 
 public class DlrAdapter implements Adapter {
 
+    public static final String ALL_SET_NAME = "all";
+    public static final String STORAGE_ID_KEY = "dlr_storage_id";
     private final transient ObjectMapper mapper = new ObjectMapper();
-    private final transient String recordsUri; // "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resources";
-    private final transient String recordUri; // "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/resource";
-    private final transient String setsUri; // "https://api-dev.dlr.aws.unit.no/dlr-gui-backend-resources-search/v1/oai/institutions";
+    private final transient String recordsUri;
+    private final transient String recordUri;
+    private final transient String setsUri;
 
     public DlrAdapter(Environment environment) {
         setsUri = environment.readEnv(SETS_URI_ENV);
@@ -96,24 +99,25 @@ public class DlrAdapter implements Adapter {
     }
 
     @Override
-    public Record parseRecordResponse(String json, String metadataPrefix) throws InternalOaiException {
+    public Record parseRecordResponse(String json, String metadataPrefix, String setSpec) throws InternalOaiException {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         try {
-            return createRecordFromResource(mapper.readValue(json, Resource.class), metadataPrefix);
+            return createRecordFromResource(mapper.readValue(json, Resource.class), metadataPrefix, setSpec);
         } catch (JsonProcessingException e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
         }
     }
 
     @Override
-    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix)
+    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix, String setSpec)
             throws InternalOaiException {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         try {
             ResourceSearchResponse resourceSearchResponse = mapper.readValue(json, ResourceSearchResponse.class);
             RecordsList records = new RecordsList(resourceSearchResponse.numFound);
             for (String resourceString : resourceSearchResponse.resourcesAsJson) {
-                records.add(createRecordFromResource(mapper.readValue(resourceString, Resource.class), metadataPrefix));
+                records.add(createRecordFromResource(mapper.readValue(resourceString, Resource.class), metadataPrefix,
+                        setSpec));
             }
             return records;
         } catch (JsonProcessingException e) {
@@ -154,13 +158,19 @@ public class DlrAdapter implements Adapter {
         return uriWrapper.getUri();
     }
 
-    private Record createRecordFromResource(Resource resource, String metadataPrefix) {
+    private Record createRecordFromResource(Resource resource, String metadataPrefix, String setSpec) {
         boolean deleted = Boolean.parseBoolean(resource.features.get("dlr_status_deleted"));
+        List<String> setSpecs = new ArrayList<>();
+        if (!ALL_SET_NAME.equalsIgnoreCase(setSpec)) {
+            setSpecs.add(ALL_SET_NAME);
+        }
+        setSpecs.add(resource.features.get(STORAGE_ID_KEY));
         return new Record(
                 createRecordContent(resource, metadataPrefix),
                 deleted,
                 getIdentifierPrefix() + resource.identifier,
-                TimeUtils.string2Date(resource.features.get("dlr_time_updated"), TimeUtils.FORMAT_ZULU_SHORT));
+                TimeUtils.string2Date(resource.features.get("dlr_time_updated"), TimeUtils.FORMAT_ZULU_SHORT),
+                setSpecs);
     }
 
     private String createRecordContent(Resource resource, String metadataPrefix) {
@@ -197,7 +207,7 @@ public class DlrAdapter implements Adapter {
         buffer.append("    <dc:rights>").append(resource.features.get("dlr_rights_license_name"))
                 .append("</dc:rights>\n")
                 .append("    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n")
-                .append("    <dc:publisher>").append(resource.features.get("dlr_storage_id"))
+                .append("    <dc:publisher>").append(resource.features.get(STORAGE_ID_KEY))
                 .append("</dc:publisher>\n")
                 .append("    <dc:date>").append(resource.features.get("dlr_time_created")).append("</dc:date>\n")
                 .append("    <dc:date>").append(resource.features.get("dlr_time_published")).append("</dc:date>\n")
@@ -237,7 +247,7 @@ public class DlrAdapter implements Adapter {
                 .append("</dc:rights>\n")
                 .append("    <dcterms:accessRights>").append(resource.features.get("dlr_access"))
                 .append("</dcterms:accessRights>\n")
-                .append("    <dc:publisher>").append(resource.features.get("dlr_storage_id"))
+                .append("    <dc:publisher>").append(resource.features.get(STORAGE_ID_KEY))
                 .append("</dc:publisher>\n")
                 .append("    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n")
                 .append("    <dcterms:created>").append(resource.features.get("dlr_time_created"))
@@ -266,7 +276,7 @@ public class DlrAdapter implements Adapter {
                 .append("    </datacite:titles>\n")
                 .append("    <dc:description>").append(resource.features.getOrDefault("dlr_description", ""))
                 .append("</dc:description>\n")
-                .append("    <dc:publisher>").append(resource.features.get("dlr_storage_id"))
+                .append("    <dc:publisher>").append(resource.features.get(STORAGE_ID_KEY))
                 .append("</dc:publisher>\n");
         for (ResourceCreator creator : resource.creators) {
             buffer.append("    <datacite:creators>\n")

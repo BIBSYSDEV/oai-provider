@@ -26,6 +26,8 @@ public class DlrAdapter implements Adapter {
 
     public static final String ALL_SET_NAME = "all";
     public static final String STORAGE_ID_KEY = "dlr_storage_id";
+
+    public static final String NULL_STRING = "null";
     private final transient ObjectMapper mapper = new ObjectMapper();
     private final transient String recordsUri;
     private final transient String recordUri;
@@ -159,13 +161,14 @@ public class DlrAdapter implements Adapter {
     }
 
     private Record createRecordFromResource(Resource resource, String metadataPrefix, String setSpec) {
-        boolean deleted = Boolean.parseBoolean(resource.features.get("dlr_status_deleted"));
         List<String> setSpecs = new ArrayList<>();
         setSpecs.add(ALL_SET_NAME);
-        if (!ALL_SET_NAME.equalsIgnoreCase(setSpec)) {
+        if (!ALL_SET_NAME.equalsIgnoreCase(setSpec)
+                && !NULL_STRING.equalsIgnoreCase(resource.features.get(STORAGE_ID_KEY))) {
             setSpecs.add(resource.features.get(STORAGE_ID_KEY));
         }
         setSpecs.add(resource.features.get(STORAGE_ID_KEY));
+        boolean deleted = Boolean.parseBoolean(resource.features.get("dlr_status_deleted"));
         return new Record(
                 createRecordContent(resource, metadataPrefix),
                 deleted,

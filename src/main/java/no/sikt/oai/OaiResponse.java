@@ -250,7 +250,7 @@ public class OaiResponse {
         }
     }
 
-    // OAI helpers: ListRecords & ListItentifiers
+    // OAI helpers: ListRecords & ListIdentifiers
 
     protected static void makeHeaderRequestListRecordsIdentifiers(String verb, String oldResumptionToken, String from,
                                                                   String until, String metadataPrefix, String baseUrl,

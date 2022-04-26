@@ -102,7 +102,7 @@ public class OaiProviderHandlerTest {
         context = mock(Context.class);
         mockSetsResponse(adapter);
         mockRecordResponse(adapter);
-        mockRecordsResponse();
+        mockRecordsResponse(adapter);
         handler = new OaiProviderHandler(environment, httpClient);
     }
 
@@ -280,6 +280,23 @@ public class OaiProviderHandlerTest {
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
         assertThat(responseBody, is(containsString(NOT_A_LEGAL_PARAMETER)));
+    }
+
+    @Test
+    public void shouldReturnListRecordsResponseWhenAskedForListRecordsWithMetadataPrefixQdcAndSetSiktAndIdentifierNVA()
+            throws IOException {
+        init(CLIENT_TYPE_NVA);
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        var output = new ByteArrayOutputStream();
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.ListRecords.name())));
     }
 
     @Test
@@ -865,9 +882,15 @@ public class OaiProviderHandlerTest {
         stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(ok().withBody(deletedResponseBody.toPrettyString())));
     }
 
-    private void mockRecordsResponse() {
-        ObjectNode responseBody = createRecordsResponse();
-        stubFor(get(urlPathMatching("/records")).willReturn(ok().withBody(responseBody.toPrettyString())));
+    private void mockRecordsResponse(String adapter) {
+        if (CLIENT_TYPE_DLR.equalsIgnoreCase(adapter)) {
+            ObjectNode responseBody = createRecordsResponse();
+            stubFor(get(urlPathMatching("/records")).willReturn(ok().withBody(responseBody.toPrettyString())));
+        } else if (CLIENT_TYPE_NVA.equalsIgnoreCase(adapter)) {
+            String publicationJson =
+                    IoUtils.stringFromResources(Path.of(EMPTY_STRING, "publications.json"));
+            stubFor(get(urlPathMatching("/records")).willReturn(ok().withBody(publicationJson)));
+        }
     }
 
     private void mockFaultyRecordsResponse() {
@@ -901,6 +924,11 @@ public class OaiProviderHandlerTest {
             objectNode2.put("displayName", "Universitetet i Oslo");
             objectNode2.put("id", UIO_CUSTUMER_ID);
             objectArray.add(objectNode2);
+            var objectNode3 = dtoObjectMapper.createObjectNode();
+            objectNode3.put("createdDate", "2022-04-06T06:28:59.673041Z");
+            objectNode3.put("displayName", "Universitetet i Oslo");
+            objectNode3.put("id", SET_NAME_SIKT);
+            objectArray.add(objectNode3);
             var responseBodyElement = dtoObjectMapper.createObjectNode();
             responseBodyElement.put("@context", "https://bibsysdev.github.io/src/customer-context.json");
             responseBodyElement.set("customers", objectArray);

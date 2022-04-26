@@ -1,0 +1,789 @@
+{
+  "hits": [
+    {
+      "type": "Publication",
+      "publicationContextUris": [
+        "https://api.dev.nva.aws.unit.no/publication-channels/journal/474486/2022"
+      ],
+      "@context": {
+        "@vocab": "https://bibsysdev.github.io/src/nva/ontology.ttl#",
+        "id": "@id",
+        "type": "@type",
+        "contributors": {
+          "@container": "@set"
+        },
+        "additionalIdentifiers": {
+          "@container": "@set"
+        },
+        "affiliations": {
+          "@container": "@set"
+        },
+        "subjects": {
+          "@container": "@set"
+        },
+        "projects": {
+          "@container": "@set"
+        },
+        "tags": {
+          "@container": "@set"
+        },
+        "isbnList": {
+          "@container": "@set"
+        },
+        "venues": {
+          "@container": "@set"
+        },
+        "files": {
+          "@container": "@set"
+        },
+        "grants": {
+          "@container": "@set"
+        },
+        "approvals": {
+          "@container": "@set"
+        },
+        "messages": {
+          "@container": "@set"
+        }
+      },
+      "id": "https://api.dev.nva.aws.unit.no/publication/018050ab1237-ef2e4248-faae-4d74-8b4e-4e21d9f29a34",
+      "createdDate": "2022-04-22T09:47:10.258211Z",
+      "entityDescription": {
+        "type": "EntityDescription",
+        "abstract": "Dette er en bra artikkel",
+        "contributors": [
+          {
+            "type": "Contributor",
+            "affiliations": [
+              {
+                "id": "https://api.dev.nva.aws.unit.no/cristin/organization/186.38.11.0",
+                "type": "Organization"
+              }
+            ],
+            "correspondingAuthor": false,
+            "identity": {
+              "id": "https://api.dev.nva.aws.unit.no/cristin/person/741118",
+              "type": "Identity",
+              "name": "Per Persson"
+            },
+            "role": "Researcher",
+            "sequence": 1
+          },
+          {
+            "type": "Contributor",
+            "affiliations": [
+              {
+                "id": "https://api.dev.nva.aws.unit.no/cristin/organization/217.8.5.0",
+                "type": "Organization"
+              }
+            ],
+            "correspondingAuthor": false,
+            "identity": {
+              "id": "https://api.dev.nva.aws.unit.no/cristin/person/1019567",
+              "type": "Identity",
+              "name": "Bjarne Mikalsen"
+            },
+            "role": "Creator",
+            "sequence": 1
+          }
+        ],
+        "date": {
+          "type": "PublicationDate",
+          "day": "22",
+          "month": "4",
+          "year": "2022"
+        },
+        "description": "Mer beskrivelse",
+        "mainTitle": "Pers Artikkel",
+        "reference": {
+          "type": "Reference",
+          "publicationContext": {
+            "id": "https://api.dev.nva.aws.unit.no/publication-channels/journal/474486/2022",
+            "type": "Journal",
+            "active": true,
+            "identifier": "474486",
+            "language": {
+              "id": "http://lexvo.org/id/iso639-3/und"
+            },
+            "level": "1",
+            "name": "About Performance",
+            "npiDomain": "Teatervitenskap og drama",
+            "printIssn": "1324-6089",
+            "publisherId": "https://api.dev.nva.aws.unit.no/publication-channels/publisher/22074/2022",
+            "website": {
+              "id": "http://www.sup.usyd.edu.au/journals/aboutperformance/"
+            }
+          },
+          "publicationInstance": {
+            "type": "JournalArticle",
+            "contentType": "Research article",
+            "originalResearch": false,
+            "pages": {
+              "type": "Range"
+            },
+            "peerReviewed": false
+          }
+        },
+        "tags": [
+          "per",
+          "bjarne",
+          "gg"
+        ]
+      },
+      "fileSet": {
+        "type": "FileSet",
+        "files": [
+          {
+            "type": "File",
+            "administrativeAgreement": false,
+            "identifier": "e08364e9-c7da-4e8f-8e01-fe685d48588e",
+            "license": {
+              "type": "License",
+              "identifier": "CC0",
+              "labels": {
+                "nb": "CC0"
+              }
+            },
+            "mimeType": "image/png",
+            "name": "logo.png",
+            "publisherAuthority": false,
+            "size": 16715
+          }
+        ]
+      },
+      "identifier": "018050ab1237-ef2e4248-faae-4d74-8b4e-4e21d9f29a34",
+      "modelVersion": "0.16.0",
+      "modifiedDate": "2022-04-22T10:09:06.546138Z",
+      "owner": "27468@20754.0.0.0",
+      "publishedDate": "2022-04-22T10:09:06.546138Z",
+      "publisher": {
+        "id": "https://api.dev.nva.aws.unit.no/customer/f50dff3a-e244-48c7-891d-cc4d75597321",
+        "type": "Organization"
+      },
+      "resourceOwner": {
+        "owner": "27468@20754.0.0.0",
+        "ownerAffiliation": "https://api.dev.nva.aws.unit.no/cristin/organization/20754.0.0.0"
+      },
+      "status": "PUBLISHED"
+    },
+    {
+      "type": "Publication",
+      "publicationContextUris": [
+        "https://api.dev.nva.aws.unit.no/publication-channels/journal/476390/2022"
+      ],
+      "@context": {
+        "@vocab": "https://bibsysdev.github.io/src/nva/ontology.ttl#",
+        "id": "@id",
+        "type": "@type",
+        "contributors": {
+          "@container": "@set"
+        },
+        "additionalIdentifiers": {
+          "@container": "@set"
+        },
+        "affiliations": {
+          "@container": "@set"
+        },
+        "subjects": {
+          "@container": "@set"
+        },
+        "projects": {
+          "@container": "@set"
+        },
+        "tags": {
+          "@container": "@set"
+        },
+        "isbnList": {
+          "@container": "@set"
+        },
+        "venues": {
+          "@container": "@set"
+        },
+        "files": {
+          "@container": "@set"
+        },
+        "grants": {
+          "@container": "@set"
+        },
+        "approvals": {
+          "@container": "@set"
+        },
+        "messages": {
+          "@container": "@set"
+        }
+      },
+      "id": "https://api.dev.nva.aws.unit.no/publication/0180185106c4-3d675f50-024a-4430-a9ae-656fa798067f",
+      "createdDate": "2022-04-11T11:10:04.991455Z",
+      "doi": "https://handle.stage.datacite.org/10.16903/8dds-cp02",
+      "entityDescription": {
+        "type": "EntityDescription",
+        "abstract": "Hewldfsldkj",
+        "contributors": [
+          {
+            "type": "Contributor",
+            "affiliations": [
+              {
+                "id": "https://api.dev.nva.aws.unit.no/cristin/organization/20754.0.0.0",
+                "type": "Organization"
+              }
+            ],
+            "correspondingAuthor": false,
+            "identity": {
+              "id": "https://api.dev.nva.aws.unit.no/cristin/person/33311",
+              "type": "Identity",
+              "name": "Orestis Gkorgkas"
+            },
+            "role": "Creator",
+            "sequence": 1
+          }
+        ],
+        "date": {
+          "type": "PublicationDate",
+          "day": "11",
+          "month": "4",
+          "year": "2022"
+        },
+        "description": "dsfsdf",
+        "language": "http://lexvo.org/id/iso639-3/eng",
+        "mainTitle": "Orestis test 2022-04-11",
+        "reference": {
+          "type": "Reference",
+          "publicationContext": {
+            "id": "https://api.dev.nva.aws.unit.no/publication-channels/journal/476390/2022",
+            "type": "Journal",
+            "active": true,
+            "identifier": "476390",
+            "language": {
+              "id": "http://lexvo.org/id/iso639-3/eng"
+            },
+            "level": "2",
+            "name": "Proceedings of the VLDB Endowment",
+            "npiDomain": "Informatikk og datateknikk",
+            "onlineIssn": "2150-8097",
+            "publisherId": "https://api.dev.nva.aws.unit.no/publication-channels/publisher/18077/2022",
+            "website": {
+              "id": "http://www.eecs.umich.edu/db/pvldb/"
+            }
+          },
+          "publicationInstance": {
+            "type": "JournalArticle",
+            "articleNumber": "1",
+            "contentType": "Research article",
+            "originalResearch": false,
+            "pages": {
+              "type": "Range"
+            },
+            "peerReviewed": true
+          }
+        },
+        "tags": [
+          "sdf"
+        ]
+      },
+      "fileSet": {
+        "type": "FileSet",
+        "files": [
+          {
+            "type": "File",
+            "administrativeAgreement": false,
+            "identifier": "7f18c81a-f354-4605-b6ff-95d4153b8825",
+            "license": {
+              "type": "License",
+              "identifier": "CC0",
+              "labels": {
+                "nb": "CC0"
+              }
+            },
+            "mimeType": "application/pdf",
+            "name": "vldb09-677233.pdf",
+            "publisherAuthority": true,
+            "size": 428244
+          }
+        ]
+      },
+      "identifier": "0180185106c4-3d675f50-024a-4430-a9ae-656fa798067f",
+      "modelVersion": "0.16.0",
+      "modifiedDate": "2022-04-11T11:12:35.172098Z",
+      "owner": "33311@20754.0.0.0",
+      "publishedDate": "2022-04-11T11:12:35.487774Z",
+      "publisher": {
+        "id": "https://api.dev.nva.aws.unit.no/customer/f50dff3a-e244-48c7-891d-cc4d75597321",
+        "type": "Organization"
+      },
+      "resourceOwner": {
+        "owner": "33311@20754.0.0.0",
+        "ownerAffiliation": "https://api.dev.nva.aws.unit.no/cristin/organization/20754.0.0.0"
+      },
+      "status": "PUBLISHED",
+      "subjects": [
+        "https://nva.unit.no/hrcs/activity/hrcs_ra_2_5"
+      ]
+    },
+    {
+      "type": "Publication",
+      "publicationContextUris": [
+        "https://api.dev.nva.aws.unit.no/publication-channels/journal/481038/2022"
+      ],
+      "@context": {
+        "@vocab": "https://bibsysdev.github.io/src/nva/ontology.ttl#",
+        "id": "@id",
+        "type": "@type",
+        "contributors": {
+          "@container": "@set"
+        },
+        "additionalIdentifiers": {
+          "@container": "@set"
+        },
+        "affiliations": {
+          "@container": "@set"
+        },
+        "subjects": {
+          "@container": "@set"
+        },
+        "projects": {
+          "@container": "@set"
+        },
+        "tags": {
+          "@container": "@set"
+        },
+        "isbnList": {
+          "@container": "@set"
+        },
+        "venues": {
+          "@container": "@set"
+        },
+        "files": {
+          "@container": "@set"
+        },
+        "grants": {
+          "@container": "@set"
+        },
+        "approvals": {
+          "@container": "@set"
+        },
+        "messages": {
+          "@container": "@set"
+        }
+      },
+      "id": "https://api.dev.nva.aws.unit.no/publication/0180043a0efa-ded0ce84-e1d8-4192-b5e6-512629994d6f",
+      "createdDate": "2022-04-07T13:32:35.446143Z",
+      "entityDescription": {
+        "type": "EntityDescription",
+        "contributors": [
+          {
+            "type": "Contributor",
+            "affiliations": [
+              {
+                "id": "https://api.dev.nva.aws.unit.no/cristin/organization/20754.0.0.0",
+                "type": "Organization"
+              },
+              {
+                "id": "https://api.dev.nva.aws.unit.no/cristin/organization/185.15.0.0",
+                "type": "Organization"
+              }
+            ],
+            "correspondingAuthor": false,
+            "identity": {
+              "id": "https://api.dev.nva.aws.unit.no/cristin/person/1130542",
+              "type": "Identity",
+              "name": "Kjetil Møkkelgjerd"
+            },
+            "role": "Creator",
+            "sequence": 1
+          }
+        ],
+        "date": {
+          "type": "PublicationDate",
+          "day": "7",
+          "month": "4",
+          "year": "2022"
+        },
+        "mainTitle": "Min registrering",
+        "reference": {
+          "type": "Reference",
+          "publicationContext": {
+            "id": "https://api.dev.nva.aws.unit.no/publication-channels/journal/481038/2022",
+            "type": "Journal",
+            "active": true,
+            "identifier": "481038",
+            "language": {
+              "id": "http://lexvo.org/id/iso639-3/und"
+            },
+            "level": "0",
+            "name": "21st International Conference on Miniaturized Systems for Chemistry and Life Sciences",
+            "npiDomain": "Kjemi",
+            "onlineIssn": "1545-8296",
+            "printIssn": "1556-5904",
+            "website": {
+              "id": "http://www.microtas2017.org"
+            }
+          },
+          "publicationInstance": {
+            "type": "JournalArticle",
+            "contentType": "Case report",
+            "originalResearch": false,
+            "pages": {
+              "type": "Range"
+            },
+            "peerReviewed": false
+          }
+        }
+      },
+      "fileSet": {
+        "type": "FileSet",
+        "files": [
+          {
+            "type": "File",
+            "administrativeAgreement": false,
+            "identifier": "db63ea08-db51-41f0-a64f-41fdf9a02a83",
+            "license": {
+              "type": "License",
+              "identifier": "CC BY",
+              "labels": {
+                "nb": "CC BY"
+              }
+            },
+            "mimeType": "image/jpeg",
+            "name": "osteloff.jpg",
+            "publisherAuthority": false,
+            "size": 4656
+          }
+        ]
+      },
+      "identifier": "0180043a0efa-ded0ce84-e1d8-4192-b5e6-512629994d6f",
+      "modelVersion": "0.16.0",
+      "modifiedDate": "2022-04-07T13:39:55.512444Z",
+      "owner": "1130542@20754.0.0.0",
+      "publishedDate": "2022-04-07T13:39:55.512444Z",
+      "publisher": {
+        "id": "https://api.dev.nva.aws.unit.no/customer/f50dff3a-e244-48c7-891d-cc4d75597321",
+        "type": "Organization"
+      },
+      "resourceOwner": {
+        "owner": "1130542@20754.0.0.0",
+        "ownerAffiliation": "https://api.dev.nva.aws.unit.no/cristin/organization/20754.0.0.0"
+      },
+      "status": "PUBLISHED"
+    },
+    {
+      "type": "Publication",
+      "publicationContextUris": [
+        "https://api.dev.nva.aws.unit.no/publication-channels/journal/476390/2022"
+      ],
+      "@context": {
+        "@vocab": "https://bibsysdev.github.io/src/nva/ontology.ttl#",
+        "id": "@id",
+        "type": "@type",
+        "contributors": {
+          "@container": "@set"
+        },
+        "additionalIdentifiers": {
+          "@container": "@set"
+        },
+        "affiliations": {
+          "@container": "@set"
+        },
+        "subjects": {
+          "@container": "@set"
+        },
+        "projects": {
+          "@container": "@set"
+        },
+        "tags": {
+          "@container": "@set"
+        },
+        "isbnList": {
+          "@container": "@set"
+        },
+        "venues": {
+          "@container": "@set"
+        },
+        "files": {
+          "@container": "@set"
+        },
+        "grants": {
+          "@container": "@set"
+        },
+        "approvals": {
+          "@container": "@set"
+        },
+        "messages": {
+          "@container": "@set"
+        }
+      },
+      "id": "https://api.dev.nva.aws.unit.no/publication/017ffe769d95-82c74f04-563c-4ba7-8ff7-738334f0cdb7",
+      "createdDate": "2022-04-06T10:41:00.816673Z",
+      "doi": "https://handle.stage.datacite.org/10.16903/eb2k-ds56",
+      "entityDescription": {
+        "type": "EntityDescription",
+        "abstract": "Locomotives 101",
+        "contributors": [
+          {
+            "type": "Contributor",
+            "affiliations": [
+              {
+                "id": "https://api.dev.nva.aws.unit.no/cristin/organization/20754.0.0.0",
+                "type": "Organization"
+              }
+            ],
+            "correspondingAuthor": false,
+            "identity": {
+              "id": "https://api.dev.nva.aws.unit.no/cristin/person/33311",
+              "type": "Identity",
+              "name": "Orestis Gkorgkas"
+            },
+            "role": "Creator",
+            "sequence": 1
+          }
+        ],
+        "date": {
+          "type": "PublicationDate",
+          "day": "6",
+          "month": "4",
+          "year": "2022"
+        },
+        "description": "Trains",
+        "language": "http://lexvo.org/id/iso639-3/eng",
+        "mainTitle": "Orestis test 2022-04-06-A",
+        "reference": {
+          "type": "Reference",
+          "publicationContext": {
+            "id": "https://api.dev.nva.aws.unit.no/publication-channels/journal/476390/2022",
+            "type": "Journal",
+            "active": true,
+            "identifier": "476390",
+            "language": {
+              "id": "http://lexvo.org/id/iso639-3/eng"
+            },
+            "level": "2",
+            "name": "Proceedings of the VLDB Endowment",
+            "npiDomain": "Informatikk og datateknikk",
+            "onlineIssn": "2150-8097",
+            "publisherId": "https://api.dev.nva.aws.unit.no/publication-channels/publisher/18077/2022",
+            "website": {
+              "id": "http://www.eecs.umich.edu/db/pvldb/"
+            }
+          },
+          "publicationInstance": {
+            "type": "JournalArticle",
+            "articleNumber": "1",
+            "contentType": "Research article",
+            "originalResearch": false,
+            "pages": {
+              "type": "Range"
+            },
+            "peerReviewed": true
+          }
+        },
+        "tags": [
+          "loco",
+          "motives"
+        ]
+      },
+      "fileSet": {
+        "type": "FileSet",
+        "files": [
+          {
+            "type": "File",
+            "administrativeAgreement": false,
+            "identifier": "bc9b811a-db12-42e6-8a2c-dd8eb4371b06",
+            "license": {
+              "type": "License",
+              "identifier": "CC0",
+              "labels": {
+                "nb": "CC0"
+              }
+            },
+            "mimeType": "application/pdf",
+            "name": "vldb09-677233.pdf",
+            "publisherAuthority": true,
+            "size": 428244
+          }
+        ]
+      },
+      "identifier": "017ffe769d95-82c74f04-563c-4ba7-8ff7-738334f0cdb7",
+      "modelVersion": "0.16.0",
+      "modifiedDate": "2022-04-06T13:51:31.685649Z",
+      "owner": "33311@20754.0.0.0",
+      "projects": [
+        {
+          "id": "https://api.dev.nva.aws.unit.no/cristin/project/415870",
+          "type": "ResearchProject",
+          "name": "Geologisk og kjemisk vurdering av steinmel fra lokalt pukkverk i Vanvikan"
+        }
+      ],
+      "publishedDate": "2022-04-06T10:43:48.528169Z",
+      "publisher": {
+        "id": "https://api.dev.nva.aws.unit.no/customer/f50dff3a-e244-48c7-891d-cc4d75597321",
+        "type": "Organization"
+      },
+      "resourceOwner": {
+        "owner": "33311@20754.0.0.0",
+        "ownerAffiliation": "https://api.dev.nva.aws.unit.no/cristin/organization/20754.0.0.0"
+      },
+      "status": "PUBLISHED",
+      "subjects": [
+        "https://nva.unit.no/hrcs/activity/hrcs_ra_1_1"
+      ]
+    },
+    {
+      "type": "Publication",
+      "publicationContextUris": [
+        "https://api.dev.nva.aws.unit.no/publication-channels/journal/476390/2022"
+      ],
+      "@context": {
+        "@vocab": "https://bibsysdev.github.io/src/nva/ontology.ttl#",
+        "id": "@id",
+        "type": "@type",
+        "contributors": {
+          "@container": "@set"
+        },
+        "additionalIdentifiers": {
+          "@container": "@set"
+        },
+        "affiliations": {
+          "@container": "@set"
+        },
+        "subjects": {
+          "@container": "@set"
+        },
+        "projects": {
+          "@container": "@set"
+        },
+        "tags": {
+          "@container": "@set"
+        },
+        "isbnList": {
+          "@container": "@set"
+        },
+        "venues": {
+          "@container": "@set"
+        },
+        "files": {
+          "@container": "@set"
+        },
+        "grants": {
+          "@container": "@set"
+        },
+        "approvals": {
+          "@container": "@set"
+        },
+        "messages": {
+          "@container": "@set"
+        }
+      },
+      "id": "https://api.dev.nva.aws.unit.no/publication/017ffeb4bfff-1b49769e-a8a0-4304-8377-12877212579f",
+      "createdDate": "2022-04-06T11:48:52.858019Z",
+      "entityDescription": {
+        "type": "EntityDescription",
+        "abstract": "Hello world",
+        "contributors": [
+          {
+            "type": "Contributor",
+            "affiliations": [
+              {
+                "id": "https://api.dev.nva.aws.unit.no/cristin/organization/201.0.0.0",
+                "type": "Organization"
+              },
+              {
+                "id": "https://api.dev.nva.aws.unit.no/cristin/organization/20754.0.0.0",
+                "type": "Organization"
+              },
+              {
+                "id": "https://api.dev.nva.aws.unit.no/cristin/organization/194.63.10.0",
+                "type": "Organization"
+              }
+            ],
+            "correspondingAuthor": false,
+            "identity": {
+              "id": "https://api.dev.nva.aws.unit.no/cristin/person/33311",
+              "type": "Identity",
+              "name": "Orestis Gkorgkas"
+            },
+            "role": "Creator",
+            "sequence": 1
+          }
+        ],
+        "date": {
+          "type": "PublicationDate",
+          "day": "6",
+          "month": "4",
+          "year": "2022"
+        },
+        "language": "http://lexvo.org/id/iso639-3/eng",
+        "mainTitle": "Orestis publication 2",
+        "reference": {
+          "type": "Reference",
+          "publicationContext": {
+            "id": "https://api.dev.nva.aws.unit.no/publication-channels/journal/476390/2022",
+            "type": "Journal",
+            "active": true,
+            "identifier": "476390",
+            "language": {
+              "id": "http://lexvo.org/id/iso639-3/eng"
+            },
+            "level": "2",
+            "name": "Proceedings of the VLDB Endowment",
+            "npiDomain": "Informatikk og datateknikk",
+            "onlineIssn": "2150-8097",
+            "publisherId": "https://api.dev.nva.aws.unit.no/publication-channels/publisher/18077/2022",
+            "website": {
+              "id": "http://www.eecs.umich.edu/db/pvldb/"
+            }
+          },
+          "publicationInstance": {
+            "type": "JournalArticle",
+            "articleNumber": "1",
+            "contentType": "Research article",
+            "originalResearch": false,
+            "pages": {
+              "type": "Range"
+            },
+            "peerReviewed": true
+          }
+        }
+      },
+      "fileSet": {
+        "type": "FileSet",
+        "files": [
+          {
+            "type": "File",
+            "administrativeAgreement": false,
+            "identifier": "9310bdef-23ba-432d-b7aa-2c8d5dc0fcb3",
+            "license": {
+              "type": "License",
+              "identifier": "CC0",
+              "labels": {
+                "nb": "CC0"
+              }
+            },
+            "mimeType": "application/pdf",
+            "name": "vldb09-677233.pdf",
+            "publisherAuthority": true,
+            "size": 428244
+          }
+        ]
+      },
+      "identifier": "017ffeb4bfff-1b49769e-a8a0-4304-8377-12877212579f",
+      "modelVersion": "0.16.0",
+      "modifiedDate": "2022-04-06T11:50:41.106382Z",
+      "owner": "33311@20754.0.0.0",
+      "publishedDate": "2022-04-06T11:50:41.106382Z",
+      "publisher": {
+        "id": "https://api.dev.nva.aws.unit.no/customer/f50dff3a-e244-48c7-891d-cc4d75597321",
+        "type": "Organization"
+      },
+      "resourceOwner": {
+        "owner": "33311@20754.0.0.0",
+        "ownerAffiliation": "https://api.dev.nva.aws.unit.no/cristin/organization/20754.0.0.0"
+      },
+      "status": "PUBLISHED"
+    }
+  ],
+  "@context": "https://api.nva.unit.no/resources/search",
+  "id": "https://api.dev.nva.aws.unit.no/search/resources?query=*",
+  "processingTime": 4,
+  "size": 5,
+  "took": 4,
+  "total": 5
+}

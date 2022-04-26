@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -139,11 +138,19 @@ public class NvaAdapter implements Adapter {
     }
 
     @Override
-    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix, String setSpec) {
-        Record record = new Record("", false, "1234", new Date(), Collections.emptyList());
-        RecordsList records = new RecordsList(1);
-        records.add(record);
-        return records;
+    public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix, String setSpec)
+            throws InternalOaiException {
+        try {
+            PublicationSearchResponse publicationSearchResponse =
+                    mapper.readValue(json, PublicationSearchResponse.class);
+            RecordsList records = new RecordsList(publicationSearchResponse.total);
+            for (Publication publication : publicationSearchResponse.hits) {
+                records.add(createRecordFromPublication(publication, metadataPrefix));
+            }
+            return records;
+        } catch (JsonProcessingException e) {
+            throw new InternalOaiException(e, HTTP_UNAVAILABLE);
+        }
     }
 
     private Record createRecordFromPublication(Publication publication, String metadataPrefix) {
@@ -306,5 +313,17 @@ public class NvaAdapter implements Adapter {
         /* default */ transient String displayName;
         @JsonProperty("id")
         /* default */ transient String id;
+    }
+
+    private static class PublicationSearchResponse {
+
+        @JsonProperty("@context")
+        /* default */ transient String context;
+        @JsonProperty("hits")
+        /* default */ transient List<Publication> hits;
+        @JsonProperty("size")
+        /* default */ transient int size;
+        @JsonProperty("total")
+        /* default */ transient int total;
     }
 }

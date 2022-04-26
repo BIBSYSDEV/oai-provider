@@ -867,7 +867,7 @@ public class OaiProviderHandlerTest {
         var responseBodyElement = dtoObjectMapper.createObjectNode();
         responseBodyElement.put("offset", "0");
         responseBodyElement.put("limit", "50");
-        responseBodyElement.put("numFound", 4);
+        responseBodyElement.put("numFound", 400);
         responseBodyElement.put("queryTime", 0);
         var objectArray = dtoObjectMapper.createArrayNode();
         objectArray.add("{\"identifier\":\"fc2eff7c-5061-47d1-9828-7b3f64c57c67\","

@@ -7,6 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static no.sikt.oai.MetadataFormat.OAI_DATACITE;
 import static no.sikt.oai.MetadataFormat.OAI_DC;
 import static no.sikt.oai.MetadataFormat.QDC;
 import static no.sikt.oai.OaiConstants.BAD_ARGUMENT;
@@ -30,8 +31,10 @@ import static no.sikt.oai.OaiConstants.UNKNOWN_SET_NAME;
 import static no.sikt.oai.OaiConstants.VERB_IS_MISSING;
 import static no.sikt.oai.RestApiConfig.restServiceObjectMapper;
 import static no.unit.nva.commons.json.JsonUtils.dtoObjectMapper;
+import static no.unit.nva.testutils.RandomDataGenerator.objectMapper;
 import static no.unit.nva.testutils.RandomDataGenerator.randomString;
 import static nva.commons.apigateway.ApiGatewayHandler.ALLOWED_ORIGIN_ENV;
+import static nva.commons.apigateway.RestRequestHandler.EMPTY_STRING;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
@@ -50,11 +53,13 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import no.unit.nva.testutils.HandlerRequestBuilder;
 import nva.commons.apigateway.GatewayResponse;
 import nva.commons.core.Environment;
+import nva.commons.core.ioutils.IoUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -96,7 +101,7 @@ public class OaiProviderHandlerTest {
         when(environment.readEnv(RECORDS_URI_ENV)).thenReturn(serverUriRecords.toString());
         context = mock(Context.class);
         mockSetsResponse(adapter);
-        mockRecordResponse();
+        mockRecordResponse(adapter);
         mockRecordsResponse();
         handler = new OaiProviderHandler(environment, httpClient);
     }
@@ -295,12 +300,48 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefixAndIdentifierNVA()
+    public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefixQdcAndIdentifierNVA()
         throws IOException {
         init(CLIENT_TYPE_NVA);
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, FAKE_OAI_IDENTIFIER_NVA);
+        var output = new ByteArrayOutputStream();
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
+    }
+
+    @Test
+    public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefixOaiDcAndIdentifierNVA()
+            throws IOException {
+        init(CLIENT_TYPE_NVA);
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DC.name());
+        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, FAKE_OAI_IDENTIFIER_NVA);
+        var output = new ByteArrayOutputStream();
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
+    }
+
+    @Test
+    public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefixOaiDataciteAndIdentifierNVA()
+            throws IOException {
+        init(CLIENT_TYPE_NVA);
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DATACITE.name());
         queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
         queryParameters.put(ValidParameterKey.IDENTIFIER.key, FAKE_OAI_IDENTIFIER_NVA);
         var output = new ByteArrayOutputStream();
@@ -800,9 +841,15 @@ public class OaiProviderHandlerTest {
         stubFor(get(urlPathMatching("/" + adapter + "/sets")).willReturn(serverError()));
     }
 
-    private void mockRecordResponse() {
-        ObjectNode responseBody = createRecordResponse();
-        stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(ok().withBody(responseBody.toPrettyString())));
+    private void mockRecordResponse(String adapter) {
+        if (CLIENT_TYPE_DLR.equalsIgnoreCase(adapter)) {
+            ObjectNode responseBody = createRecordResponse();
+            stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(ok().withBody(responseBody.toPrettyString())));
+        } else if (CLIENT_TYPE_NVA.equalsIgnoreCase(adapter)) {
+            String publicationJson =
+                    IoUtils.stringFromResources(Path.of(EMPTY_STRING, "publication.json"));
+            stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(ok().withBody(publicationJson)));
+        }
     }
 
     private void mockFaultyRecordResponse() {

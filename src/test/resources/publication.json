@@ -1,0 +1,164 @@
+{
+  "type": "Publication",
+  "identifier": "018050ab1237-ef2e4248-faae-4d74-8b4e-4e21d9f29a34",
+  "status": "PUBLISHED",
+  "owner": "27468@20754.0.0.0",
+  "resourceOwner": {
+    "owner": "27468@20754.0.0.0",
+    "ownerAffiliation": "https://api.dev.nva.aws.unit.no/cristin/organization/20754.0.0.0"
+  },
+  "publisher": {
+    "type": "Organization",
+    "id": "https://api.dev.nva.aws.unit.no/customer/f50dff3a-e244-48c7-891d-cc4d75597321",
+    "labels": {}
+  },
+  "createdDate": "2022-04-22T09:47:10.258211Z",
+  "modifiedDate": "2022-04-22T10:09:06.546138Z",
+  "publishedDate": "2022-04-22T10:09:06.546138Z",
+  "entityDescription": {
+    "type": "EntityDescription",
+    "mainTitle": "Pers Artikkel",
+    "alternativeTitles": {},
+    "date": {
+      "type": "PublicationDate",
+      "year": "2022",
+      "month": "4",
+      "day": "22"
+    },
+    "contributors": [
+      {
+        "type": "Contributor",
+        "identity": {
+          "type": "Identity",
+          "id": "https://api.dev.nva.aws.unit.no/cristin/person/741118",
+          "name": "Per Persson"
+        },
+        "affiliations": [
+          {
+            "type": "Organization",
+            "id": "https://api.dev.nva.aws.unit.no/cristin/organization/186.38.11.0",
+            "labels": {}
+          }
+        ],
+        "role": "Researcher",
+        "sequence": 1,
+        "correspondingAuthor": false
+      },
+      {
+        "type": "Contributor",
+        "identity": {
+          "type": "Identity",
+          "id": "https://api.dev.nva.aws.unit.no/cristin/person/1019567",
+          "name": "Bjarne Mikalsen"
+        },
+        "affiliations": [
+          {
+            "type": "Organization",
+            "id": "https://api.dev.nva.aws.unit.no/cristin/organization/217.8.5.0",
+            "labels": {}
+          }
+        ],
+        "role": "Creator",
+        "sequence": 1,
+        "correspondingAuthor": false
+      }
+    ],
+    "tags": [
+      "per",
+      "bjarne",
+      "gg"
+    ],
+    "description": "Mer beskrivelse",
+    "reference": {
+      "type": "Reference",
+      "publicationContext": {
+        "type": "Journal",
+        "id": "https://api.dev.nva.aws.unit.no/publication-channels/journal/474486/2022"
+      },
+      "publicationInstance": {
+        "type": "JournalArticle",
+        "contentType": "Research article",
+        "peerReviewed": false,
+        "originalResearch": false,
+        "pages": {
+          "type": "Range"
+        }
+      }
+    },
+    "abstract": "Dette er en bra artikkel"
+  },
+  "fileSet": {
+    "type": "FileSet",
+    "files": [
+      {
+        "type": "File",
+        "identifier": "e08364e9-c7da-4e8f-8e01-fe685d48588e",
+        "name": "logo.png",
+        "mimeType": "image/png",
+        "size": 16715,
+        "license": {
+          "type": "License",
+          "identifier": "CC0",
+          "labels": {
+            "nb": "CC0"
+          }
+        },
+        "administrativeAgreement": false,
+        "publisherAuthority": false
+      }
+    ]
+  },
+  "doiRequested": false,
+  "projects": [],
+  "subjects": [],
+  "@context": {
+    "@vocab": "https://nva.unit.no/publication#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "type": "@type",
+    "id": "@id",
+    "handle": {
+      "@type": "@id"
+    },
+    "alternativeTitles": {
+      "@container": "@language"
+    },
+    "createdDate": {
+      "@type": "xsd:dateTime"
+    },
+    "publishedDate": {
+      "@type": "xsd:dateTime"
+    },
+    "indexedDate": {
+      "@type": "xsd:dateTime"
+    },
+    "modifiedDate": {
+      "@type": "xsd:dateTime"
+    },
+    "link": {
+      "@type": "@id"
+    },
+    "hasTag": {
+      "@container": "@list"
+    },
+    "labels": {
+      "@container": "@language"
+    },
+    "language": {
+      "@type": "@id"
+    },
+    "year": {
+      "@type": "xsd:gYear"
+    },
+    "month": {
+      "@type": "xsd:gMonth"
+    },
+    "day": {
+      "@type": "xsd:gDay"
+    },
+    "subjects": {
+      "@type": "@id",
+      "@container": "@list"
+    }
+  },
+  "id": "https://api.dev.nva.aws.unit.no/publication/018050ab1237-ef2e4248-faae-4d74-8b4e-4e21d9f29a34"
+}

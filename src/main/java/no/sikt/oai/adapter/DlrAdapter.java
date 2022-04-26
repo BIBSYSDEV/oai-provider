@@ -1,6 +1,9 @@
 package no.sikt.oai.adapter;
 
 import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
+import static no.sikt.oai.OaiConstants.OAI_DATACITE_HEADER;
+import static no.sikt.oai.OaiConstants.OAI_DC_HEADER;
+import static no.sikt.oai.OaiConstants.QDC_HEADER;
 import static no.sikt.oai.OaiConstants.RECORDS_URI_ENV;
 import static no.sikt.oai.OaiConstants.RECORD_URI_ENV;
 import static no.sikt.oai.OaiConstants.SETS_URI_ENV;
@@ -39,6 +42,7 @@ public class DlrAdapter implements Adapter {
         setsUri = environment.readEnv(SETS_URI_ENV);
         recordUri = environment.readEnv(RECORD_URI_ENV);
         recordsUri = environment.readEnv(RECORDS_URI_ENV);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
@@ -104,7 +108,6 @@ public class DlrAdapter implements Adapter {
 
     @Override
     public Record parseRecordResponse(String json, String metadataPrefix, String setSpec) throws InternalOaiException {
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         try {
             return createRecordFromResource(mapper.readValue(json, Resource.class), metadataPrefix);
         } catch (JsonProcessingException e) {
@@ -115,7 +118,6 @@ public class DlrAdapter implements Adapter {
     @Override
     public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix, String setSpec)
             throws InternalOaiException {
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         try {
             ResourceSearchResponse resourceSearchResponse = mapper.readValue(json, ResourceSearchResponse.class);
             RecordsList records = new RecordsList(resourceSearchResponse.numFound);
@@ -191,21 +193,21 @@ public class DlrAdapter implements Adapter {
     @SuppressWarnings({"PMD.ConsecutiveLiteralAppends", "PMD.InsufficientStringBufferDeclaration"})
     private String createRecordContentOaiDc(Resource resource) {
         StringBuilder buffer = new StringBuilder();
-        appendOaiDcHeader(buffer);
-        buffer.append("    <dc:title>").append(resource.features.get("dlr_title")).append("</dc:title>\n")
-                .append("    <dc:description>")
-                .append(resource.features.getOrDefault("dlr_description", EMPTY_STRING))
-                .append("</dc:description>\n")
-                .append("    <dc:rights>").append(resource.features.get("dlr_rights_license_name"))
-                .append("</dc:rights>\n")
-                .append("    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n")
-                .append("    <dc:publisher>").append(resource.features.get(STORAGE_ID_KEY))
-                .append("</dc:publisher>\n")
-                .append("    <dc:date>").append(resource.features.get("dlr_time_created")).append("</dc:date>\n")
-                .append("    <dc:date>").append(resource.features.get("dlr_time_published")).append("</dc:date>\n")
-                .append("    <dc:identifier>").append(resource.features.get("dlr_identifier_handle"))
-                .append("</dc:identifier>\n")
-                .append("    <dc:identifier>").append(resource.identifier).append("</dc:identifier>\n");
+        buffer.append(OAI_DC_HEADER)
+            .append("    <dc:title>").append(resource.features.get("dlr_title")).append("</dc:title>\n")
+            .append("    <dc:description>")
+            .append(resource.features.getOrDefault("dlr_description", EMPTY_STRING))
+            .append("</dc:description>\n")
+            .append("    <dc:rights>").append(resource.features.get("dlr_rights_license_name"))
+            .append("</dc:rights>\n")
+            .append("    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n")
+            .append("    <dc:publisher>").append(resource.features.get(STORAGE_ID_KEY))
+            .append("</dc:publisher>\n")
+            .append("    <dc:date>").append(resource.features.get("dlr_time_created")).append("</dc:date>\n")
+            .append("    <dc:date>").append(resource.features.get("dlr_time_published")).append("</dc:date>\n")
+            .append("    <dc:identifier>").append(resource.features.get("dlr_identifier_handle"))
+            .append("</dc:identifier>\n")
+            .append("    <dc:identifier>").append(resource.identifier).append("</dc:identifier>\n");
         appendCreatorsDc(resource, buffer);
         buffer.append("</oai_dc:dc>\n");
         return buffer.toString();
@@ -214,23 +216,23 @@ public class DlrAdapter implements Adapter {
     @SuppressWarnings({"PMD.ConsecutiveLiteralAppends", "PMD.InsufficientStringBufferDeclaration"})
     private String createRecordContentQdc(Resource resource) {
         StringBuilder buffer = new StringBuilder();
-        appendQdcHeader(buffer);
-        buffer.append("    <dc:title>").append(resource.features.get("dlr_title")).append("</dc:title>\n")
-                .append("    <dc:description>")
-                .append(resource.features.getOrDefault("dlr_description", EMPTY_STRING))
-                .append("</dc:description>\n")
-                .append("    <dc:rights>").append(resource.features.get("dlr_rights_license_name"))
-                .append("</dc:rights>\n")
-                .append("    <dcterms:accessRights>").append(resource.features.get("dlr_access"))
-                .append("</dcterms:accessRights>\n")
-                .append("    <dc:publisher>").append(resource.features.get(STORAGE_ID_KEY))
-                .append("</dc:publisher>\n")
-                .append("    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n")
-                .append("    <dcterms:created>").append(resource.features.get("dlr_time_created"))
-                .append("</dcterms:created>\n")
-                .append("    <dcterms:identifier xsi:type=\"dcterms:URI\">")
-                .append(resource.features.get("dlr_identifier_handle")).append("</dcterms:identifier>\n")
-                .append("    <dcterms:identifier>").append(resource.identifier).append("</dcterms:identifier>\n");
+        buffer.append(QDC_HEADER)
+            .append("    <dc:title>").append(resource.features.get("dlr_title")).append("</dc:title>\n")
+            .append("    <dc:description>")
+            .append(resource.features.getOrDefault("dlr_description", EMPTY_STRING))
+            .append("</dc:description>\n")
+            .append("    <dc:rights>").append(resource.features.get("dlr_rights_license_name"))
+            .append("</dc:rights>\n")
+            .append("    <dcterms:accessRights>").append(resource.features.get("dlr_access"))
+            .append("</dcterms:accessRights>\n")
+            .append("    <dc:publisher>").append(resource.features.get(STORAGE_ID_KEY))
+            .append("</dc:publisher>\n")
+            .append("    <dc:type>").append(resource.features.get("dlr_type")).append("</dc:type>\n")
+            .append("    <dcterms:created>").append(resource.features.get("dlr_time_created"))
+            .append("</dcterms:created>\n")
+            .append("    <dcterms:identifier xsi:type=\"dcterms:URI\">")
+            .append(resource.features.get("dlr_identifier_handle")).append("</dcterms:identifier>\n")
+            .append("    <dcterms:identifier>").append(resource.identifier).append("</dcterms:identifier>\n");
         appendCreatorsDc(resource, buffer);
         appendContributorsDc(resource, buffer);
         buffer.append("</qdc:qualifieddc>\n");
@@ -240,59 +242,24 @@ public class DlrAdapter implements Adapter {
     @SuppressWarnings({"PMD.ConsecutiveLiteralAppends", "PMD.InsufficientStringBufferDeclaration"})
     private String createRecordContentOaiDatacite(Resource resource) {
         StringBuilder buffer = new StringBuilder();
-        appendOaiDataciteHeader(buffer);
-        buffer.append("    <datacite:titles>\n")
-                .append("        <datacite:title>").append(resource.features.get("dlr_title"))
-                .append("</datacite:title>\n")
-                .append("    </datacite:titles>\n")
-                .append("    <dc:description>")
-                .append(resource.features.getOrDefault("dlr_description", EMPTY_STRING))
-                .append("</dc:description>\n")
-                .append("    <dc:publisher>").append(resource.features.get(STORAGE_ID_KEY))
-                .append("</dc:publisher>\n")
-                .append("    <datacite:dates>\n")
-                .append("        <datacite:date dateType=\"Issued\">")
-                .append(resource.features.get("dlr_time_published"))
-                .append("</datacite:date>\n")
-                .append("    </datacite:dates>\n");
+        buffer.append(OAI_DATACITE_HEADER)
+            .append("    <datacite:titles>\n")
+            .append("        <datacite:title>").append(resource.features.get("dlr_title"))
+            .append("</datacite:title>\n")
+            .append("    </datacite:titles>\n")
+            .append("    <dc:description>")
+            .append(resource.features.getOrDefault("dlr_description", EMPTY_STRING))
+            .append("</dc:description>\n")
+            .append("    <dc:publisher>").append(resource.features.get(STORAGE_ID_KEY))
+            .append("</dc:publisher>\n")
+            .append("    <datacite:dates>\n")
+            .append("        <datacite:date dateType=\"Issued\">")
+            .append(resource.features.get("dlr_time_published"))
+            .append("</datacite:date>\n")
+            .append("    </datacite:dates>\n");
         appendCreatorsDatacite(resource, buffer);
         buffer.append("</oaire:resource>\n");
         return buffer.toString();
-    }
-
-    @SuppressWarnings("PMD.ConsecutiveLiteralAppends")
-    private void appendOaiDcHeader(StringBuilder buffer) {
-        buffer.append("<oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\"\n")
-                .append(" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n")
-                .append(" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
-                .append(" xmlns:doc=\"http://www.lyncode.com/xoai\"\n")
-                .append(" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/")
-                .append(" http://www.openarchives.org/OAI/2.0/oai_dc.xsd\">\n");
-    }
-
-    @SuppressWarnings("PMD.ConsecutiveLiteralAppends")
-    private void appendQdcHeader(StringBuilder buffer) {
-        buffer.append("<qdc:qualifieddc xmlns:doc=\"http://www.lyncode.com/xoai\"\n")
-                .append(" xmlns:dcterms=\"http://purl.org/dc/terms/\"\n")
-                .append(" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n ")
-                .append(" xmlns:qdc=\"http://dspace.org/qualifieddc/\"\n")
-                .append(" xsi:schemaLocation=\"http://purl.org/dc/elements/1.1/")
-                .append(" http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd")
-                .append(" http://purl.org/dc/terms/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dcterms.xsd")
-                .append(" http://dspace.org/qualifieddc/")
-                .append("http://www.ukoln.ac.uk/metadata/dcmi/xmlschema/qualifieddc.xsd\">\n");
-    }
-
-    @SuppressWarnings("PMD.ConsecutiveLiteralAppends")
-    private void appendOaiDataciteHeader(StringBuilder buffer) {
-        buffer.append("<oaire:resource xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
-                .append(" xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n")
-                .append(" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n")
-                .append(" xmlns:datacite=\"http://datacite.org/schema/kernel-4\"\n")
-                .append(" xmlns:vc=\"http://www.w3.org/2007/XMLSchema-versioning\"\n")
-                .append(" xmlns:oaire=\"http://namespace.openaire.eu/schema/oaire/\"\n")
-                .append(" xsi:schemaLocation=\"http://namespace.openaire.eu/schema/oaire/")
-                .append(" https://www.openaire.eu/schema/repo-lit/4.0/openaire.xsd\">\n");
     }
 
     private void appendCreatorsDc(Resource resource, StringBuilder buffer) {

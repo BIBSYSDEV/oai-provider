@@ -59,9 +59,9 @@ public class OaiResponse {
         return buffer.toString();
     }
 
-    public static String listIdentifiers(String from, String until, String metadataPrefix,
-                                         String resumptionToken, String baseUrl, String setSpec,
-                                         int startPosition, RecordsList records, long startTime) {
+    public static String listIdentifiers(String from, String until, String resumptionToken, String metadataPrefix,
+                                         String baseUrl, int startPosition, String setSpec, RecordsList records,
+                                         long startTime) {
         StringBuilder buffer = new StringBuilder();
         makeHeader(buffer);
         makeHeaderRequestListRecordsIdentifiers(ListIdentifiers.name(), resumptionToken, from, until, metadataPrefix,
@@ -76,7 +76,7 @@ public class OaiResponse {
 
         String newResumptionToken = createNewResumptionToken(from, until, resumptionToken, metadataPrefix,
                 startPosition, setSpec, records, recordsRemaining);
-        makeFooterListIdentifiers(records.getNumFound(), newResumptionToken, buffer);
+        makeFooterListIdentifiers(records.getNumFound(), newResumptionToken, startPosition + records.size(), buffer);
         makeVerbEnd(ListIdentifiers.name(), buffer);
         makeFooter(buffer);
         makeTimeUsed(ListIdentifiers.name(), startTime, buffer);
@@ -243,10 +243,10 @@ public class OaiResponse {
 
     // OAI helpers: ListIdentifiers
 
-    protected static void makeFooterListIdentifiers(long listSize, String newToken, StringBuilder buffer) {
+    protected static void makeFooterListIdentifiers(long listSize, String newToken, int cursor, StringBuilder buffer) {
         if (newToken.length() > 0) {
-            buffer.append("        <resumptionToken completeListSize=\"").append(listSize).append("\">")
-                .append(newToken).append("</resumptionToken>\n");
+            buffer.append("        <resumptionToken completeListSize=\"").append(listSize).append("\"  cursor=\"")
+                .append(cursor).append("\">").append(newToken).append("</resumptionToken>\n");
         }
     }
 

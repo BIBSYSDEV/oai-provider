@@ -106,8 +106,8 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                         validateSet(setSpec);
                     }
                     recordsList = getRecordsList(verb, from, until, setSpec, metadataPrefix, resumptionToken);
-                    response = OaiResponse.listIdentifiers(from, until, metadataPrefix, resumptionToken,
-                            adapter.getBaseUrl(), setSpec, getStartPosition(resumptionToken), recordsList, startTime);
+                    response = OaiResponse.listIdentifiers(from, until, resumptionToken, metadataPrefix,
+                            adapter.getBaseUrl(), getStartPosition(resumptionToken), setSpec, recordsList, startTime);
                     break;
                 case ListMetadataFormats:
                     response = OaiResponse.listMetadataFormats(adapter.getBaseUrl(), startTime);

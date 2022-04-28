@@ -7,7 +7,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-import static no.sikt.oai.MetadataFormat.OAI_DATACITE;
 import static no.sikt.oai.MetadataFormat.OAI_DC;
 import static no.sikt.oai.MetadataFormat.QDC;
 import static no.sikt.oai.OaiConstants.BAD_ARGUMENT;
@@ -66,6 +65,8 @@ import nva.commons.core.Environment;
 import nva.commons.core.ioutils.IoUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class OaiProviderHandlerTest {
 
@@ -328,49 +329,14 @@ public class OaiProviderHandlerTest {
         assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
     }
 
-    @Test
-    public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefixQdcAndIdentifierNVA()
+    @ParameterizedTest(name = "Should return GetRecordResponse for metadataPrefix: {0}")
+    @ValueSource(strings = {"qdc", "oai_datacite", "oai_dc"})
+    public void shouldReturnGetRecordResponseWithVerbGetRecordWithMetadataPrefixAndIdentifierNVA(String metadataPrefix)
         throws IOException {
         init(CLIENT_TYPE_NVA);
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
-        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
-        queryParameters.put(ValidParameterKey.IDENTIFIER.key, FAKE_OAI_IDENTIFIER_NVA);
-        var output = new ByteArrayOutputStream();
-        var inputStream = handlerInputStream(queryParameters);
-        handler.handleRequest(inputStream, output, context);
-        var gatewayResponse = parseSuccessResponse(output.toString());
-        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
-        var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
-    }
-
-    @Test
-    public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefixOaiDcAndIdentifierNVA()
-            throws IOException {
-        init(CLIENT_TYPE_NVA);
-        Map<String, String> queryParameters = new HashMap<>();
-        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DC.name());
-        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
-        queryParameters.put(ValidParameterKey.IDENTIFIER.key, FAKE_OAI_IDENTIFIER_NVA);
-        var output = new ByteArrayOutputStream();
-        var inputStream = handlerInputStream(queryParameters);
-        handler.handleRequest(inputStream, output, context);
-        var gatewayResponse = parseSuccessResponse(output.toString());
-        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
-        var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
-    }
-
-    @Test
-    public void shouldReturnGetRecordResponseWhenAskedForGetRecordWithMetadataPrefixOaiDataciteAndIdentifierNVA()
-            throws IOException {
-        init(CLIENT_TYPE_NVA);
-        Map<String, String> queryParameters = new HashMap<>();
-        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, OAI_DATACITE.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, metadataPrefix);
         queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
         queryParameters.put(ValidParameterKey.IDENTIFIER.key, FAKE_OAI_IDENTIFIER_NVA);
         var output = new ByteArrayOutputStream();
@@ -643,12 +609,14 @@ public class OaiProviderHandlerTest {
         assertThat(responseBody, is(containsString(FAULTY_JSON)));
     }
 
-    @Test
-    public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingNvaSetSpec() throws IOException {
+    @ParameterizedTest(name = "Should return ListRecordsResponse for metadataPrefix: {0}")
+    @ValueSource(strings = {"qdc", "oai_datacite", "oai_dc"})
+    public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingNvaSetSpec(String metadataPrefix)
+            throws IOException {
         init(CLIENT_TYPE_NVA);
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
-        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadataFormat.OAI_DATACITE.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, metadataPrefix);
         queryParameters.put(ValidParameterKey.SET.key, UIO_CUSTUMER_ID);
         var output = new ByteArrayOutputStream();
         var inputStream = handlerInputStream(queryParameters);

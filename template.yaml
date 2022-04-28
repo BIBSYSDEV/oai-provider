@@ -29,6 +29,9 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<String>
     Default: 'oai_records_uri'
     Description: uri for api endpoint to search for records
+  CognitoUri:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/NVA/CognitoUri'
 
 Conditions:
   HasDomainName: !Not [ !Equals [ !Ref CustomDomain, '' ] ]
@@ -139,7 +142,7 @@ Resources:
           SETS_URI: !Ref SetsUri
           RECORD_URI: !Ref RecordUri
           RECORDS_URI: !Ref RecordsUri
-#          COGNITO_URI: "{{resolve:ssm:NVA:CognitoUri}}"
+          COGNITO_URI: !Ref CognitoUri
       Events:
         OaiProviderEvent:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api

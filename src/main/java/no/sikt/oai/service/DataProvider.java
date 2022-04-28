@@ -37,12 +37,11 @@ public class DataProvider {
     public String getSetsList() throws OaiException, InternalOaiException {
         HttpResponse<String> response;
         try {
-            Builder httpRequest = HttpRequest.newBuilder()
+            Builder builder = HttpRequest.newBuilder()
                     .uri(adapter.getSetsUri())
                     .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
                     .GET();
-//                    .build();
-            response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            response = client.send(builder, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new InternalOaiException(e, HttpURLConnection.HTTP_UNAVAILABLE);
         }

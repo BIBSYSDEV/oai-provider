@@ -36,7 +36,7 @@ Parameters:
 Conditions:
   HasDomainName: !Not [ !Equals [ !Ref CustomDomain, '' ] ]
   HasCustomDomainBasePath: !Not [ !Equals [ !Ref CustomDomainBasePath, '' ] ]
-  isDLR: !Equals [ !Ref OaiClientName, 'DLR']
+  isDLR: !Equals [ !Ref OaiClientName, 'DLR' ]
 
 Globals:
   Function:
@@ -144,9 +144,9 @@ Resources:
           RECORD_URI: !Ref RecordUri
           RECORDS_URI: !Ref RecordsUri
           COGNITO_URI: !If
-          - isDLR
-          - 'dummyString'
-          - !Ref CognitoUri
+            - isDLR
+            - !Ref CognitoUri
+            - 'dummyString'
       Events:
         OaiProviderEvent:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api

@@ -4,7 +4,6 @@ import static com.google.common.net.MediaType.APPLICATION_XML_UTF_8;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.google.common.net.MediaType;
 import java.net.HttpURLConnection;
-import java.net.http.HttpClient;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -18,6 +17,7 @@ import no.sikt.oai.data.RecordsList;
 import no.sikt.oai.exception.InternalOaiException;
 import no.sikt.oai.exception.OaiException;
 import no.sikt.oai.service.DataProvider;
+import no.unit.nva.auth.AuthorizedBackendClient;
 import nva.commons.apigateway.ApiGatewayHandler;
 import nva.commons.apigateway.RequestInfo;
 import nva.commons.apigateway.exceptions.ApiGatewayException;
@@ -37,10 +37,10 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     @JacocoGenerated
     public OaiProviderHandler() {
-        this(new Environment(), HttpClient.newBuilder().build());
+        this(new Environment(), AuthorizedBackendClient.prepareWithBackendCredentials());
     }
 
-    public OaiProviderHandler(Environment environment, HttpClient client) {
+    public OaiProviderHandler(Environment environment, AuthorizedBackendClient client) {
         super(Void.class, environment);
         initAdapter();
         this.dataProvider = new DataProvider(client, adapter);

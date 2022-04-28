@@ -8,39 +8,40 @@ import static no.sikt.oai.OaiConstants.UNKNOWN_IDENTIFIER;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 import java.net.HttpURLConnection;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
 import no.sikt.oai.OaiConstants;
 import no.sikt.oai.adapter.Adapter;
 import no.sikt.oai.exception.InternalOaiException;
 import no.sikt.oai.exception.OaiException;
+import no.unit.nva.auth.AuthorizedBackendClient;
 import nva.commons.core.JacocoGenerated;
 import org.apache.http.HttpStatus;
 
 public class DataProvider {
 
-    private final transient HttpClient client;
+    private final transient AuthorizedBackendClient client;
     private final transient Adapter adapter;
 
-    public DataProvider(HttpClient client, Adapter adapter) {
+    public DataProvider(AuthorizedBackendClient client, Adapter adapter) {
         this.client = client;
         this.adapter = adapter;
     }
 
     @JacocoGenerated
     public DataProvider(Adapter adapter) {
-        this(HttpClient.newBuilder().build(), adapter);
+        this(AuthorizedBackendClient.prepareWithBackendCredentials(), adapter);
     }
 
     public String getSetsList() throws OaiException, InternalOaiException {
         HttpResponse<String> response;
         try {
-            HttpRequest httpRequest = HttpRequest.newBuilder()
+            Builder httpRequest = HttpRequest.newBuilder()
                     .uri(adapter.getSetsUri())
                     .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
-                    .GET()
-                    .build();
+                    .GET();
+//                    .build();
             response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new InternalOaiException(e, HttpURLConnection.HTTP_UNAVAILABLE);
@@ -54,12 +55,11 @@ public class DataProvider {
     public String getRecord(String identifier) throws OaiException, InternalOaiException {
         HttpResponse<String> response;
         try {
-            HttpRequest httpRequest = HttpRequest.newBuilder()
+            Builder builder = HttpRequest.newBuilder()
                     .uri(adapter.getRecordUri(identifier))
                     .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
-                    .GET()
-                    .build();
-            response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+                    .GET();
+            response = client.send(builder, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new InternalOaiException(e, HttpURLConnection.HTTP_UNAVAILABLE);
         }
@@ -73,12 +73,11 @@ public class DataProvider {
             throws OaiException, InternalOaiException {
         HttpResponse<String> response;
         try {
-            HttpRequest httpRequest = HttpRequest.newBuilder()
+            Builder builder = HttpRequest.newBuilder()
                     .uri(adapter.getRecordsListUri(from, until, setSpec, startPosition))
                     .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
-                    .GET()
-                    .build();
-            response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+                    .GET();
+            response = client.send(builder, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new InternalOaiException(e, HttpURLConnection.HTTP_UNAVAILABLE);
         }

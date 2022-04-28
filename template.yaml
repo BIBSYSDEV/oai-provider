@@ -34,15 +34,19 @@ Parameters:
     Default: '/NVA/CognitoUri'
 
 Conditions:
-  HasDomainName: !Not [!Equals [!Ref CustomDomain, '']]
-  HasCustomDomainBasePath: !Not [!Equals [!Ref CustomDomainBasePath, '']]
+  HasDomainName: !Not [ !Equals [ !Ref CustomDomain, '' ] ]
+  HasCustomDomainBasePath: !Not [ !Equals [ !Ref CustomDomainBasePath, '' ] ]
+  HasCognitoAuthorizationUri: !Not [ !Equals [ !Ref CognitoAuthorizationUri, '' ] ]
 
 Globals:
   Function:
     Timeout: 20
     Environment:
       Variables:
-        COGNITO_URI: !Ref CognitoAuthorizationUri
+        COGNITO_URI: !If
+          - HasCognitoAuthorizationUri
+          - !Ref CognitoAuthorizationUri
+          - !Ref 'AWS::NoValue'
   Api:
     Cors:
       AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
@@ -96,11 +100,11 @@ Resources:
                   required: true
                   type: string
                   description: text text text
-              x-amazon-apigateway-request-validator : params-only
+              x-amazon-apigateway-request-validator: params-only
               x-amazon-apigateway-integration:
                 uri:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OaiProviderFunction.Arn}/invocations
-                responses: {}
+                responses: { }
                 httpMethod: POST
                 type: AWS_PROXY
               responses:

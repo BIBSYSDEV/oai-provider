@@ -29,6 +29,9 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<String>
     Default: 'oai_records_uri'
     Description: uri for api endpoint to search for records
+  CognitoAuthorizationUri:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/NVA/CognitoUri'
 
 Conditions:
   HasDomainName: !Not [!Equals [!Ref CustomDomain, '']]
@@ -37,6 +40,9 @@ Conditions:
 Globals:
   Function:
     Timeout: 20
+    Environment:
+      Variables:
+        COGNITO_URI: !Ref CognitoAuthorizationUri
   Api:
     Cors:
       AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''

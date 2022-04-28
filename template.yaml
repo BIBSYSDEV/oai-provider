@@ -36,7 +36,7 @@ Parameters:
 Conditions:
   HasDomainName: !Not [ !Equals [ !Ref CustomDomain, '' ] ]
   HasCustomDomainBasePath: !Not [ !Equals [ !Ref CustomDomainBasePath, '' ] ]
-  HasCognitoAuthorizationUri: !Not [ !Equals [ !Ref CognitoAuthorizationUri, '' ] ]
+  HasCognitoAuthorizationUri: !Not [ !Equals [ !Ref OaiClientName, 'NVA' ] ]
 
 Globals:
   Function:

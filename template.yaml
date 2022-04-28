@@ -37,9 +37,6 @@ Conditions:
 Globals:
   Function:
     Timeout: 20
-    Environment:
-      Variables:
-        COGNITO_URI: "{{resolve:ssm:NVA:CognitoUri}}"
   Api:
     Cors:
       AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
@@ -142,6 +139,7 @@ Resources:
           SETS_URI: !Ref SetsUri
           RECORD_URI: !Ref RecordUri
           RECORDS_URI: !Ref RecordsUri
+          COGNITO_URI: "{{resolve:ssm:NVA:CognitoUri}}"
       Events:
         OaiProviderEvent:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api

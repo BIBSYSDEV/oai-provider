@@ -1,6 +1,8 @@
 package no.sikt.oai.adapter;
 
 import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
+import static no.sikt.oai.OaiConstants.ID_DOES_NOT_EXIST;
+import static no.sikt.oai.OaiConstants.NO_RECORDS_MATCH;
 import static no.sikt.oai.OaiConstants.NO_SETS_FOUND;
 import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
 import static no.sikt.oai.OaiConstants.OAI_DATACITE_HEADER;
@@ -9,6 +11,7 @@ import static no.sikt.oai.OaiConstants.QDC_HEADER;
 import static no.sikt.oai.OaiConstants.RECORDS_URI_ENV;
 import static no.sikt.oai.OaiConstants.RECORD_URI_ENV;
 import static no.sikt.oai.OaiConstants.SETS_URI_ENV;
+import static no.sikt.oai.OaiConstants.UNKNOWN_IDENTIFIER;
 import static no.sikt.oai.OaiProviderHandler.EMPTY_STRING;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
@@ -17,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import no.sikt.oai.MetadataFormat;
+import no.sikt.oai.OaiConstants;
 import no.sikt.oai.TimeUtils;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
@@ -39,7 +42,7 @@ import nva.commons.core.StringUtils;
 import nva.commons.core.paths.UriWrapper;
 import org.apache.http.HttpStatus;
 
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
+@SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.GodClass"})
 public class DlrAdapter implements Adapter {
 
     public static final String ALL_SET_NAME = "all";
@@ -49,13 +52,23 @@ public class DlrAdapter implements Adapter {
     private final transient String recordsUri;
     private final transient String recordUri;
     private final transient String setsUri;
-    private final transient HttpClient client = HttpClient.newBuilder().build();
+    private final transient HttpClient client;
 
+    @JacocoGenerated
     public DlrAdapter(Environment environment) {
         setsUri = environment.readEnv(SETS_URI_ENV);
         recordUri = environment.readEnv(RECORD_URI_ENV);
         recordsUri = environment.readEnv(RECORDS_URI_ENV);
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.client = HttpClient.newBuilder().build();
+    }
+
+    public DlrAdapter(Environment environment, HttpClient client) {
+        setsUri = environment.readEnv(SETS_URI_ENV);
+        recordUri = environment.readEnv(RECORD_URI_ENV);
+        recordsUri = environment.readEnv(RECORDS_URI_ENV);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.client = client;
     }
 
     @Override
@@ -143,6 +156,7 @@ public class DlrAdapter implements Adapter {
         }
     }
 
+    @Override
     public String getSetsList() throws OaiException, InternalOaiException {
         HttpResponse<String> response;
         try {
@@ -152,7 +166,7 @@ public class DlrAdapter implements Adapter {
                 .GET();
             response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
-            throw new InternalOaiException(e, HttpURLConnection.HTTP_UNAVAILABLE);
+            throw new InternalOaiException(e, HTTP_UNAVAILABLE);
         }
         if (!responseIsSuccessful(response)) {
             throw new OaiException(NO_SET_HIERARCHY, NO_SETS_FOUND);
@@ -161,22 +175,56 @@ public class DlrAdapter implements Adapter {
     }
 
     @Override
-    public URI getSetsUri() {
+    public String getRecord(String identifier) throws OaiException, InternalOaiException {
+        HttpResponse<String> response;
+        try {
+            Builder builder = HttpRequest.newBuilder()
+                    .uri(getRecordUri(identifier))
+                    .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                    .GET();
+            response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        } catch (Exception e) {
+            throw new InternalOaiException(e, HTTP_UNAVAILABLE);
+        }
+        if (!responseIsSuccessful(response)) {
+            throw new OaiException(ID_DOES_NOT_EXIST, UNKNOWN_IDENTIFIER);
+        }
+        return response.body();
+    }
+
+    @Override
+    public String getRecordsList(String from, String until, String setSpec, int startPosition)
+            throws OaiException, InternalOaiException {
+        HttpResponse<String> response;
+        try {
+            Builder builder = HttpRequest.newBuilder()
+                    .uri(getRecordsListUri(from, until, setSpec, startPosition))
+                    .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                    .GET();
+            response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        } catch (Exception e) {
+            throw new InternalOaiException(e, HTTP_UNAVAILABLE);
+        }
+        if (!responseIsSuccessful(response)) {
+            throw new OaiException(NO_RECORDS_MATCH, OaiConstants.COMBINATION_OF_PARAMS_ERROR);
+        }
+        return response.body();
+    }
+
+    private URI getSetsUri() {
         return UriWrapper
                 .fromUri(setsUri)
                 .getUri();
     }
 
-    @Override
-    public URI getRecordUri(String identifier) {
+    private URI getRecordUri(String identifier) {
         return UriWrapper
                 .fromUri(recordUri)
                 .addChild(identifier)
                 .getUri();
     }
 
-    @Override
-    public URI getRecordsListUri(String from, String until, String institution, int startPosition) {
+    private URI getRecordsListUri(String from, String until, String institution, int startPosition) {
         UriWrapper uriWrapper = UriWrapper.fromUri(recordsUri);
         if (StringUtils.isNotEmpty(institution)) {
             uriWrapper = uriWrapper.addQueryParameter("institution", institution);

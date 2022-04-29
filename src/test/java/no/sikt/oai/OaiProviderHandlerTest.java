@@ -49,6 +49,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
+
+import no.sikt.oai.adapter.Adapter;
+import no.sikt.oai.adapter.DlrAdapter;
+import no.sikt.oai.adapter.NvaAdapter;
 import no.unit.nva.auth.AuthorizedBackendClient;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -89,18 +93,20 @@ public class OaiProviderHandlerTest {
                                                  + ".no/customer/1bd2e3f7-a570-442a-b444-cb02e6cc70e4";
     private AuthorizedBackendClient authorizedBackendClient;
     private OaiProviderHandler handler;
+    private Adapter adapter;
     private Environment environment;
     private Context context;
     private WireMockServer httpServer;
+    private HttpClient httpClient;
     private URI serverUriSets;
     private URI serverUriRecord;
     private URI serverUriRecords;
 
-    public void init(String adapter) {
+    public void init(String adapterName) {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
-        when(environment.readEnv(CLIENT_NAME_ENV)).thenReturn(adapter);
-        final HttpClient httpClient = WiremockHttpClient.create();
+        when(environment.readEnv(CLIENT_NAME_ENV)).thenReturn(adapterName);
+        httpClient = WiremockHttpClient.create();
         authorizedBackendClient = new AuthorizedBackendClient(null, null, null) {
             @Override
             public <T> HttpResponse<T> send(HttpRequest.Builder request, BodyHandler<T> responseBodyHandler)
@@ -108,15 +114,16 @@ public class OaiProviderHandlerTest {
                 return httpClient.send(request.build(), responseBodyHandler);
             }
         };
-        startWiremockServer(adapter);
+        startWiremockServer(adapterName);
         when(environment.readEnv(SETS_URI_ENV)).thenReturn(serverUriSets.toString());
         when(environment.readEnv(RECORD_URI_ENV)).thenReturn(serverUriRecord.toString());
         when(environment.readEnv(RECORDS_URI_ENV)).thenReturn(serverUriRecords.toString());
         context = mock(Context.class);
-        mockSetsResponse(adapter);
-        mockRecordResponse(adapter);
-        mockRecordsResponse(adapter);
-        handler = new OaiProviderHandler(environment, authorizedBackendClient);
+        mockSetsResponse(adapterName);
+        mockRecordResponse(adapterName);
+        mockRecordsResponse(adapterName);
+        createAdapter(adapterName, environment);
+        handler = new OaiProviderHandler(environment, adapter);
     }
 
     @AfterEach
@@ -129,7 +136,6 @@ public class OaiProviderHandlerTest {
     @Test
     public void handleRequestReturnsIdentifyOaiResponseDLR() throws IOException {
         init(CLIENT_TYPE_DLR);
-        ;
         TimeUtils timeUtils = new TimeUtils();
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
@@ -144,7 +150,6 @@ public class OaiProviderHandlerTest {
     @Test
     public void handleRequestReturnsIdentifyOaiResponseNVA() throws IOException {
         init(CLIENT_TYPE_NVA);
-        ;
         TimeUtils.date2String(null, null);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
@@ -230,10 +235,11 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnExceptionWhenGetRecordWhenComunicationCrashes() throws IOException {
+    public void shouldReturnExceptionWhenGetRecordWhenCommunicationCrashes() throws IOException {
         init(CLIENT_TYPE_DLR);
         when(environment.readEnv(RECORD_URI_ENV)).thenReturn(FAULTY_JSON);
-        handler = new OaiProviderHandler(environment, authorizedBackendClient);
+        createAdapter(CLIENT_TYPE_DLR, environment);
+        handler = new OaiProviderHandler(environment, adapter);
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
         queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER_DLR);
@@ -433,7 +439,8 @@ public class OaiProviderHandlerTest {
         throws IOException {
         init(CLIENT_TYPE_DLR);
         when(environment.readEnv(SETS_URI_ENV)).thenReturn(FAULTY_JSON);
-        handler = new OaiProviderHandler(environment, authorizedBackendClient);
+        createAdapter(CLIENT_TYPE_DLR, environment);
+        handler = new OaiProviderHandler(environment, adapter);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListSets.name());
@@ -564,7 +571,8 @@ public class OaiProviderHandlerTest {
     public void shouldReturnExceptionWhenAskedForListRecordsAndServerCommunicationFails() throws IOException {
         init(CLIENT_TYPE_DLR);
         when(environment.readEnv(RECORDS_URI_ENV)).thenReturn(FAULTY_JSON);
-        handler = new OaiProviderHandler(environment, authorizedBackendClient);
+        createAdapter(CLIENT_TYPE_DLR, environment);
+        handler = new OaiProviderHandler(environment, adapter);
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadataFormat.OAI_DATACITE.name());
@@ -687,8 +695,7 @@ public class OaiProviderHandlerTest {
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");
         when(environment.readEnv(CLIENT_NAME_ENV)).thenReturn(UNKNOWN_CLIENT_NAME);
         context = mock(Context.class);
-        assertThrows(RuntimeException.class, () -> handler = new OaiProviderHandler(environment,
-                                                                                    authorizedBackendClient));
+        assertThrows(RuntimeException.class, () -> handler = new OaiProviderHandler(environment, adapter));
     }
 
     @Test
@@ -816,6 +823,14 @@ public class OaiProviderHandlerTest {
         var typeRef = restServiceObjectMapper.getTypeFactory()
             .constructParametricType(GatewayResponse.class, String.class);
         return restServiceObjectMapper.readValue(output, typeRef);
+    }
+
+    private void createAdapter(String adapterName, Environment environment) {
+        if (CLIENT_TYPE_DLR.equalsIgnoreCase(adapterName)) {
+            adapter = new DlrAdapter(environment, httpClient);
+        } else if (CLIENT_TYPE_NVA.equalsIgnoreCase(adapterName)) {
+            adapter = new NvaAdapter(environment, authorizedBackendClient);
+        }
     }
 
     private void startWiremockServer(String adapter) {

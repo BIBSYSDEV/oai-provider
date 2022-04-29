@@ -1,17 +1,27 @@
 package no.sikt.oai.adapter;
 
 import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
+import static no.sikt.oai.OaiConstants.ID_DOES_NOT_EXIST;
+import static no.sikt.oai.OaiConstants.NO_RECORDS_MATCH;
+import static no.sikt.oai.OaiConstants.NO_SETS_FOUND;
+import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
 import static no.sikt.oai.OaiConstants.OAI_DATACITE_HEADER;
 import static no.sikt.oai.OaiConstants.OAI_DC_HEADER;
 import static no.sikt.oai.OaiConstants.QDC_HEADER;
+import static no.sikt.oai.OaiConstants.UNKNOWN_IDENTIFIER;
 import static no.sikt.oai.OaiProviderHandler.EMPTY_STRING;
 import static no.sikt.oai.adapter.DlrAdapter.ALL_SET_NAME;
+import static org.apache.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.net.URI;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -24,24 +34,41 @@ import no.sikt.oai.TimeUtils;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
 import no.sikt.oai.exception.InternalOaiException;
+import no.sikt.oai.exception.OaiException;
+import no.unit.nva.auth.AuthorizedBackendClient;
 import no.unit.nva.model.Publication;
 import nva.commons.core.Environment;
+import nva.commons.core.JacocoGenerated;
+import nva.commons.core.StringUtils;
 import nva.commons.core.paths.UriWrapper;
+import org.apache.http.HttpStatus;
 
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
+@SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.GodClass"})
 public class NvaAdapter implements Adapter {
 
     private final transient ObjectMapper mapper = new ObjectMapper();
     private final transient String resourceUri;
     private final transient String resourcesUri;
-    private final transient String setsUri; // "https://api.dev.nva.aws.unit.no/customer/";
+    private final transient String setsUri;
+    private final transient AuthorizedBackendClient client;
 
+    @JacocoGenerated
     public NvaAdapter(Environment environment) {
         setsUri = environment.readEnv(OaiConstants.SETS_URI_ENV);
         resourceUri = environment.readEnv(OaiConstants.RECORD_URI_ENV);
         resourcesUri = environment.readEnv(OaiConstants.RECORDS_URI_ENV);
         mapper.registerModule(new JavaTimeModule());
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.client = AuthorizedBackendClient.prepareWithBackendCredentials();
+    }
+
+    public NvaAdapter(Environment environment, AuthorizedBackendClient client) {
+        setsUri = environment.readEnv(OaiConstants.SETS_URI_ENV);
+        resourceUri = environment.readEnv(OaiConstants.RECORD_URI_ENV);
+        resourcesUri = environment.readEnv(OaiConstants.RECORDS_URI_ENV);
+        mapper.registerModule(new JavaTimeModule());
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.client = client;
     }
 
     @Override
@@ -94,26 +121,95 @@ public class NvaAdapter implements Adapter {
         return "oai:nva.unit.no:";
     }
 
-    @Override
-    public URI getSetsUri() {
+    private URI getSetsUri() {
         return UriWrapper
             .fromUri(setsUri)
             .getUri();
     }
 
-    @Override
-    public URI getRecordUri(String identifier) {
+    private URI getRecordUri(String identifier) {
         return UriWrapper
             .fromUri(resourceUri)
             .addChild(identifier)
             .getUri();
     }
 
+    private URI getRecordsListUri(String from, String until, String institution, int startPosition) {
+        UriWrapper uriWrapper = UriWrapper.fromUri(resourcesUri);
+        StringBuilder query = new StringBuilder();
+        if (StringUtils.isNotEmpty(institution)) {
+            query.append("publisher = ").append(institution)
+                .append("AND modifiedDate > ").append(from)
+                .append(" AND modifiedDate < ").append(until);
+        }
+        uriWrapper = uriWrapper.addQueryParameter("query", query.toString());
+        if (startPosition != 0) {
+            uriWrapper = uriWrapper.addQueryParameter("from", String.valueOf(startPosition));
+        }
+        uriWrapper = uriWrapper.addQueryParameter("results", "50");
+        return uriWrapper.getUri();
+    }
+
     @Override
-    public URI getRecordsListUri(String from, String until, String institution, int startPosition) {
-        return UriWrapper
-            .fromUri(resourcesUri)
-            .getUri();
+    public String getSetsList() throws OaiException, InternalOaiException {
+        HttpResponse<String> response;
+        try {
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
+                    .uri(getSetsUri())
+                    .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                    .GET();
+            response = client.send(builder, HttpResponse.BodyHandlers.ofString());
+        } catch (Exception e) {
+            throw new InternalOaiException(e, HTTP_UNAVAILABLE);
+        }
+        if (!responseIsSuccessful(response)) {
+            throw new OaiException(NO_SET_HIERARCHY, NO_SETS_FOUND);
+        }
+        return response.body();
+    }
+
+    @Override
+    public String getRecord(String identifier) throws OaiException, InternalOaiException {
+        HttpResponse<String> response;
+        try {
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
+                    .uri(getRecordUri(identifier))
+                    .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                    .GET();
+            response = client.send(builder, HttpResponse.BodyHandlers.ofString());
+        } catch (Exception e) {
+            throw new InternalOaiException(e, HTTP_UNAVAILABLE);
+        }
+        if (!responseIsSuccessful(response)) {
+            throw new OaiException(ID_DOES_NOT_EXIST, UNKNOWN_IDENTIFIER);
+        }
+        return response.body();
+    }
+
+    @Override
+    public String getRecordsList(String from, String until, String setSpec, int startPosition)
+            throws OaiException, InternalOaiException {
+        HttpResponse<String> response;
+        try {
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
+                    .uri(getRecordsListUri(from, until, setSpec, startPosition))
+                    .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                    .GET();
+            response = client.send(builder, HttpResponse.BodyHandlers.ofString());
+        } catch (Exception e) {
+            throw new InternalOaiException(e, HTTP_UNAVAILABLE);
+        }
+        if (!responseIsSuccessful(response)) {
+            throw new OaiException(NO_RECORDS_MATCH, OaiConstants.COMBINATION_OF_PARAMS_ERROR);
+        }
+        return response.body();
+    }
+
+    @JacocoGenerated
+    protected boolean responseIsSuccessful(HttpResponse<String> response) {
+        int status = response.statusCode();
+        // status should be in the range [200,300)
+        return status >= HttpStatus.SC_OK && status < HttpStatus.SC_MULTIPLE_CHOICES;
     }
 
     @Override

@@ -7,6 +7,7 @@ import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import no.sikt.oai.adapter.Adapter;
 import no.sikt.oai.adapter.Adapter.OaiSet;
@@ -39,11 +40,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
 
     public OaiProviderHandler(Environment environment, Adapter adapter) {
         super(Void.class, environment);
-        if (adapter == null) {
-            initAdapter();
-        } else {
-            this.adapter = adapter;
-        }
+        this.adapter = Objects.requireNonNullElseGet(adapter, this::initAdapter);
     }
 
     @Override

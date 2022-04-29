@@ -6,6 +6,7 @@ import no.sikt.oai.exception.InternalOaiException;
 
 import java.net.URI;
 import java.util.List;
+import no.sikt.oai.exception.OaiException;
 
 public interface Adapter {
 
@@ -41,6 +42,8 @@ public interface Adapter {
     URI getRecordUri(String identifier);
 
     URI getRecordsListUri(String from, String until, String institution, int startPosition);
+
+    String getSetsList() throws OaiException, InternalOaiException;
 
     class OaiSet {
 

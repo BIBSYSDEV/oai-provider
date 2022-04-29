@@ -1,6 +1,8 @@
 package no.sikt.oai.adapter;
 
 import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
+import static no.sikt.oai.OaiConstants.NO_SETS_FOUND;
+import static no.sikt.oai.OaiConstants.NO_SET_HIERARCHY;
 import static no.sikt.oai.OaiConstants.OAI_DATACITE_HEADER;
 import static no.sikt.oai.OaiConstants.OAI_DC_HEADER;
 import static no.sikt.oai.OaiConstants.QDC_HEADER;
@@ -8,12 +10,19 @@ import static no.sikt.oai.OaiConstants.RECORDS_URI_ENV;
 import static no.sikt.oai.OaiConstants.RECORD_URI_ENV;
 import static no.sikt.oai.OaiConstants.SETS_URI_ENV;
 import static no.sikt.oai.OaiProviderHandler.EMPTY_STRING;
+import static org.apache.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.Builder;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,9 +32,12 @@ import no.sikt.oai.TimeUtils;
 import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
 import no.sikt.oai.exception.InternalOaiException;
+import no.sikt.oai.exception.OaiException;
 import nva.commons.core.Environment;
+import nva.commons.core.JacocoGenerated;
 import nva.commons.core.StringUtils;
 import nva.commons.core.paths.UriWrapper;
+import org.apache.http.HttpStatus;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class DlrAdapter implements Adapter {
@@ -37,6 +49,7 @@ public class DlrAdapter implements Adapter {
     private final transient String recordsUri;
     private final transient String recordUri;
     private final transient String setsUri;
+    private final transient HttpClient client = HttpClient.newBuilder().build();
 
     public DlrAdapter(Environment environment) {
         setsUri = environment.readEnv(SETS_URI_ENV);
@@ -130,6 +143,23 @@ public class DlrAdapter implements Adapter {
         }
     }
 
+    public String getSetsList() throws OaiException, InternalOaiException {
+        HttpResponse<String> response;
+        try {
+            Builder builder = HttpRequest.newBuilder()
+                .uri(getSetsUri())
+                .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                .GET();
+            response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        } catch (Exception e) {
+            throw new InternalOaiException(e, HttpURLConnection.HTTP_UNAVAILABLE);
+        }
+        if (!responseIsSuccessful(response)) {
+            throw new OaiException(NO_SET_HIERARCHY, NO_SETS_FOUND);
+        }
+        return response.body();
+    }
+
     @Override
     public URI getSetsUri() {
         return UriWrapper
@@ -161,6 +191,13 @@ public class DlrAdapter implements Adapter {
             uriWrapper = uriWrapper.addQueryParameter("offset", String.valueOf(startPosition));
         }
         return uriWrapper.getUri();
+    }
+
+    @JacocoGenerated
+    protected boolean responseIsSuccessful(HttpResponse<String> response) {
+        int status = response.statusCode();
+        // status should be in the range [200,300)
+        return status >= HttpStatus.SC_OK && status < HttpStatus.SC_MULTIPLE_CHOICES;
     }
 
     private Record createRecordFromResource(Resource resource, String metadataPrefix) {

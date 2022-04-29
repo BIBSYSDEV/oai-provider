@@ -21,11 +21,11 @@ import org.apache.http.HttpStatus;
 
 public class DataProvider {
 
-    private final transient AuthorizedBackendClient client;
+    private final transient AuthorizedBackendClient nvaClient;
     private final transient Adapter adapter;
 
-    public DataProvider(AuthorizedBackendClient client, Adapter adapter) {
-        this.client = client;
+    public DataProvider(AuthorizedBackendClient nvaClient, Adapter adapter) {
+        this.nvaClient = nvaClient;
         this.adapter = adapter;
     }
 
@@ -41,7 +41,7 @@ public class DataProvider {
                     .uri(adapter.getSetsUri())
                     .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
                     .GET();
-            response = client.send(builder, HttpResponse.BodyHandlers.ofString());
+            response = nvaClient.send(builder, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new InternalOaiException(e, HttpURLConnection.HTTP_UNAVAILABLE);
         }
@@ -58,7 +58,7 @@ public class DataProvider {
                     .uri(adapter.getRecordUri(identifier))
                     .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
                     .GET();
-            response = client.send(builder, HttpResponse.BodyHandlers.ofString());
+            response = nvaClient.send(builder, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new InternalOaiException(e, HttpURLConnection.HTTP_UNAVAILABLE);
         }
@@ -76,7 +76,7 @@ public class DataProvider {
                     .uri(adapter.getRecordsListUri(from, until, setSpec, startPosition))
                     .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
                     .GET();
-            response = client.send(builder, HttpResponse.BodyHandlers.ofString());
+            response = nvaClient.send(builder, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new InternalOaiException(e, HttpURLConnection.HTTP_UNAVAILABLE);
         }

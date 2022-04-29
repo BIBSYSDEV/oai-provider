@@ -143,6 +143,8 @@ Resources:
           RECORD_URI: !Ref RecordUri
           RECORDS_URI: !Ref RecordsUri
           COGNITO_URI: !Ref CognitoUri
+          BACKEND_CLIENT_ID: '{{resolve:secretsmanager:BackendCognitoClientCredentials:SecretString:backendClientId}}'
+          BACKEND_CLIENT_SECRET: '{{resolve:secretsmanager:BackendCognitoClientCredentials:SecretString:backendClientSecret}}'
       Events:
         OaiProviderEvent:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api

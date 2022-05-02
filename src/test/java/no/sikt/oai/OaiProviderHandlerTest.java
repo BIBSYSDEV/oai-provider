@@ -307,7 +307,7 @@ public class OaiProviderHandlerTest {
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
-        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        queryParameters.put(ValidParameterKey.SET.key, UIO_CUSTUMER_ID);
         var output = new ByteArrayOutputStream();
         var inputStream = handlerInputStream(queryParameters);
         handler.handleRequest(inputStream, output, context);
@@ -323,7 +323,7 @@ public class OaiProviderHandlerTest {
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
         queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
-        queryParameters.put(ValidParameterKey.SET.key, SET_NAME_SIKT);
+        queryParameters.put(ValidParameterKey.SET.key, UIO_CUSTUMER_ID);
         queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER_DLR);
         var output = new ByteArrayOutputStream();
         var inputStream = handlerInputStream(queryParameters);
@@ -404,9 +404,8 @@ public class OaiProviderHandlerTest {
 
     @ParameterizedTest(name = "Should return ListSets for init: {0}")
     @ValueSource(strings = {CLIENT_TYPE_DLR, CLIENT_TYPE_NVA})
-    public void shouldReturnListSetsResponseWhenAskedForListSets(String client_type) throws IOException {
-        init(client_type);
-        System.out.println(client_type);
+    public void shouldReturnListSetsResponseWhenAskedForListSets(String clientType) throws IOException {
+        init(clientType);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListSets.name());

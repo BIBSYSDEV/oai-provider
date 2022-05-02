@@ -89,8 +89,7 @@ public class OaiProviderHandlerTest {
     public static final String SET_NAME_SIKT = "sikt";
     public static final String EXCEPTION = "Exception";
     public static final String METADATA_TAG = "<metadata>";
-    public static final String UIO_CUSTUMER_ID = "https://api.dev.nva.aws.unit"
-                                                 + ".no/customer/1bd2e3f7-a570-442a-b444-cb02e6cc70e4";
+    public static final String UIO_CUSTUMER_ID = "1bd2e3f7-a570-442a-b444-cb02e6cc70e4";
     private AuthorizedBackendClient authorizedBackendClient;
     private OaiProviderHandler handler;
     private Adapter adapter;
@@ -403,9 +402,11 @@ public class OaiProviderHandlerTest {
         assertThat(responseBody, is(containsString(Verb.ListMetadataFormats.name())));
     }
 
-    @Test
-    public void shouldReturnListSetsResponseWhenAskedForListSets() throws IOException {
-        init(CLIENT_TYPE_DLR);
+    @ParameterizedTest(name = "Should return ListSets for init: {0}")
+    @ValueSource(strings = {CLIENT_TYPE_DLR, CLIENT_TYPE_NVA})
+    public void shouldReturnListSetsResponseWhenAskedForListSets(String client_type) throws IOException {
+        init(client_type);
+        System.out.println(client_type);
         var output = new ByteArrayOutputStream();
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListSets.name());
@@ -923,7 +924,7 @@ public class OaiProviderHandlerTest {
             var objectNode3 = dtoObjectMapper.createObjectNode();
             objectNode3.put("createdDate", "2022-04-06T06:28:59.673041Z");
             objectNode3.put("displayName", "Universitetet i Oslo");
-            objectNode3.put("id", SET_NAME_SIKT);
+            objectNode3.put("id","https://api.dev.nva.aws.unit.no/customer/f50dff3a-e244-48c7-891d-cc4d75597322");
             objectArray.add(objectNode3);
             var responseBodyElement = dtoObjectMapper.createObjectNode();
             responseBodyElement.put("@context", "https://bibsysdev.github.io/src/customer-context.json");

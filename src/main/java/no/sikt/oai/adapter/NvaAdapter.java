@@ -46,6 +46,7 @@ import org.apache.http.HttpStatus;
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.GodClass"})
 public class NvaAdapter implements Adapter {
 
+    private static final String SLASH = "/";
     private final transient ObjectMapper mapper = new ObjectMapper();
     private final transient String resourceUri;
     private final transient String resourcesUri;
@@ -217,11 +218,19 @@ public class NvaAdapter implements Adapter {
         try {
             List<Customer> customerList = mapper.readValue(json, Customers.class).customerList;
             return customerList.stream()
-                    .map(customer -> new OaiSet(customer.displayName, customer.id))
+                    .map(customer -> new OaiSet(customer.displayName, extractIdentifier(customer.id)))
                     .collect(Collectors.toList());
         } catch (JsonProcessingException e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
         }
+    }
+
+    private String extractIdentifier(String customerUri) {
+        if (customerUri.contains(SLASH)) {
+            int lastIndexOfSlash = customerUri.lastIndexOf(SLASH);
+            return customerUri.substring(lastIndexOfSlash + 1);
+        }
+        return customerUri;
     }
 
     @Override

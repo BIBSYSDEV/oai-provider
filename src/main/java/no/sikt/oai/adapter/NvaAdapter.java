@@ -140,8 +140,8 @@ public class NvaAdapter implements Adapter {
         StringBuilder query = new StringBuilder();
         if (StringUtils.isNotEmpty(institution)) {
             query.append("publisher = ").append(institution)
-                .append("AND modifiedDate > ").append(from)
-                .append(" AND modifiedDate < ").append(until);
+                .append(" & modifiedDate > ").append(from)
+                .append(" & modifiedDate < ").append(until);
         }
         uriWrapper = uriWrapper.addQueryParameter("query", query.toString());
         if (startPosition != 0) {

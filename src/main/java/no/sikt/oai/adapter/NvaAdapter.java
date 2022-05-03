@@ -13,7 +13,6 @@ import static no.sikt.oai.OaiProviderHandler.EMPTY_STRING;
 import static no.sikt.oai.adapter.DlrAdapter.ALL_SET_NAME;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -25,6 +24,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 import no.sikt.oai.MetadataFormat;
 import no.sikt.oai.OaiConstants;
@@ -34,6 +34,7 @@ import no.sikt.oai.data.RecordsList;
 import no.sikt.oai.exception.InternalOaiException;
 import no.sikt.oai.exception.OaiException;
 import no.unit.nva.auth.AuthorizedBackendClient;
+import no.unit.nva.file.model.File;
 import no.unit.nva.model.Publication;
 import nva.commons.core.Environment;
 import nva.commons.core.JacocoGenerated;
@@ -154,9 +155,9 @@ public class NvaAdapter implements Adapter {
         HttpResponse<String> response;
         try {
             HttpRequest.Builder builder = HttpRequest.newBuilder()
-                    .uri(getSetsUri())
-                    .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
-                    .GET();
+                .uri(getSetsUri())
+                .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                .GET();
             response = client.send(builder, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
@@ -172,9 +173,9 @@ public class NvaAdapter implements Adapter {
         HttpResponse<String> response;
         try {
             HttpRequest.Builder builder = HttpRequest.newBuilder()
-                    .uri(getRecordUri(identifier))
-                    .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
-                    .GET();
+                .uri(getRecordUri(identifier))
+                .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                .GET();
             response = client.send(builder, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
@@ -187,13 +188,13 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public String getRecordsList(String from, String until, String setSpec, int startPosition)
-            throws OaiException, InternalOaiException {
+        throws OaiException, InternalOaiException {
         HttpResponse<String> response;
         try {
             HttpRequest.Builder builder = HttpRequest.newBuilder()
-                    .uri(getRecordsListUri(from, until, setSpec, startPosition))
-                    .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
-                    .GET();
+                .uri(getRecordsListUri(from, until, setSpec, startPosition))
+                .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                .GET();
             response = client.send(builder, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
@@ -216,8 +217,8 @@ public class NvaAdapter implements Adapter {
         try {
             List<Customer> customerList = mapper.readValue(json, Customers.class).customerList;
             return customerList.stream()
-                    .map(customer -> new OaiSet(customer.displayName, extractIdentifier(customer.id)))
-                    .collect(Collectors.toList());
+                .map(customer -> new OaiSet(customer.displayName, extractIdentifier(customer.id)))
+                .collect(Collectors.toList());
         } catch (JsonProcessingException e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
         }
@@ -235,17 +236,17 @@ public class NvaAdapter implements Adapter {
     public Record parseRecordResponse(String json, String metadataPrefix, String setSpec) throws InternalOaiException {
         try {
             return createRecordFromPublication(mapper.readValue(json, Publication.class), metadataPrefix);
-        }  catch (JsonProcessingException e) {
+        } catch (JsonProcessingException e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
         }
     }
 
     @Override
     public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix, String setSpec)
-            throws InternalOaiException {
+        throws InternalOaiException {
         try {
             PublicationSearchResponse publicationSearchResponse =
-                    mapper.readValue(json, PublicationSearchResponse.class);
+                mapper.readValue(json, PublicationSearchResponse.class);
             RecordsList records = new RecordsList(publicationSearchResponse.total);
             for (Publication publication : publicationSearchResponse.hits) {
                 records.add(createRecordFromPublication(publication, metadataPrefix));
@@ -261,11 +262,11 @@ public class NvaAdapter implements Adapter {
         setSpecs.add(ALL_SET_NAME);
         setSpecs.add(publication.getPublisher().getId().toString());
         return new Record(
-                createRecordContent(publication, metadataPrefix),
-                false,
-                getIdentifierPrefix() + publication.getIdentifier(),
-                Date.from(publication.getModifiedDate()),
-                setSpecs);
+            createRecordContent(publication, metadataPrefix),
+            false,
+            getIdentifierPrefix() + publication.getIdentifier(),
+            Date.from(publication.getModifiedDate()),
+            setSpecs);
     }
 
     private String createRecordContent(Publication publication, String metadataPrefix) {
@@ -288,17 +289,19 @@ public class NvaAdapter implements Adapter {
             .append("    <dc:description>")
             .append(publication.getEntityDescription().getDescription())
             .append("</dc:description>\n")
-            .append("    <dc:rights>").append(EMPTY_STRING)
+            .append("    <dc:rights>").append(getLicenseAsText(publication))
+            .append("</dc:rights>\n")
+            .append("    <dc:rights>").append(getLicenseAsUri(publication))
             .append("</dc:rights>\n")
             .append("    <dc:type>").append(EMPTY_STRING).append("</dc:type>\n")
             .append("    <dc:publisher>").append(publication.getPublisher().getId())
             .append("</dc:publisher>\n")
             .append("    <dc:date>").append(TimeUtils.date2String(Date.from(publication.getCreatedDate()),
-                    TimeUtils.FORMAT_ZULU_SHORT)).append("</dc:date>\n")
+                                                                  TimeUtils.FORMAT_ZULU_SHORT)).append("</dc:date>\n")
             .append("    <dc:date>").append(TimeUtils.date2String(Date.from(publication.getPublishedDate()),
-                    TimeUtils.FORMAT_ZULU_SHORT)).append("</dc:date>\n")
+                                                                  TimeUtils.FORMAT_ZULU_SHORT)).append("</dc:date>\n")
             .append("    <dc:date>").append(TimeUtils.date2String(Date.from(publication.getModifiedDate()),
-                    TimeUtils.FORMAT_ZULU_SHORT)).append("</dc:date>\n")
+                                                                  TimeUtils.FORMAT_ZULU_SHORT)).append("</dc:date>\n")
             .append("    <dc:identifier>").append(publication.getIdentifier().toString())
             .append("</dc:identifier>\n");
         appendCreatorsDc(publication, buffer);
@@ -315,7 +318,9 @@ public class NvaAdapter implements Adapter {
             .append("    <dc:description>")
             .append(publication.getEntityDescription().getDescription())
             .append("</dc:description>\n")
-            .append("    <dc:rights>").append(EMPTY_STRING)
+            .append("    <dc:rights>").append(getLicenseAsText(publication))
+            .append("</dc:rights>\n")
+            .append("    <dc:rights xsi:type=\"dcterms:URI\">").append(getLicenseAsUri(publication))
             .append("</dc:rights>\n")
             .append("    <dcterms:accessRights>").append(EMPTY_STRING)
             .append("</dcterms:accessRights>\n")
@@ -323,13 +328,13 @@ public class NvaAdapter implements Adapter {
             .append("</dc:publisher>\n")
             .append("    <dc:type>").append(EMPTY_STRING).append("</dc:type>\n")
             .append("    <dcterms:created>").append(TimeUtils.date2String(Date.from(publication.getCreatedDate()),
-                    TimeUtils.FORMAT_ZULU_SHORT))
+                                                                          TimeUtils.FORMAT_ZULU_SHORT))
             .append("</dcterms:created>\n")
             .append("    <dcterms:modified>").append(TimeUtils.date2String(Date.from(publication.getModifiedDate()),
-                    TimeUtils.FORMAT_ZULU_SHORT))
+                                                                           TimeUtils.FORMAT_ZULU_SHORT))
             .append("</dcterms:modified>\n")
             .append("    <dcterms:issued>").append(TimeUtils.date2String(Date.from(publication.getPublishedDate()),
-                    TimeUtils.FORMAT_ZULU_SHORT))
+                                                                         TimeUtils.FORMAT_ZULU_SHORT))
             .append("</dcterms:issued>\n")
             .append("    <dcterms:identifier xsi:type=\"dcterms:URI\">")
             .append(publication.getIdentifier().toString()).append("</dcterms:identifier>\n")
@@ -364,41 +369,58 @@ public class NvaAdapter implements Adapter {
         return buffer.toString();
     }
 
+    private String getLicenseAsText(Publication publication) {
+        File file = publication.getFileSet()
+            .getFiles()
+            .stream()
+            .findFirst()
+            .get();
+        return file.getLicense().getIdentifier();
+    }
+
+    private String getLicenseAsUri(Publication publication) {
+        String licenseAsText = getLicenseAsText(publication);
+        if (licenseAsText.toLowerCase(Locale.getDefault()).contains("cc")) {
+            return "http://creativecommons.org/licenses/" + licenseAsText.toLowerCase(Locale.getDefault()) + "/4"
+                   + ".0/deed.no";
+        }
+        return EMPTY_STRING;
+    }
+
     private void appendCreatorsDc(Publication publication, StringBuilder buffer) {
         publication.getEntityDescription().getContributors().stream()
-                .filter(contributor -> "creator".equalsIgnoreCase(contributor.getRole().name()))
-                .map(contributor -> contributor.getIdentity().getId().toString())
-                .forEach(contributorName -> {
-                    buffer.append("    <dc:creator>").append(contributorName).append("</dc:creator>\n");
-                });
+            .filter(contributor -> "creator".equalsIgnoreCase(contributor.getRole().name()))
+            .map(contributor -> contributor.getIdentity().getName())
+            .forEach(contributorName -> {
+                buffer.append("    <dc:creator>").append(contributorName).append("</dc:creator>\n");
+            });
     }
 
     @SuppressWarnings("PMD.ConsecutiveLiteralAppends")
     private void appendCreatorsDatacite(Publication publication, StringBuilder buffer) {
         publication.getEntityDescription().getContributors().stream()
-                .filter(contributor -> "creator".equalsIgnoreCase(contributor.getRole().name()))
-                .map(contributor -> contributor.getIdentity().getId().toString())
-                .forEach(contributorName -> {
-                    buffer.append("    <datacite:creators>\n")
-                        .append("        <datacite:creator>\n")
-                        .append("            <datacite:creatorName>")
-                        .append(contributorName)
-                        .append("</datacite:creatorName>\n")
-                        .append("        </datacite:creator>\n")
-                        .append("    </datacite:creators>\n");
-                });
+            .filter(contributor -> "creator".equalsIgnoreCase(contributor.getRole().name()))
+            .map(contributor -> contributor.getIdentity().getName())
+            .forEach(contributorName -> {
+                buffer.append("    <datacite:creators>\n")
+                    .append("        <datacite:creator>\n")
+                    .append("            <datacite:creatorName>")
+                    .append(contributorName)
+                    .append("</datacite:creatorName>\n")
+                    .append("        </datacite:creator>\n")
+                    .append("    </datacite:creators>\n");
+            });
     }
 
     private void appendContributorsDc(Publication publication, StringBuilder buffer) {
         publication.getEntityDescription().getContributors().stream()
-                .filter(contributor -> !"creator".equalsIgnoreCase(contributor.getRole().name()))
-                .map(contributor -> contributor.getIdentity().getId().toString())
-                .forEach(contributorName -> {
-                    buffer.append("    <dc:contributor>").append(contributorName).append("</dc:contributor>\n");
-                });
+            .filter(contributor -> !"creator".equalsIgnoreCase(contributor.getRole().name()))
+            .map(contributor -> contributor.getIdentity().getName())
+            .forEach(contributorName -> {
+                buffer.append("    <dc:contributor>").append(contributorName).append("</dc:contributor>\n");
+            });
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private static class Customers {
 
         @JsonProperty("@context")
@@ -409,7 +431,6 @@ public class NvaAdapter implements Adapter {
         /* default */ transient String id;
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private static class Customer {
 
         @JsonProperty("createdDate")
@@ -420,7 +441,6 @@ public class NvaAdapter implements Adapter {
         /* default */ transient String id;
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private static class PublicationSearchResponse {
 
         @JsonProperty("@context")

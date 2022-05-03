@@ -46,6 +46,8 @@ import org.apache.http.HttpStatus;
 public class NvaAdapter implements Adapter {
 
     private static final String SLASH = "/";
+    private static final String BLANK = " ";
+    private static final String DASH = "-";
     private final transient ObjectMapper mapper = new ObjectMapper();
     private final transient String resourceUri;
     private final transient String resourcesUri;
@@ -380,11 +382,9 @@ public class NvaAdapter implements Adapter {
 
     private String getLicenseAsUri(Publication publication) {
         String licenseAsText = getLicenseAsText(publication);
-        if (licenseAsText.toLowerCase(Locale.getDefault()).contains("cc")) {
-            return "http://creativecommons.org/licenses/" + licenseAsText.toLowerCase(Locale.getDefault()) + "/4"
-                   + ".0/deed.no";
-        }
-        return EMPTY_STRING;
+        String licensePathlet = licenseAsText.toLowerCase(Locale.getDefault());
+        licensePathlet = licensePathlet.replaceAll(BLANK, DASH);
+        return "http://creativecommons.org/licenses/" + licensePathlet + "/4.0/deed.no";
     }
 
     private void appendCreatorsDc(Publication publication, StringBuilder buffer) {

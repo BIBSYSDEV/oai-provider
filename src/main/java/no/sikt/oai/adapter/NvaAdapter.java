@@ -13,12 +13,12 @@ import static no.sikt.oai.OaiProviderHandler.EMPTY_STRING;
 import static no.sikt.oai.adapter.DlrAdapter.ALL_SET_NAME;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -26,8 +26,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import no.sikt.oai.MetadataFormat;
 import no.sikt.oai.OaiConstants;
 import no.sikt.oai.TimeUtils;
@@ -74,7 +72,7 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public boolean isValidIdentifier(String identifier) {
-        return identifier.length() == 36;
+        return identifier.length() >= 36;
     }
 
     @Override
@@ -400,6 +398,7 @@ public class NvaAdapter implements Adapter {
                 });
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private static class Customers {
 
         @JsonProperty("@context")
@@ -410,6 +409,7 @@ public class NvaAdapter implements Adapter {
         /* default */ transient String id;
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private static class Customer {
 
         @JsonProperty("createdDate")
@@ -420,6 +420,7 @@ public class NvaAdapter implements Adapter {
         /* default */ transient String id;
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private static class PublicationSearchResponse {
 
         @JsonProperty("@context")

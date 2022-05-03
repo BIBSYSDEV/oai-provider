@@ -45,23 +45,22 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandler;
-
-import no.sikt.oai.adapter.Adapter;
-import no.sikt.oai.adapter.DlrAdapter;
-import no.sikt.oai.adapter.NvaAdapter;
-import no.unit.nva.auth.AuthorizedBackendClient;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandler;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import no.sikt.oai.adapter.Adapter;
+import no.sikt.oai.adapter.DlrAdapter;
+import no.sikt.oai.adapter.NvaAdapter;
+import no.unit.nva.auth.AuthorizedBackendClient;
 import no.unit.nva.stubs.WiremockHttpClient;
 import no.unit.nva.testutils.HandlerRequestBuilder;
 import nva.commons.apigateway.GatewayResponse;
@@ -77,14 +76,15 @@ public class OaiProviderHandlerTest {
     public static final String BLANK = " ";
     public static final String UNKNOWN_CLIENT_NAME = "Unknown client name";
     public static final String UNKNOWN_VERB = "UnknownVerb";
-    public static final String FAKE_OAI_IDENTIFIER_NVA = "oai:nva.unit.no:9a1eae92-38bf-4002-a1a9-d21035242d30";
-    public static final String INVALID_NVA_IDENTIFIER = "oai:nva.unit.no:9a1eae92-38bf-4002-a1a9-d21035242d30-36";
+    public static final String FAKE_OAI_IDENTIFIER_NVA = "oai:nva.unit.no:"
+                                                         + "018067600e39-9ed63653-a74b-454f-aab9-9a120d319b9f";
+    public static final String INVALID_NVA_IDENTIFIER = "oai:nva.unit.no:9a1eae92-38bf-4002-a1a9-d21035242d";
     public static final String REAL_OAI_IDENTIFIER_DLR = "oai:dlr.unit.no:9a1eae92-38bf-4002-a1a9-d21035242d30";
     public static final String INVALID_DLR_IDENTIFIER = "oai:dlr.unit.no:9a1eae92-38bf-4002-a1a9-d21035242d30-36";
     public static final String VALID_DLR_IDENTIFIER = "oai:dlr.unit.no:00000000-0000-0000-0000-000000000000";
     public static final String FAULTY_JSON = "faultyJson";
-    public static final String UUID_REGEX = "^/[^/]+/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f"
-                                            + "]{12}$";
+    public static final String UUID_REGEX = "^/[^/]+/(?:[0-9a-f]{12}-)?[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0"
+                                            + "-9a-f]{3}-[0-9a-f]{12}$";
     public static final String RESUMPTION_TOKEN = "lr~sikt~~~qdc~50";
     public static final String SET_NAME_SIKT = "sikt";
     public static final String EXCEPTION = "Exception";
@@ -302,7 +302,7 @@ public class OaiProviderHandlerTest {
 
     @Test
     public void shouldReturnListRecordsResponseWhenAskedForListRecordsWithMetadataPrefixQdcAndSetSiktAndIdentifierNVA()
-            throws IOException {
+        throws IOException {
         init(CLIENT_TYPE_NVA);
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -620,7 +620,7 @@ public class OaiProviderHandlerTest {
     @ParameterizedTest(name = "Should return ListRecordsResponse for metadataPrefix: {0}")
     @ValueSource(strings = {"qdc", "oai_datacite", "oai_dc"})
     public void shouldReturnListRecordsWhenAskedForListRecordsWithExistingNvaSetSpec(String metadataPrefix)
-            throws IOException {
+        throws IOException {
         init(CLIENT_TYPE_NVA);
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
@@ -860,7 +860,7 @@ public class OaiProviderHandlerTest {
             stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(ok().withBody(responseBody.toPrettyString())));
         } else if (CLIENT_TYPE_NVA.equalsIgnoreCase(adapter)) {
             String publicationJson =
-                    IoUtils.stringFromResources(Path.of(EMPTY_STRING, "publication.json"));
+                IoUtils.stringFromResources(Path.of(EMPTY_STRING, "publication.json"));
             stubFor(get(urlPathMatching(UUID_REGEX)).willReturn(ok().withBody(publicationJson)));
         }
     }
@@ -884,7 +884,7 @@ public class OaiProviderHandlerTest {
             stubFor(get(urlPathMatching("/records")).willReturn(ok().withBody(responseBody.toPrettyString())));
         } else if (CLIENT_TYPE_NVA.equalsIgnoreCase(adapter)) {
             String publicationJson =
-                    IoUtils.stringFromResources(Path.of(EMPTY_STRING, "publications.json"));
+                IoUtils.stringFromResources(Path.of(EMPTY_STRING, "publications.json"));
             stubFor(get(urlPathMatching("/records")).willReturn(ok().withBody(publicationJson)));
         }
     }
@@ -923,7 +923,7 @@ public class OaiProviderHandlerTest {
             var objectNode3 = dtoObjectMapper.createObjectNode();
             objectNode3.put("createdDate", "2022-04-06T06:28:59.673041Z");
             objectNode3.put("displayName", "Universitetet i Oslo");
-            objectNode3.put("id","https://api.dev.nva.aws.unit.no/customer/f50dff3a-e244-48c7-891d-cc4d75597322");
+            objectNode3.put("id", "https://api.dev.nva.aws.unit.no/customer/f50dff3a-e244-48c7-891d-cc4d75597322");
             objectArray.add(objectNode3);
             var responseBodyElement = dtoObjectMapper.createObjectNode();
             responseBodyElement.put("@context", "https://bibsysdev.github.io/src/customer-context.json");

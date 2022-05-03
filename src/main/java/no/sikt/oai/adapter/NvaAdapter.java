@@ -295,8 +295,12 @@ public class NvaAdapter implements Adapter {
             .append("</dc:rights>\n")
             .append("    <dc:rights>").append(getLicenseAsUri(publication))
             .append("</dc:rights>\n")
-            .append("    <dc:type>").append(EMPTY_STRING).append("</dc:type>\n")
-            .append("    <dc:publisher>").append(publication.getPublisher().getId())
+            .append("    <dc:type>").append(publication.getEntityDescription().getReference().getPublicationInstance()
+                                                .getInstanceType()).append("</dc:type>\n");
+        if (publication.getEntityDescription().getReference().getPublicationInstance().isPeerReviewed()) {
+            buffer.append("    <dc:type>Peer reviewed</dc:type>\n");
+        }
+        buffer.append("    <dc:publisher>").append(publication.getPublisher().getId())
             .append("</dc:publisher>\n")
             .append("    <dc:date>").append(TimeUtils.date2String(Date.from(publication.getCreatedDate()),
                                                                   TimeUtils.FORMAT_ZULU_SHORT)).append("</dc:date>\n")
@@ -328,8 +332,12 @@ public class NvaAdapter implements Adapter {
             .append("</dcterms:accessRights>\n")
             .append("    <dc:publisher>").append(publication.getPublisher().getId())
             .append("</dc:publisher>\n")
-            .append("    <dc:type>").append(EMPTY_STRING).append("</dc:type>\n")
-            .append("    <dcterms:created>").append(TimeUtils.date2String(Date.from(publication.getCreatedDate()),
+            .append("    <dc:type>").append(publication.getEntityDescription().getReference().getPublicationInstance()
+                                                .getInstanceType()).append("</dc:type>\n");
+        if (publication.getEntityDescription().getReference().getPublicationInstance().isPeerReviewed()) {
+            buffer.append("    <dc:type>Peer reviewed</dc:type>\n");
+        }
+        buffer.append("    <dcterms:created>").append(TimeUtils.date2String(Date.from(publication.getCreatedDate()),
                                                                           TimeUtils.FORMAT_ZULU_SHORT))
             .append("</dcterms:created>\n")
             .append("    <dcterms:modified>").append(TimeUtils.date2String(Date.from(publication.getModifiedDate()),
@@ -353,12 +361,19 @@ public class NvaAdapter implements Adapter {
         StringBuilder buffer = new StringBuilder();
         buffer.append(OAI_DATACITE_HEADER)
             .append("    <datacite:titles>\n")
-            .append("        <datacite:title>").append(publication.getEntityDescription().getMainTitle())
+            .append("        <datacite:title>")
+            .append(publication.getEntityDescription().getMainTitle())
             .append("</datacite:title>\n")
             .append("    </datacite:titles>\n")
             .append("    <dc:description>")
             .append(publication.getEntityDescription().getDescription())
             .append("</dc:description>\n")
+            .append("    <datacite:resourceType resourceTypeGeneral=\"")
+            .append(StringUtils.removeMultipleWhiteSpaces(
+                publication.getEntityDescription().getReference().getPublicationInstance().getInstanceType()))
+            .append("\">")
+            .append(publication.getEntityDescription().getReference().getPublicationInstance().getInstanceType())
+            .append("</datacite:resourceType>\n")
             .append("    <dc:publisher>").append(publication.getPublisher().getId())
             .append("</dc:publisher>\n")
             .append("    <datacite:dates>\n")

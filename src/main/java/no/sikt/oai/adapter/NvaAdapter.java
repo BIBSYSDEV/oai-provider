@@ -35,6 +35,7 @@ import no.sikt.oai.exception.InternalOaiException;
 import no.sikt.oai.exception.OaiException;
 import no.unit.nva.auth.AuthorizedBackendClient;
 import no.unit.nva.file.model.File;
+import no.unit.nva.model.Contributor;
 import no.unit.nva.model.Publication;
 import nva.commons.core.Environment;
 import nva.commons.core.JacocoGenerated;
@@ -262,7 +263,7 @@ public class NvaAdapter implements Adapter {
     private Record createRecordFromPublication(Publication publication, String metadataPrefix) {
         List<String> setSpecs = new ArrayList<>();
         setSpecs.add(ALL_SET_NAME);
-        setSpecs.add(publication.getPublisher().getId().toString());
+        setSpecs.add(UriWrapper.fromUri(publication.getPublisher().getId()).getLastPathElement());
         return new Record(
             createRecordContent(publication, metadataPrefix),
             false,
@@ -428,18 +429,25 @@ public class NvaAdapter implements Adapter {
 
     @SuppressWarnings("PMD.ConsecutiveLiteralAppends")
     private void appendCreatorsDatacite(Publication publication, StringBuilder buffer) {
+        buffer.append("    <datacite:creators>\n");
         publication.getEntityDescription().getContributors().stream()
             .filter(contributor -> "creator".equalsIgnoreCase(contributor.getRole().name()))
-            //.map(contributor -> contributor.getIdentity().getName())
             .forEach(contributor -> {
-                buffer.append("    <datacite:creators>\n")
-                    .append("        <datacite:creator>\n")
-                    .append("            <datacite:creatorName>")
-                    .append(contributor.getIdentity().getName())
-                    .append("</datacite:creatorName>\n")
-                    .append("        </datacite:creator>\n")
-                    .append("    </datacite:creators>\n");
+                extractCreator(buffer, contributor);
             });
+        buffer.append("    </datacite:creators>\n");
+    }
+
+    private void extractCreator(StringBuilder buffer, Contributor contributor) {
+        buffer.append("        <datacite:creator>\n            <datacite:creatorName>")
+            .append(contributor.getIdentity().getName())
+            .append("</datacite:creatorName>\n");
+        if (contributor.getIdentity().getOrcId() != null) {
+            buffer.append("<datacite:nameIdentifier nameIdentifierScheme=\"ORCID\" schemeURI=\"https://orcid.org\">")
+                .append(UriWrapper.fromUri(contributor.getIdentity().getOrcId()).getLastPathElement())
+                .append("</datacite:nameIdentifier>");
+        }
+        buffer.append("        </datacite:creator>\n");
     }
 
     private void appendContributorsDc(Publication publication, StringBuilder buffer) {

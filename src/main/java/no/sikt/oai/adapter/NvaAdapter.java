@@ -366,11 +366,9 @@ public class NvaAdapter implements Adapter {
             .append("        <datacite:title>")
             .append(publication.getEntityDescription().getMainTitle())
             .append("</datacite:title>\n")
-            .append("    </datacite:titles>\n")
-            .append("    <dc:description>")
-            .append(publication.getEntityDescription().getDescription())
-            .append("</dc:description>\n")
-            .append(extractLanguageDcTag(publication))
+            .append("    </datacite:titles>\n");
+        extractDescription(publication, buffer);
+        buffer.append(extractLanguageDcTag(publication))
             .append("    <datacite:resourceType resourceTypeGeneral=\"")
             .append(StringUtils.removeMultipleWhiteSpaces(
                 publication.getEntityDescription().getReference().getPublicationInstance().getInstanceType()))
@@ -387,6 +385,25 @@ public class NvaAdapter implements Adapter {
         appendCreatorsDatacite(publication, buffer);
         buffer.append("</oaire:resource>\n");
         return buffer.toString();
+    }
+
+    private void extractDescription(Publication publication, StringBuilder buffer) {
+        boolean isDescriptionAvailable = StringUtils.isNotEmpty(publication.getEntityDescription().getDescription());
+        boolean isAbstractAvailable = StringUtils.isNotEmpty(publication.getEntityDescription().getAbstract());
+        if (isDescriptionAvailable || isAbstractAvailable) {
+            buffer.append("    <datacite:descriptions>\n ");
+            if (isDescriptionAvailable) {
+                buffer.append("         <datacite:description descriptionType=\"Other\">")
+                    .append(publication.getEntityDescription().getDescription())
+                    .append("</datacite:description>\n");
+            }
+            if (isAbstractAvailable) {
+                buffer.append("         <datacite:description descriptionType=\"Abstract\">")
+                    .append(publication.getEntityDescription().getAbstract())
+                    .append("</datacite:description>\n");
+            }
+            buffer.append("</datacite:descriptions>\n");
+        }
     }
 
     @SuppressWarnings({"PMD.InsufficientStringBufferDeclaration"})

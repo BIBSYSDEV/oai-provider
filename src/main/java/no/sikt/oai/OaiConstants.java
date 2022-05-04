@@ -44,7 +44,7 @@ public class OaiConstants {
             + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
             + " xmlns:doc=\"http://www.lyncode.com/xoai\"\n"
             + " xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/"
-            + " http://www.openarchives.org/OAI/2.0/oai_dc.xsd\">";
+            + " http://www.openarchives.org/OAI/2.0/oai_dc.xsd\">\n";
 
 
     public static final String OAI_DATACITE_HEADER =
@@ -55,7 +55,7 @@ public class OaiConstants {
             + " xmlns:vc=\"http://www.w3.org/2007/XMLSchema-versioning\"\n"
             + " xmlns:oaire=\"http://namespace.openaire.eu/schema/oaire/\"\n"
             + " xsi:schemaLocation=\"http://namespace.openaire.eu/schema/oaire/"
-            + " https://www.openaire.eu/schema/repo-lit/4.0/openaire.xsd\">";
+            + " https://www.openaire.eu/schema/repo-lit/4.0/openaire.xsd\">\n";
 
 
     public static final String QDC_HEADER = "<qdc:qualifieddc xmlns:doc=\"http://www.lyncode.com/xoai\"\n"
@@ -65,6 +65,6 @@ public class OaiConstants {
             + " xsi:schemaLocation=\"http://purl.org/dc/elements/1.1/"
             + " http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd"
             + " http://purl.org/dc/terms/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dcterms.xsd"
-            + " http://dspace.org/qualifieddc/http://www.ukoln.ac.uk/metadata/dcmi/xmlschema/qualifieddc.xsd\">";
+            + " http://dspace.org/qualifieddc/http://www.ukoln.ac.uk/metadata/dcmi/xmlschema/qualifieddc.xsd\">\n";
 
 }

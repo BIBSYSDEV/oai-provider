@@ -37,6 +37,7 @@ import no.sikt.oai.exception.OaiException;
 import no.unit.nva.auth.AuthorizedBackendClient;
 import no.unit.nva.file.model.File;
 import no.unit.nva.model.EntityDescription;
+import no.unit.nva.model.Contributor;
 import no.unit.nva.model.Publication;
 import no.unit.nva.model.Reference;
 import no.unit.nva.model.instancetypes.PublicationInstance;
@@ -94,12 +95,12 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public String getEarliestTimestamp() {
-        return "2020-01-31T00:00:01Z";
+        return "2020-06-18T13:08:48.472596Z";
     }
 
     @Override
     public String getDeletedRecord() {
-        return "yes";
+        return "no";
     }
 
     @Override
@@ -266,7 +267,7 @@ public class NvaAdapter implements Adapter {
     private Record createRecordFromPublication(Publication publication, String metadataPrefix) {
         List<String> setSpecs = new ArrayList<>();
         setSpecs.add(ALL_SET_NAME);
-        setSpecs.add(publication.getPublisher().getId().toString());
+        setSpecs.add(UriWrapper.fromUri(publication.getPublisher().getId()).getLastPathElement());
         return new Record(
             createRecordContent(publication, metadataPrefix),
             false,
@@ -328,6 +329,7 @@ public class NvaAdapter implements Adapter {
             .append("    <dc:description>")
             .append(publication.getEntityDescription().getDescription())
             .append("</dc:description>\n")
+            .append(extractLanguageDcTag(publication))
             .append("    <dc:rights>").append(getLicenseAsText(publication))
             .append("</dc:rights>\n")
             .append("    <dc:rights xsi:type=\"dcterms:URI\">").append(getLicenseAsUri(publication))
@@ -372,6 +374,7 @@ public class NvaAdapter implements Adapter {
             .append("    <dc:description>")
             .append(publication.getEntityDescription().getDescription())
             .append("</dc:description>\n")
+            .append(extractLanguageDcTag(publication))
             .append("    <dc:publisher>").append(publication.getPublisher().getId())
             .append("</dc:publisher>\n")
             .append("    <datacite:dates>\n")
@@ -383,6 +386,19 @@ public class NvaAdapter implements Adapter {
         appendResourceTypeDatacite(publication, buffer);
         buffer.append("</oaire:resource>\n");
         return buffer.toString();
+    }
+
+    @SuppressWarnings({"PMD.InsufficientStringBufferDeclaration"})
+    private String extractLanguageDcTag(Publication publication) {
+        StringBuilder str = new StringBuilder();
+        if (publication.getEntityDescription().getLanguage() != null) {
+            UriWrapper languageUri = UriWrapper.fromUri(publication.getEntityDescription().getLanguage());
+            String isoCodePathlet = languageUri.getParent().get().getLastPathElement();
+            str.append("    <dc:language xsi:type=\"dcterms:").append(isoCodePathlet).append("\">")
+                .append(languageUri.getLastPathElement())
+                .append("</dc:language>\n");
+        }
+        return str.toString();
     }
 
     private String getLicenseAsText(Publication publication) {
@@ -424,18 +440,25 @@ public class NvaAdapter implements Adapter {
 
     @SuppressWarnings("PMD.ConsecutiveLiteralAppends")
     private void appendCreatorsDatacite(Publication publication, StringBuilder buffer) {
+        buffer.append("    <datacite:creators>\n");
         publication.getEntityDescription().getContributors().stream()
             .filter(contributor -> "creator".equalsIgnoreCase(contributor.getRole().name()))
-            .map(contributor -> contributor.getIdentity().getName())
-            .forEach(contributorName -> {
-                buffer.append("    <datacite:creators>\n")
-                    .append("        <datacite:creator>\n")
-                    .append("            <datacite:creatorName>")
-                    .append(contributorName)
-                    .append("</datacite:creatorName>\n")
-                    .append("        </datacite:creator>\n")
-                    .append("    </datacite:creators>\n");
+            .forEach(contributor -> {
+                extractCreator(buffer, contributor);
             });
+        buffer.append("    </datacite:creators>\n");
+    }
+
+    private void extractCreator(StringBuilder buffer, Contributor contributor) {
+        buffer.append("        <datacite:creator>\n            <datacite:creatorName>")
+            .append(contributor.getIdentity().getName())
+            .append("</datacite:creatorName>\n");
+        if (contributor.getIdentity().getOrcId() != null) {
+            buffer.append("<datacite:nameIdentifier nameIdentifierScheme=\"ORCID\" schemeURI=\"https://orcid.org\">")
+                .append(UriWrapper.fromUri(contributor.getIdentity().getOrcId()).getLastPathElement())
+                .append("</datacite:nameIdentifier>");
+        }
+        buffer.append("        </datacite:creator>\n");
     }
 
     private void appendContributorsDc(Publication publication, StringBuilder buffer) {

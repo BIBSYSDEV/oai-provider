@@ -90,12 +90,12 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public String getEarliestTimestamp() {
-        return "2020-01-31T00:00:01Z";
+        return "2020-06-18T13:08:48.472596Z";
     }
 
     @Override
     public String getDeletedRecord() {
-        return "yes";
+        return "no";
     }
 
     @Override
@@ -324,6 +324,7 @@ public class NvaAdapter implements Adapter {
             .append("    <dc:description>")
             .append(publication.getEntityDescription().getDescription())
             .append("</dc:description>\n")
+            .append(extractLanguageDcTag(publication))
             .append("    <dc:rights>").append(getLicenseAsText(publication))
             .append("</dc:rights>\n")
             .append("    <dc:rights xsi:type=\"dcterms:URI\">").append(getLicenseAsUri(publication))
@@ -368,6 +369,7 @@ public class NvaAdapter implements Adapter {
             .append("    <dc:description>")
             .append(publication.getEntityDescription().getDescription())
             .append("</dc:description>\n")
+            .append(extractLanguageDcTag(publication))
             .append("    <datacite:resourceType resourceTypeGeneral=\"")
             .append(StringUtils.removeMultipleWhiteSpaces(
                 publication.getEntityDescription().getReference().getPublicationInstance().getInstanceType()))
@@ -384,6 +386,19 @@ public class NvaAdapter implements Adapter {
         appendCreatorsDatacite(publication, buffer);
         buffer.append("</oaire:resource>\n");
         return buffer.toString();
+    }
+
+    @SuppressWarnings({"PMD.InsufficientStringBufferDeclaration"})
+    private String extractLanguageDcTag(Publication publication) {
+        StringBuilder str = new StringBuilder();
+        if (publication.getEntityDescription().getLanguage() != null) {
+            UriWrapper languageUri = UriWrapper.fromUri(publication.getEntityDescription().getLanguage());
+            String isoCodePathlet = languageUri.getParent().get().getLastPathElement();
+            str.append("    <dc:language xsi:type=\"dcterms:").append(isoCodePathlet).append("\">")
+                .append(languageUri.getLastPathElement())
+                .append("</dc:language>\n");
+        }
+        return str.toString();
     }
 
     private String getLicenseAsText(Publication publication) {
@@ -415,12 +430,12 @@ public class NvaAdapter implements Adapter {
     private void appendCreatorsDatacite(Publication publication, StringBuilder buffer) {
         publication.getEntityDescription().getContributors().stream()
             .filter(contributor -> "creator".equalsIgnoreCase(contributor.getRole().name()))
-            .map(contributor -> contributor.getIdentity().getName())
-            .forEach(contributorName -> {
+            //.map(contributor -> contributor.getIdentity().getName())
+            .forEach(contributor -> {
                 buffer.append("    <datacite:creators>\n")
                     .append("        <datacite:creator>\n")
                     .append("            <datacite:creatorName>")
-                    .append(contributorName)
+                    .append(contributor.getIdentity().getName())
                     .append("</datacite:creatorName>\n")
                     .append("        </datacite:creator>\n")
                     .append("    </datacite:creators>\n");

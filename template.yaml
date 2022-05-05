@@ -29,10 +29,13 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<String>
     Default: 'oai_records_uri'
     Description: uri for api endpoint to search for records
+  CognitoUri:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: '/NVA/CognitoUri'
 
 Conditions:
-  HasDomainName: !Not [!Equals [!Ref CustomDomain, '']]
-  HasCustomDomainBasePath: !Not [!Equals [!Ref CustomDomainBasePath, '']]
+  HasDomainName: !Not [ !Equals [ !Ref CustomDomain, '' ] ]
+  HasCustomDomainBasePath: !Not [ !Equals [ !Ref CustomDomainBasePath, '' ] ]
 
 Globals:
   Function:
@@ -90,11 +93,11 @@ Resources:
                   required: true
                   type: string
                   description: text text text
-              x-amazon-apigateway-request-validator : params-only
+              x-amazon-apigateway-request-validator: params-only
               x-amazon-apigateway-integration:
                 uri:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OaiProviderFunction.Arn}/invocations
-                responses: {}
+                responses: { }
                 httpMethod: POST
                 type: AWS_PROXY
               responses:
@@ -139,6 +142,9 @@ Resources:
           SETS_URI: !Ref SetsUri
           RECORD_URI: !Ref RecordUri
           RECORDS_URI: !Ref RecordsUri
+          COGNITO_URI: !Ref CognitoUri
+          BACKEND_CLIENT_ID: '{{resolve:secretsmanager:BackendCognitoClientCredentials:SecretString:backendClientId}}'
+          BACKEND_CLIENT_SECRET: '{{resolve:secretsmanager:BackendCognitoClientCredentials:SecretString:backendClientSecret}}'
       Events:
         OaiProviderEvent:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api

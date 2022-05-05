@@ -4,8 +4,8 @@ import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
 import no.sikt.oai.exception.InternalOaiException;
 
-import java.net.URI;
 import java.util.List;
+import no.sikt.oai.exception.OaiException;
 
 public interface Adapter {
 
@@ -36,11 +36,12 @@ public interface Adapter {
     RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix, String setSpec)
         throws InternalOaiException;
 
-    URI getSetsUri();
+    String getSetsList() throws OaiException, InternalOaiException;
 
-    URI getRecordUri(String identifier);
+    String getRecord(String identifier) throws OaiException, InternalOaiException;
 
-    URI getRecordsListUri(String from, String until, String institution, int startPosition);
+    String getRecordsList(String from, String until, String setSpec, int startPosition)
+            throws OaiException, InternalOaiException;
 
     class OaiSet {
 

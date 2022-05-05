@@ -4,10 +4,10 @@ import static com.google.common.net.MediaType.APPLICATION_XML_UTF_8;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.google.common.net.MediaType;
 import java.net.HttpURLConnection;
-import java.net.http.HttpClient;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import no.sikt.oai.adapter.Adapter;
 import no.sikt.oai.adapter.Adapter.OaiSet;
@@ -17,7 +17,6 @@ import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
 import no.sikt.oai.exception.InternalOaiException;
 import no.sikt.oai.exception.OaiException;
-import no.sikt.oai.service.DataProvider;
 import nva.commons.apigateway.ApiGatewayHandler;
 import nva.commons.apigateway.RequestInfo;
 import nva.commons.apigateway.exceptions.ApiGatewayException;
@@ -33,17 +32,15 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     public static final String NO_MATCHING_IDENTIFIER = "No matching identifier in: ";
 
     private Adapter adapter;
-    private final DataProvider dataProvider;
 
     @JacocoGenerated
     public OaiProviderHandler() {
-        this(new Environment(), HttpClient.newBuilder().build());
+        this(new Environment(), null);
     }
 
-    public OaiProviderHandler(Environment environment, HttpClient client) {
+    public OaiProviderHandler(Environment environment, Adapter adapter) {
         super(Void.class, environment);
-        initAdapter();
-        this.dataProvider = new DataProvider(client, adapter);
+        this.adapter = Objects.requireNonNullElseGet(adapter, this::initAdapter);
     }
 
     @Override
@@ -113,7 +110,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
                     response = OaiResponse.listMetadataFormats(adapter.getBaseUrl(), startTime);
                     break;
                 case ListSets:
-                    List<OaiSet> setsList = this.getSetsList();
+                    List<OaiSet> setsList = getSetsList();
                     response = OaiResponse.listSets(adapter.getBaseUrl(), setsList, startTime);
                     break;
                 case Identify:
@@ -127,15 +124,13 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         return response;
     }
 
-    private void initAdapter() {
+    private Adapter initAdapter() {
         String clientName = environment.readEnv(OaiConstants.CLIENT_NAME_ENV);
         switch (clientName) {
             case OaiConstants.CLIENT_TYPE_DLR:
-                this.adapter = new DlrAdapter(environment);
-                break;
+                return new DlrAdapter(environment);
             case OaiConstants.CLIENT_TYPE_NVA:
-                this.adapter = new NvaAdapter(environment);
-                break;
+                return new NvaAdapter(environment);
             default:
                 throw new RuntimeException(String.format(UNKNOWN_CLIENT_NAME, clientName));
         }
@@ -196,13 +191,13 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
     }
 
     private List<OaiSet> getSetsList() throws OaiException, InternalOaiException {
-        String json = dataProvider.getSetsList();
+        String json = adapter.getSetsList();
         return adapter.parseSetsResponse(json);
     }
 
     private Record getRecord(String identifier, String metadataPrefix, String setSpec) throws InternalOaiException,
             OaiException {
-        String json = dataProvider.getRecord(identifier);
+        String json = adapter.getRecord(identifier);
         return adapter.parseRecordResponse(json, metadataPrefix, setSpec);
     }
 
@@ -212,11 +207,11 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         String json;
         if (resumptionToken.length() > 0) {
             ResumptionToken token = new ResumptionToken(resumptionToken);
-            json = dataProvider.getRecordsList(token.from, token.until, token.setSpec,
+            json = adapter.getRecordsList(token.from, token.until, token.setSpec,
                     Integer.parseInt(token.startPosition));
             return adapter.parseRecordsListResponse(verb, json, token.metadataPrefix, token.setSpec);
         } else {
-            json = dataProvider.getRecordsList(from, until, setSpec, 0);
+            json = adapter.getRecordsList(from, until, setSpec, 0);
             return adapter.parseRecordsListResponse(verb, json, metadataPrefix, setSpec);
         }
     }

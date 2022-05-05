@@ -11,6 +11,11 @@ public class InternalOaiException extends ApiGatewayException {
         this.status = statusCode;
     }
 
+    public InternalOaiException(Exception e, String message, int statusCode) {
+        super(e, message);
+        this.status = statusCode;
+    }
+
     @Override
     protected Integer statusCode() {
         return status;

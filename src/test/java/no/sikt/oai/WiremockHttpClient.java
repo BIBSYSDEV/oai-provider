@@ -1,5 +1,6 @@
 package no.sikt.oai;
 
+import no.unit.nva.auth.AuthorizedBackendClient;
 import org.junit.jupiter.api.Assertions;
 
 import javax.net.ssl.SSLContext;
@@ -15,15 +16,16 @@ import java.security.cert.X509Certificate;
 public final class WiremockHttpClient {
 
     public static final String TEST_CONFIGURATION_TRUST_MANAGER_FAILURE =
-            "Failed to configure the trust everything rule for the http client, which is required to connect to "
-                    + "wiremock server and local signed SSL certificate for now.";
+        "Failed to configure the trust everything rule for the http client, which is required to connect to "
+        + "wiremock server and local signed SSL certificate for now.";
 
     private WiremockHttpClient() {
 
     }
 
-    public static HttpClient create() {
-        return HttpClient.newBuilder().sslContext(createInsecureSslContextTrustingEverything()).build();
+    public static AuthorizedBackendClient create() {
+        return AuthorizedBackendClient.prepareWithBackendCredentials(
+            HttpClient.newBuilder().sslContext(createInsecureSslContextTrustingEverything()).build());
     }
 
     @SuppressWarnings("PMD.AvoidPrintStackTrace")
@@ -31,7 +33,7 @@ public final class WiremockHttpClient {
         try {
             var insecureSslContext = SSLContext.getInstance("SSL");
             insecureSslContext.init(null, new X509ExtendedTrustManager[]{createTrustEverythingManager()},
-                    new java.security.SecureRandom());
+                                    new java.security.SecureRandom());
             return insecureSslContext;
         } catch (KeyManagementException | NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -46,12 +48,12 @@ public final class WiremockHttpClient {
         return new X509ExtendedTrustManager() {
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket)
-                    throws CertificateException {
+                throws CertificateException {
             }
 
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine)
-                    throws CertificateException {
+                throws CertificateException {
             }
 
             @Override
@@ -60,12 +62,12 @@ public final class WiremockHttpClient {
 
             @Override
             public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket)
-                    throws CertificateException {
+                throws CertificateException {
             }
 
             @Override
             public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine)
-                    throws CertificateException {
+                throws CertificateException {
             }
 
             @Override

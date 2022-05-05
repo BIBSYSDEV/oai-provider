@@ -690,6 +690,23 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
+    public void shouldReturnErrorWhenAskedForListRecordsAndSourceNvaJsonIsInvalid() throws IOException {
+        init(CLIENT_TYPE_NVA);
+        mockFaultyRecordsResponse();
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.ListRecords.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, MetadataFormat.OAI_DATACITE.name());
+        queryParameters.put(ValidParameterKey.SET.key, UIO_CUSTUMER_ID);
+        var output = new ByteArrayOutputStream();
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_UNAVAILABLE, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(FAULTY_JSON)));
+    }
+
+    @Test
     public void shouldReturnErrorWhenClientNameFromEnvironmentIsUnknown() {
         environment = mock(Environment.class);
         when(environment.readEnv(ALLOWED_ORIGIN_ENV)).thenReturn("*");

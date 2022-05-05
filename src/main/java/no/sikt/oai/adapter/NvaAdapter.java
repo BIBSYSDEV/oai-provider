@@ -261,7 +261,7 @@ public class NvaAdapter implements Adapter {
             }
             return records;
         } catch (JsonProcessingException e) {
-            throw new InternalOaiException(e, HTTP_UNAVAILABLE);
+            throw new InternalOaiException(e, "Unexpected response from data source", HTTP_UNAVAILABLE);
         }
     }
 

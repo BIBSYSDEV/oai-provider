@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import no.sikt.oai.MetadataFormat;
 import no.sikt.oai.OaiConstants;
@@ -35,8 +36,11 @@ import no.sikt.oai.exception.InternalOaiException;
 import no.sikt.oai.exception.OaiException;
 import no.unit.nva.auth.AuthorizedBackendClient;
 import no.unit.nva.file.model.File;
+import no.unit.nva.model.EntityDescription;
 import no.unit.nva.model.Contributor;
 import no.unit.nva.model.Publication;
+import no.unit.nva.model.Reference;
+import no.unit.nva.model.instancetypes.PublicationInstance;
 import nva.commons.core.Environment;
 import nva.commons.core.JacocoGenerated;
 import nva.commons.core.StringUtils;
@@ -369,12 +373,6 @@ public class NvaAdapter implements Adapter {
             .append("    </datacite:titles>\n");
         extractDescription(publication, buffer);
         buffer.append(extractLanguageDcTag(publication))
-            .append("    <datacite:resourceType resourceTypeGeneral=\"")
-            .append(StringUtils.removeMultipleWhiteSpaces(
-                publication.getEntityDescription().getReference().getPublicationInstance().getInstanceType()))
-            .append("\">")
-            .append(publication.getEntityDescription().getReference().getPublicationInstance().getInstanceType())
-            .append("</datacite:resourceType>\n")
             .append("    <dc:publisher>").append(publication.getPublisher().getId())
             .append("</dc:publisher>\n")
             .append("    <datacite:dates>\n")
@@ -383,6 +381,7 @@ public class NvaAdapter implements Adapter {
             .append("</datacite:date>\n")
             .append("    </datacite:dates>\n");
         appendCreatorsDatacite(publication, buffer);
+        appendResourceTypeDatacite(publication, buffer);
         buffer.append("</oaire:resource>\n");
         return buffer.toString();
     }
@@ -433,6 +432,18 @@ public class NvaAdapter implements Adapter {
         String licensePathlet = licenseAsText.toLowerCase(Locale.getDefault());
         licensePathlet = licensePathlet.replaceAll(BLANK, DASH);
         return "http://creativecommons.org/licenses/" + licensePathlet + "/4.0/deed.no";
+    }
+
+    private void appendResourceTypeDatacite(Publication publication, StringBuilder buffer) {
+        String instanceType = Optional.of(publication).map(Publication::getEntityDescription)
+            .map(EntityDescription::getReference)
+            .map(Reference::getPublicationInstance)
+            .map(PublicationInstance::getInstanceType).orElse(EMPTY_STRING);
+        buffer.append("    <datacite:resourceType resourceTypeGeneral=\"")
+            .append(instanceType.isEmpty() ? "Other" : "Text")
+            .append("\">")
+            .append(instanceType)
+            .append("</datacite:resourceType>\n");
     }
 
     private void appendCreatorsDc(Publication publication, StringBuilder buffer) {

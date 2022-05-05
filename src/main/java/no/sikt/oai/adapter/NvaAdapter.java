@@ -53,6 +53,7 @@ public class NvaAdapter implements Adapter {
     private static final String SLASH = "/";
     private static final String BLANK = " ";
     private static final String DASH = "-";
+    public static final String ACCESS_RIGHT_OPEN = "open";
     private final transient ObjectMapper mapper = new ObjectMapper();
     private final transient String resourceUri;
     private final transient String resourcesUri;
@@ -334,7 +335,7 @@ public class NvaAdapter implements Adapter {
             .append("</dc:rights>\n")
             .append("    <dc:rights xsi:type=\"dcterms:URI\">").append(getLicenseAsUri(publication))
             .append("</dc:rights>\n")
-            .append("    <dcterms:accessRights>").append(EMPTY_STRING)
+            .append("    <dcterms:accessRights>").append(ACCESS_RIGHT_OPEN)
             .append("</dcterms:accessRights>\n")
             .append("    <dc:publisher>").append(publication.getPublisher().getId())
             .append("</dc:publisher>\n")

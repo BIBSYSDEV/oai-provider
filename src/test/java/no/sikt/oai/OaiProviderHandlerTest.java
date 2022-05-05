@@ -29,6 +29,7 @@ import static no.sikt.oai.OaiConstants.SETS_URI_ENV;
 import static no.sikt.oai.OaiConstants.UNKNOWN_SET_NAME;
 import static no.sikt.oai.OaiConstants.VERB_IS_MISSING;
 import static no.sikt.oai.RestApiConfig.restServiceObjectMapper;
+import static no.sikt.oai.adapter.NvaAdapter.ERROR_UNEXPECTED_RESPONSE_FROM_DATA_SOURCE;
 import static no.unit.nva.commons.json.JsonUtils.dtoObjectMapper;
 import static no.unit.nva.testutils.RandomDataGenerator.randomString;
 import static nva.commons.apigateway.ApiGatewayHandler.ALLOWED_ORIGIN_ENV;
@@ -703,7 +704,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_UNAVAILABLE, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString(FAULTY_JSON)));
+        assertThat(responseBody, is(containsString(ERROR_UNEXPECTED_RESPONSE_FROM_DATA_SOURCE)));
     }
 
     @Test

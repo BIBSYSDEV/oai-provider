@@ -54,6 +54,7 @@ public class NvaAdapter implements Adapter {
     private static final String BLANK = " ";
     private static final String DASH = "-";
     public static final String ACCESS_RIGHT_OPEN = "open";
+    public static final String ERROR_UNEXPECTED_RESPONSE_FROM_DATA_SOURCE = "Unexpected response from data source";
     private final transient ObjectMapper mapper = new ObjectMapper();
     private final transient String resourceUri;
     private final transient String resourcesUri;
@@ -261,7 +262,7 @@ public class NvaAdapter implements Adapter {
             }
             return records;
         } catch (JsonProcessingException e) {
-            throw new InternalOaiException(e, "Unexpected response from data source", HTTP_UNAVAILABLE);
+            throw new InternalOaiException(e, ERROR_UNEXPECTED_RESPONSE_FROM_DATA_SOURCE, HTTP_UNAVAILABLE);
         }
     }
 

@@ -293,11 +293,13 @@ public class NvaAdapter implements Adapter {
         StringBuilder buffer = new StringBuilder();
         buffer.append(OAI_DC_HEADER)
             .append("    <dc:title>").append(publication.getEntityDescription().getMainTitle())
-            .append("</dc:title>\n")
-            .append("    <dc:description>")
-            .append(publication.getEntityDescription().getDescription())
-            .append("</dc:description>\n")
-            .append("    <dc:rights>").append(getLicenseAsText(publication))
+            .append("</dc:title>\n");
+        Optional.ofNullable(publication.getEntityDescription().getDescription()).ifPresent(description -> {
+            buffer.append("    <dc:description>")
+                    .append(description)
+                    .append("</dc:description>\n");
+        });
+        buffer.append("    <dc:rights>").append(getLicenseAsText(publication))
             .append("</dc:rights>\n")
             .append("    <dc:rights>").append(getLicenseAsUri(publication))
             .append("</dc:rights>\n")
@@ -326,11 +328,13 @@ public class NvaAdapter implements Adapter {
         StringBuilder buffer = new StringBuilder();
         buffer.append(QDC_HEADER)
             .append("    <dc:title>").append(publication.getEntityDescription().getMainTitle())
-            .append("</dc:title>\n")
-            .append("    <dc:description>")
-            .append(publication.getEntityDescription().getDescription())
-            .append("</dc:description>\n")
-            .append(extractLanguageDcTag(publication))
+            .append("</dc:title>\n");
+        Optional.ofNullable(publication.getEntityDescription().getDescription()).ifPresent(description -> {
+            buffer.append("    <dc:description>")
+                .append(description)
+                .append("</dc:description>\n");
+        });
+        buffer.append(extractLanguageDcTag(publication))
             .append("    <dc:rights>").append(getLicenseAsText(publication))
             .append("</dc:rights>\n")
             .append("    <dc:rights xsi:type=\"dcterms:URI\">").append(getLicenseAsUri(publication))

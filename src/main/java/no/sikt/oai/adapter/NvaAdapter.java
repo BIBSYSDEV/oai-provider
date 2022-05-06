@@ -10,7 +10,6 @@ import static no.sikt.oai.OaiConstants.OAI_DC_HEADER;
 import static no.sikt.oai.OaiConstants.QDC_HEADER;
 import static no.sikt.oai.OaiConstants.UNKNOWN_IDENTIFIER;
 import static no.sikt.oai.OaiProviderHandler.EMPTY_STRING;
-import static no.sikt.oai.adapter.DlrAdapter.ALL_SET_NAME;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -225,9 +224,12 @@ public class NvaAdapter implements Adapter {
     public List<OaiSet> parseSetsResponse(String json) throws InternalOaiException {
         try {
             List<Customer> customerList = mapper.readValue(json, Customers.class).customerList;
-            return customerList.stream()
+            List<OaiSet> oaiSetList = new ArrayList<>();
+            oaiSetList.add(new OaiSet(ALL_SET_NAME, ALL_SET_NAME));
+            oaiSetList.addAll(customerList.stream()
                 .map(customer -> new OaiSet(customer.displayName, extractIdentifier(customer.id)))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
+            return oaiSetList;
         } catch (JsonProcessingException e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
         }

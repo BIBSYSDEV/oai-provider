@@ -305,6 +305,11 @@ public class NvaAdapter implements Adapter {
                     .append(description)
                     .append("</dc:description>\n");
         });
+        Optional.ofNullable(publication.getEntityDescription().getAbstract()).ifPresent(abstractTag -> {
+            buffer.append("    <dc:description>")
+                .append(abstractTag)
+                .append("</dc:description>\n");
+        });
         buffer.append("    <dc:rights>").append(getLicenseAsText(publication))
             .append("</dc:rights>\n")
             .append("    <dc:rights>").append(getLicenseAsUri(publication))
@@ -339,6 +344,11 @@ public class NvaAdapter implements Adapter {
             buffer.append("    <dc:description>")
                 .append(description)
                 .append("</dc:description>\n");
+        });
+        Optional.ofNullable(publication.getEntityDescription().getAbstract()).ifPresent(abstractTag -> {
+            buffer.append("    <dcterms:abstract>")
+                .append(abstractTag)
+                .append("</dcterms:abstract>\n");
         });
         buffer.append(extractLanguageDcTag(publication))
             .append("    <dc:rights>").append(getLicenseAsText(publication))
@@ -382,7 +392,7 @@ public class NvaAdapter implements Adapter {
             .append(publication.getEntityDescription().getMainTitle())
             .append("</datacite:title>\n")
             .append("    </datacite:titles>\n");
-        extractDescription(publication, buffer);
+        extractDescriptionOaiDatacite(publication, buffer);
         buffer.append(extractLanguageDcTag(publication))
             .append("    <dc:publisher>").append(publication.getPublisher().getId())
             .append("</dc:publisher>\n")
@@ -397,21 +407,20 @@ public class NvaAdapter implements Adapter {
         return buffer.toString();
     }
 
-    private void extractDescription(Publication publication, StringBuilder buffer) {
-        boolean isDescriptionAvailable = StringUtils.isNotEmpty(publication.getEntityDescription().getDescription());
-        boolean isAbstractAvailable = StringUtils.isNotEmpty(publication.getEntityDescription().getAbstract());
-        if (isDescriptionAvailable || isAbstractAvailable) {
+    private void extractDescriptionOaiDatacite(Publication publication, StringBuilder buffer) {
+        if (Optional.ofNullable(publication.getEntityDescription().getDescription()).isPresent()
+                || Optional.ofNullable(publication.getEntityDescription().getAbstract()).isPresent()) {
             buffer.append("    <datacite:descriptions>\n ");
-            if (isDescriptionAvailable) {
-                buffer.append("         <datacite:description descriptionType=\"Other\">")
-                    .append(publication.getEntityDescription().getDescription())
+            Optional.ofNullable(publication.getEntityDescription().getDescription()).ifPresent(description -> {
+                buffer.append("    <datacite:description descriptionType=\"Other\">")
+                    .append(description)
                     .append("</datacite:description>\n");
-            }
-            if (isAbstractAvailable) {
-                buffer.append("         <datacite:description descriptionType=\"Abstract\">")
-                    .append(publication.getEntityDescription().getAbstract())
+            });
+            Optional.ofNullable(publication.getEntityDescription().getAbstract()).ifPresent(abstractTag -> {
+                buffer.append("    <datacite:description descriptionType=\"Abstract\">")
+                    .append(abstractTag)
                     .append("</datacite:description>\n");
-            }
+            });
             buffer.append("</datacite:descriptions>\n");
         }
     }

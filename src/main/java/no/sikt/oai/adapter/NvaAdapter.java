@@ -142,12 +142,15 @@ public class NvaAdapter implements Adapter {
             .getUri();
     }
 
-    private URI getRecordsListUri(String from, String until, String institution, int startPosition) {
+    private URI getRecordsListUri(String from, String until, String setSpec, int startPosition) {
         UriWrapper uriWrapper = UriWrapper.fromUri(resourcesUri);
         StringBuilder query = new StringBuilder();
-        if (StringUtils.isNotEmpty(institution)) {
-            query.append("publisher = ").append(institution)
-                .append(" & modifiedDate > ").append(from)
+        if (StringUtils.isNotEmpty(setSpec)) {
+            if (!ALL_SET_NAME.equalsIgnoreCase(setSpec)) {
+                query.append("publisher = ").append(setSpec)
+                    .append(" & ");
+            }
+            query.append("modifiedDate > ").append(from)
                 .append(" & modifiedDate < ").append(until);
         }
         uriWrapper = uriWrapper.addQueryParameter("query", query.toString());

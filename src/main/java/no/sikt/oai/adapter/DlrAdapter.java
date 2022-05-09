@@ -45,7 +45,6 @@ import org.apache.http.HttpStatus;
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.GodClass"})
 public class DlrAdapter implements Adapter {
 
-    public static final String ALL_SET_NAME = "all";
     public static final String STORAGE_ID_KEY = "dlr_storage_id";
     public static final String NULL_STRING = "null";
     private final transient ObjectMapper mapper = new ObjectMapper();

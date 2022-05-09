@@ -34,6 +34,9 @@ public class OaiConstants {
     public static final String SETS_URI_ENV = "SETS_URI";
     public static final String RECORD_URI_ENV = "RECORD_URI";
     public static final String RECORDS_URI_ENV = "RECORDS_URI";
+    public static final String COGNITO_URI_ENV = "COGNITO_URI";
+    public static final String BACKEND_SECRET_ID_ENV = "BACKEND_SECRET_ID";
+    public static final String BACKEND_CLIENT_ID_ENV = "BACKEND_CLIENT_ID";
     public static final String CLIENT_NAME_ENV = "OAI_CLIENT_NAME";
     public static final String CLIENT_TYPE_DLR = "DLR";
     public static final String CLIENT_TYPE_NVA = "NVA";

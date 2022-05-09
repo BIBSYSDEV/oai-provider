@@ -10,7 +10,6 @@ import static no.sikt.oai.OaiConstants.OAI_DC_HEADER;
 import static no.sikt.oai.OaiConstants.QDC_HEADER;
 import static no.sikt.oai.OaiConstants.UNKNOWN_IDENTIFIER;
 import static no.sikt.oai.OaiProviderHandler.EMPTY_STRING;
-import static no.sikt.oai.adapter.DlrAdapter.ALL_SET_NAME;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -143,12 +142,15 @@ public class NvaAdapter implements Adapter {
             .getUri();
     }
 
-    private URI getRecordsListUri(String from, String until, String institution, int startPosition) {
+    private URI getRecordsListUri(String from, String until, String setSpec, int startPosition) {
         UriWrapper uriWrapper = UriWrapper.fromUri(resourcesUri);
         StringBuilder query = new StringBuilder();
-        if (StringUtils.isNotEmpty(institution)) {
-            query.append("publisher = ").append(institution)
-                .append(" & modifiedDate > ").append(from)
+        if (StringUtils.isNotEmpty(setSpec)) {
+            if (!ALL_SET_NAME.equalsIgnoreCase(setSpec)) {
+                query.append("publisher = ").append(setSpec)
+                    .append(" & ");
+            }
+            query.append("modifiedDate > ").append(from)
                 .append(" & modifiedDate < ").append(until);
         }
         uriWrapper = uriWrapper.addQueryParameter("query", query.toString());
@@ -225,9 +227,12 @@ public class NvaAdapter implements Adapter {
     public List<OaiSet> parseSetsResponse(String json) throws InternalOaiException {
         try {
             List<Customer> customerList = mapper.readValue(json, Customers.class).customerList;
-            return customerList.stream()
+            List<OaiSet> oaiSetList = new ArrayList<>();
+            oaiSetList.add(new OaiSet(ALL_SET_NAME, ALL_SET_NAME));
+            oaiSetList.addAll(customerList.stream()
                 .map(customer -> new OaiSet(customer.displayName, extractIdentifier(customer.id)))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
+            return oaiSetList;
         } catch (JsonProcessingException e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
         }
@@ -300,6 +305,11 @@ public class NvaAdapter implements Adapter {
                     .append(description)
                     .append("</dc:description>\n");
         });
+        Optional.ofNullable(publication.getEntityDescription().getAbstract()).ifPresent(abstractTag -> {
+            buffer.append("    <dc:description>")
+                .append(abstractTag)
+                .append("</dc:description>\n");
+        });
         buffer.append("    <dc:rights>").append(getLicenseAsText(publication))
             .append("</dc:rights>\n")
             .append("    <dc:rights>").append(getLicenseAsUri(publication))
@@ -334,6 +344,11 @@ public class NvaAdapter implements Adapter {
             buffer.append("    <dc:description>")
                 .append(description)
                 .append("</dc:description>\n");
+        });
+        Optional.ofNullable(publication.getEntityDescription().getAbstract()).ifPresent(abstractTag -> {
+            buffer.append("    <dcterms:abstract>")
+                .append(abstractTag)
+                .append("</dcterms:abstract>\n");
         });
         buffer.append(extractLanguageDcTag(publication))
             .append("    <dc:rights>").append(getLicenseAsText(publication))
@@ -377,7 +392,7 @@ public class NvaAdapter implements Adapter {
             .append(publication.getEntityDescription().getMainTitle())
             .append("</datacite:title>\n")
             .append("    </datacite:titles>\n");
-        extractDescription(publication, buffer);
+        extractDescriptionOaiDatacite(publication, buffer);
         buffer.append(extractLanguageDcTag(publication))
             .append("    <dc:publisher>").append(publication.getPublisher().getId())
             .append("</dc:publisher>\n")
@@ -392,21 +407,20 @@ public class NvaAdapter implements Adapter {
         return buffer.toString();
     }
 
-    private void extractDescription(Publication publication, StringBuilder buffer) {
-        boolean isDescriptionAvailable = StringUtils.isNotEmpty(publication.getEntityDescription().getDescription());
-        boolean isAbstractAvailable = StringUtils.isNotEmpty(publication.getEntityDescription().getAbstract());
-        if (isDescriptionAvailable || isAbstractAvailable) {
+    private void extractDescriptionOaiDatacite(Publication publication, StringBuilder buffer) {
+        if (Optional.ofNullable(publication.getEntityDescription().getDescription()).isPresent()
+                || Optional.ofNullable(publication.getEntityDescription().getAbstract()).isPresent()) {
             buffer.append("    <datacite:descriptions>\n ");
-            if (isDescriptionAvailable) {
-                buffer.append("         <datacite:description descriptionType=\"Other\">")
-                    .append(publication.getEntityDescription().getDescription())
+            Optional.ofNullable(publication.getEntityDescription().getDescription()).ifPresent(description -> {
+                buffer.append("    <datacite:description descriptionType=\"Other\">")
+                    .append(description)
                     .append("</datacite:description>\n");
-            }
-            if (isAbstractAvailable) {
-                buffer.append("         <datacite:description descriptionType=\"Abstract\">")
-                    .append(publication.getEntityDescription().getAbstract())
+            });
+            Optional.ofNullable(publication.getEntityDescription().getAbstract()).ifPresent(abstractTag -> {
+                buffer.append("    <datacite:description descriptionType=\"Abstract\">")
+                    .append(abstractTag)
                     .append("</datacite:description>\n");
-            }
+            });
             buffer.append("</datacite:descriptions>\n");
         }
     }

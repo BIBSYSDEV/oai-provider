@@ -9,6 +9,8 @@ import no.sikt.oai.exception.OaiException;
 
 public interface Adapter {
 
+    String ALL_SET_NAME = "all";
+
     boolean isValidIdentifier(String identifier);
 
     String getDescription();

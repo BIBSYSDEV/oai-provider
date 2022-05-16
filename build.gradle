@@ -36,7 +36,7 @@ dependencies {
     implementation group: 'com.github.bibsysdev', name: 'apigateway', version: '1.24.8'
     implementation group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.1'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.1'
-    implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.13.1'
+    implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.13.3'
     testImplementation group: 'com.github.bibsysdev', name: 'nvatestutils', version: '1.24.8'
     testImplementation group: 'org.hamcrest', name: 'hamcrest', version: '2.2'
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.1.0'

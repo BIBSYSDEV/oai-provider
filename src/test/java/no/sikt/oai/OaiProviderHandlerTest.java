@@ -91,6 +91,7 @@ public class OaiProviderHandlerTest {
     public static final String EXCEPTION = "Exception";
     public static final String METADATA_TAG = "<metadata>";
     public static final String UIO_CUSTUMER_ID = "1bd2e3f7-a570-442a-b444-cb02e6cc70e4";
+    public static final String ESCAPED_AMPERSAND = "&amp;";
     private AuthorizedBackendClient authorizedBackendClient;
     private OaiProviderHandler handler;
     private Adapter adapter;
@@ -333,6 +334,23 @@ public class OaiProviderHandlerTest {
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
         assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
+    }
+
+    @Test
+    public void shouldReturnGetRecordResponseWithXmlEscapedSpecialCharacterAmpersand() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.SET.key, UIO_CUSTUMER_ID);
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER_DLR);
+        var output = new ByteArrayOutputStream();
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString(ESCAPED_AMPERSAND)));
     }
 
     @ParameterizedTest(name = "Should return GetRecordResponse for metadataPrefix: {0}")
@@ -1088,7 +1106,7 @@ public class OaiProviderHandlerTest {
         responseBodyElement.put("identifier", "1234");
         var responseBodyFeaturesObject = dtoObjectMapper.createObjectNode();
         responseBodyFeaturesObject.put("dlr_title", "title");
-        responseBodyFeaturesObject.put("dlr_description", "description");
+        responseBodyFeaturesObject.put("dlr_description", "description & description");
         responseBodyFeaturesObject.put("dlr_rights_license_name", "CC BY 4.0");
         responseBodyFeaturesObject.put("dlr_time_created", "2021-08-09T08:25:22.552Z");
         responseBodyFeaturesObject.put("dlr_time_published", "2021-08-12T08:45:42.154Z");

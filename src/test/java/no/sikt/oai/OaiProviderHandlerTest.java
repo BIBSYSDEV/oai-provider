@@ -91,6 +91,7 @@ public class OaiProviderHandlerTest {
     public static final String EXCEPTION = "Exception";
     public static final String METADATA_TAG = "<metadata>";
     public static final String UIO_CUSTUMER_ID = "1bd2e3f7-a570-442a-b444-cb02e6cc70e4";
+    public static final String ESCAPED_AMPERSAND = "&amp;";
     private AuthorizedBackendClient authorizedBackendClient;
     private OaiProviderHandler handler;
     private Adapter adapter;
@@ -336,7 +337,7 @@ public class OaiProviderHandlerTest {
     }
 
     @Test
-    public void shouldReturnGetRecordResponseWithXmlEscapedSpecialCharacter() throws IOException {
+    public void shouldReturnGetRecordResponseWithXmlEscapedSpecialCharacterAmpersand() throws IOException {
         init(CLIENT_TYPE_DLR);
         Map<String, String> queryParameters = new HashMap<>();
         queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
@@ -349,7 +350,7 @@ public class OaiProviderHandlerTest {
         var gatewayResponse = parseSuccessResponse(output.toString());
         assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
         var responseBody = gatewayResponse.getBody();
-        assertThat(responseBody, is(containsString("&amp;")));
+        assertThat(responseBody, is(containsString(ESCAPED_AMPERSAND)));
     }
 
     @ParameterizedTest(name = "Should return GetRecordResponse for metadataPrefix: {0}")

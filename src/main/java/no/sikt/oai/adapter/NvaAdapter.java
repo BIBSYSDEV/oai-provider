@@ -322,7 +322,8 @@ public class NvaAdapter implements Adapter {
                 .append("</dc:rights>\n")
                 .append("    <dc:rights>").append(getLicenseAsUri(publication))
                 .append("</dc:rights>\n")
-                .append("    <dc:type>").append(publication.getEntityDescription().getReference().getPublicationInstance()
+                .append("    <dc:type>")
+            .append(publication.getEntityDescription().getReference().getPublicationInstance()
                         .getInstanceType()).append("</dc:type>\n");
         if (publication.getEntityDescription().getReference().getPublicationInstance().isPeerReviewed()) {
             buffer.append("    <dc:type>Peer reviewed</dc:type>\n");
@@ -367,7 +368,8 @@ public class NvaAdapter implements Adapter {
                 .append("</dcterms:accessRights>\n")
                 .append("    <dc:publisher>").append(publication.getPublisher().getId())
                 .append("</dc:publisher>\n")
-                .append("    <dc:type>").append(publication.getEntityDescription().getReference().getPublicationInstance()
+                .append("    <dc:type>")
+            .append(publication.getEntityDescription().getReference().getPublicationInstance()
                         .getInstanceType()).append("</dc:type>\n");
         if (publication.getEntityDescription().getReference().getPublicationInstance().isPeerReviewed()) {
             buffer.append("    <dc:type>Peer reviewed</dc:type>\n");

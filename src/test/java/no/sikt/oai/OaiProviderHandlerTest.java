@@ -335,6 +335,23 @@ public class OaiProviderHandlerTest {
         assertThat(responseBody, is(containsString(Verb.GetRecord.name())));
     }
 
+    @Test
+    public void shouldReturnGetRecordResponseWithXmlEscapedSpecialCharacter() throws IOException {
+        init(CLIENT_TYPE_DLR);
+        Map<String, String> queryParameters = new HashMap<>();
+        queryParameters.put(ValidParameterKey.VERB.key, Verb.GetRecord.name());
+        queryParameters.put(ValidParameterKey.METADATAPREFIX.key, QDC.name());
+        queryParameters.put(ValidParameterKey.SET.key, UIO_CUSTUMER_ID);
+        queryParameters.put(ValidParameterKey.IDENTIFIER.key, REAL_OAI_IDENTIFIER_DLR);
+        var output = new ByteArrayOutputStream();
+        var inputStream = handlerInputStream(queryParameters);
+        handler.handleRequest(inputStream, output, context);
+        var gatewayResponse = parseSuccessResponse(output.toString());
+        assertEquals(HttpURLConnection.HTTP_OK, gatewayResponse.getStatusCode());
+        var responseBody = gatewayResponse.getBody();
+        assertThat(responseBody, is(containsString("&amp;")));
+    }
+
     @ParameterizedTest(name = "Should return GetRecordResponse for metadataPrefix: {0}")
     @ValueSource(strings = {"qdc", "oai_datacite", "oai_dc"})
     public void shouldReturnGetRecordResponseWithVerbGetRecordWithMetadataPrefixAndIdentifierNVA(String metadataPrefix)
@@ -1088,7 +1105,7 @@ public class OaiProviderHandlerTest {
         responseBodyElement.put("identifier", "1234");
         var responseBodyFeaturesObject = dtoObjectMapper.createObjectNode();
         responseBodyFeaturesObject.put("dlr_title", "title");
-        responseBodyFeaturesObject.put("dlr_description", "description");
+        responseBodyFeaturesObject.put("dlr_description", "description & description");
         responseBodyFeaturesObject.put("dlr_rights_license_name", "CC BY 4.0");
         responseBodyFeaturesObject.put("dlr_time_created", "2021-08-09T08:25:22.552Z");
         responseBodyFeaturesObject.put("dlr_time_published", "2021-08-12T08:45:42.154Z");

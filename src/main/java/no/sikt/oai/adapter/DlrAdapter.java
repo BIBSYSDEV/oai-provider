@@ -230,10 +230,10 @@ public class DlrAdapter implements Adapter {
             uriWrapper = uriWrapper.addQueryParameter("institution", institution);
         }
         if (StringUtils.isNotEmpty(from)) {
-            uriWrapper = uriWrapper.addQueryParameter("from", from);
+            uriWrapper = uriWrapper.addQueryParameter("from", from.substring(0, Math.min(from.length(), 10)));
         }
         if (StringUtils.isNotEmpty(until)) {
-            uriWrapper = uriWrapper.addQueryParameter("until", until);
+            uriWrapper = uriWrapper.addQueryParameter("until", until.substring(0, Math.min(until.length(), 10)));
         }
         if (startPosition != 0) {
             uriWrapper = uriWrapper.addQueryParameter("offset", String.valueOf(startPosition));

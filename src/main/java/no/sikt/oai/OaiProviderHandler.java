@@ -247,6 +247,9 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         return 0;
     }
 
+    /**
+     * Override as a temporary fix for unsupported accept header values in apigateway 1.24.12.
+     */
     @Override
     protected MediaType calculateContentTypeHeaderReturnValue(RequestInfo requestInfo)
             throws UnsupportedAcceptHeaderException {

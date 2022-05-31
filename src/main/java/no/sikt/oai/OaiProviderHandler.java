@@ -1,7 +1,9 @@
 package no.sikt.oai;
 
 import static com.google.common.net.MediaType.APPLICATION_XML_UTF_8;
+
 import com.amazonaws.services.lambda.runtime.Context;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.MediaType;
 import java.net.HttpURLConnection;
 import java.util.List;
@@ -17,9 +19,11 @@ import no.sikt.oai.data.Record;
 import no.sikt.oai.data.RecordsList;
 import no.sikt.oai.exception.InternalOaiException;
 import no.sikt.oai.exception.OaiException;
+import no.unit.nva.commons.json.JsonUtils;
 import nva.commons.apigateway.ApiGatewayHandler;
 import nva.commons.apigateway.RequestInfo;
 import nva.commons.apigateway.exceptions.ApiGatewayException;
+import nva.commons.apigateway.exceptions.UnsupportedAcceptHeaderException;
 import nva.commons.core.Environment;
 import nva.commons.core.JacocoGenerated;
 import nva.commons.core.StringUtils;
@@ -241,5 +245,14 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
             return Integer.parseInt(new ResumptionToken(resumptionToken).startPosition);
         }
         return 0;
+    }
+
+    @Override
+    protected ObjectMapper getObjectMapper(RequestInfo requestInfo) throws UnsupportedAcceptHeaderException {
+        Map<String, String> headers = requestInfo.getHeaders();
+        headers.replace("Accept", "application/xml");
+        requestInfo.setHeaders(headers);
+        MediaType mediaType = getDefaultResponseContentTypeHeaderValue(requestInfo);
+        return getObjectMappers().getOrDefault(mediaType, JsonUtils.dtoObjectMapper);
     }
 }

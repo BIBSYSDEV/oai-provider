@@ -1,9 +1,12 @@
 package no.sikt.oai;
 
 import static com.google.common.net.MediaType.APPLICATION_XML_UTF_8;
+
 import com.amazonaws.services.lambda.runtime.Context;
+import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
 import java.net.HttpURLConnection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -20,6 +23,7 @@ import no.sikt.oai.exception.OaiException;
 import nva.commons.apigateway.ApiGatewayHandler;
 import nva.commons.apigateway.RequestInfo;
 import nva.commons.apigateway.exceptions.ApiGatewayException;
+import nva.commons.apigateway.exceptions.UnsupportedAcceptHeaderException;
 import nva.commons.core.Environment;
 import nva.commons.core.JacocoGenerated;
 import nva.commons.core.StringUtils;
@@ -241,5 +245,37 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
             return Integer.parseInt(new ResumptionToken(resumptionToken).startPosition);
         }
         return 0;
+    }
+
+    /**
+     * Override as a temporary fix for unsupported accept header values in apigateway 1.24.12.
+     */
+    @Override
+    protected MediaType calculateContentTypeHeaderReturnValue(RequestInfo requestInfo)
+            throws UnsupportedAcceptHeaderException {
+        Map<String, String> headers = requestInfo.getHeaders();
+        if (requestInfo.getHeaders().containsKey(HttpHeaders.ACCEPT)) {
+            headers.replace(HttpHeaders.ACCEPT, "application/xml");
+        } else {
+            headers.put(HttpHeaders.ACCEPT, "application/xml");
+        }
+        requestInfo.setHeaders(headers);
+        return bestMatchingMediaTypeBasedOnRequestAcceptHeader(requestInfo);
+    }
+
+    private MediaType bestMatchingMediaTypeBasedOnRequestAcceptHeader(RequestInfo requestInfo)
+            throws UnsupportedAcceptHeaderException {
+        List<MediaType> acceptMediaTypes = parseAcceptHeader(requestInfo.getHeader(HttpHeaders.ACCEPT));
+        List<MediaType> matches = findMediaTypeMatches(acceptMediaTypes);
+        if (matches.isEmpty()) {
+            throw new UnsupportedAcceptHeaderException(acceptMediaTypes, listSupportedMediaTypes());
+        }
+        return matches.get(0);
+    }
+
+    private List<MediaType> parseAcceptHeader(String header) {
+        return Arrays.stream(header.replace(SPACE, EMPTY_STRING).split(COMMA))
+                .map(MediaType::parse)
+                .collect(Collectors.toList());
     }
 }

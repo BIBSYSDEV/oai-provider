@@ -40,6 +40,7 @@ import nva.commons.core.Environment;
 import nva.commons.core.JacocoGenerated;
 import nva.commons.core.StringUtils;
 import nva.commons.core.paths.UriWrapper;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.http.HttpStatus;
 
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.GodClass"})
@@ -229,10 +230,10 @@ public class DlrAdapter implements Adapter {
             uriWrapper = uriWrapper.addQueryParameter("institution", institution);
         }
         if (StringUtils.isNotEmpty(from)) {
-            uriWrapper = uriWrapper.addQueryParameter("from", from);
+            uriWrapper = uriWrapper.addQueryParameter("from", from.substring(0, Math.min(from.length(), 10)));
         }
         if (StringUtils.isNotEmpty(until)) {
-            uriWrapper = uriWrapper.addQueryParameter("until", until);
+            uriWrapper = uriWrapper.addQueryParameter("until", until.substring(0, Math.min(until.length(), 10)));
         }
         if (startPosition != 0) {
             uriWrapper = uriWrapper.addQueryParameter("offset", String.valueOf(startPosition));
@@ -278,9 +279,10 @@ public class DlrAdapter implements Adapter {
     private String createRecordContentOaiDc(Resource resource) {
         StringBuilder buffer = new StringBuilder();
         buffer.append(OAI_DC_HEADER)
-            .append("    <dc:title>").append(resource.features.get("dlr_title")).append("</dc:title>\n")
+            .append("    <dc:title>").append(StringEscapeUtils.escapeXml11(resource.features.get("dlr_title")))
+            .append("</dc:title>\n")
             .append("    <dc:description>")
-            .append(resource.features.getOrDefault("dlr_description", EMPTY_STRING))
+            .append(StringEscapeUtils.escapeXml11(resource.features.getOrDefault("dlr_description", EMPTY_STRING)))
             .append("</dc:description>\n")
             .append("    <dc:rights>").append(resource.features.get("dlr_rights_license_name"))
             .append("</dc:rights>\n")
@@ -301,9 +303,10 @@ public class DlrAdapter implements Adapter {
     private String createRecordContentQdc(Resource resource) {
         StringBuilder buffer = new StringBuilder();
         buffer.append(QDC_HEADER)
-            .append("    <dc:title>").append(resource.features.get("dlr_title")).append("</dc:title>\n")
+            .append("    <dc:title>").append(StringEscapeUtils.escapeXml11(resource.features.get("dlr_title")))
+            .append("</dc:title>\n")
             .append("    <dc:description>")
-            .append(resource.features.getOrDefault("dlr_description", EMPTY_STRING))
+            .append(StringEscapeUtils.escapeXml11(resource.features.getOrDefault("dlr_description", EMPTY_STRING)))
             .append("</dc:description>\n")
             .append("    <dc:rights>").append(resource.features.get("dlr_rights_license_name"))
             .append("</dc:rights>\n")
@@ -328,11 +331,12 @@ public class DlrAdapter implements Adapter {
         StringBuilder buffer = new StringBuilder();
         buffer.append(OAI_DATACITE_HEADER)
             .append("    <datacite:titles>\n")
-            .append("        <datacite:title>").append(resource.features.get("dlr_title"))
+            .append("        <datacite:title>")
+            .append(StringEscapeUtils.escapeXml11(resource.features.get("dlr_title")))
             .append("</datacite:title>\n")
             .append("    </datacite:titles>\n")
             .append("    <dc:description>")
-            .append(resource.features.getOrDefault("dlr_description", EMPTY_STRING))
+            .append(StringEscapeUtils.escapeXml11(resource.features.getOrDefault("dlr_description", EMPTY_STRING)))
             .append("</dc:description>\n")
             .append("    <dc:publisher>").append(resource.features.get(STORAGE_ID_KEY))
             .append("</dc:publisher>\n")

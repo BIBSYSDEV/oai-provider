@@ -128,6 +128,7 @@ public class OaiProviderHandler extends ApiGatewayHandler<Void, String> {
         return response;
     }
 
+    @JacocoGenerated
     private Adapter initAdapter() {
         String clientName = environment.readEnv(OaiConstants.CLIENT_NAME_ENV);
         switch (clientName) {

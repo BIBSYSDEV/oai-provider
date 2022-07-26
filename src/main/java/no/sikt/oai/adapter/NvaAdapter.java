@@ -72,9 +72,9 @@ public class NvaAdapter implements Adapter {
         mapper.registerModule(new JavaTimeModule());
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         CognitoCredentials cognitoCredentials = new CognitoCredentials(
-                environment.readEnv(OaiConstants.BACKEND_CLIENT_ID_ENV),
-                environment.readEnv(OaiConstants.BACKEND_SECRET_ID_ENV),
-                UriWrapper.fromUri(environment.readEnv(OaiConstants.COGNITO_URI_ENV)).getUri());
+            () -> environment.readEnv(OaiConstants.BACKEND_CLIENT_ID_ENV),
+            () -> environment.readEnv(OaiConstants.BACKEND_SECRET_ID_ENV),
+            UriWrapper.fromUri(environment.readEnv(OaiConstants.COGNITO_URI_ENV)).getUri());
         this.client = AuthorizedBackendClient.prepareWithCognitoCredentials(cognitoCredentials);
     }
 
@@ -139,15 +139,15 @@ public class NvaAdapter implements Adapter {
 
     private URI getSetsUri() {
         return UriWrapper
-                .fromUri(setsUri)
-                .getUri();
+            .fromUri(setsUri)
+            .getUri();
     }
 
     private URI getRecordUri(String identifier) {
         return UriWrapper
-                .fromUri(resourceUri)
-                .addChild(identifier)
-                .getUri();
+            .fromUri(resourceUri)
+            .addChild(identifier)
+            .getUri();
     }
 
     private URI getRecordsListUri(String from, String until, String setSpec, int startPosition) {
@@ -156,10 +156,10 @@ public class NvaAdapter implements Adapter {
         if (StringUtils.isNotEmpty(setSpec)) {
             if (!ALL_SET_NAME.equalsIgnoreCase(setSpec)) {
                 query.append("publisher = ").append(setSpec)
-                        .append(" & ");
+                    .append(" & ");
             }
             query.append("modifiedDate > ").append(from)
-                    .append(" & modifiedDate < ").append(until);
+                .append(" & modifiedDate < ").append(until);
         }
         uriWrapper = uriWrapper.addQueryParameter("query", query.toString());
         if (startPosition != 0) {
@@ -174,9 +174,9 @@ public class NvaAdapter implements Adapter {
         HttpResponse<String> response;
         try {
             HttpRequest.Builder builder = HttpRequest.newBuilder()
-                    .uri(getSetsUri())
-                    .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
-                    .GET();
+                .uri(getSetsUri())
+                .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                .GET();
             response = client.send(builder, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
@@ -192,9 +192,9 @@ public class NvaAdapter implements Adapter {
         HttpResponse<String> response;
         try {
             HttpRequest.Builder builder = HttpRequest.newBuilder()
-                    .uri(getRecordUri(identifier))
-                    .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
-                    .GET();
+                .uri(getRecordUri(identifier))
+                .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                .GET();
             response = client.send(builder, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
@@ -207,13 +207,13 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public String getRecordsList(String from, String until, String setSpec, int startPosition)
-            throws OaiException, InternalOaiException {
+        throws OaiException, InternalOaiException {
         HttpResponse<String> response;
         try {
             HttpRequest.Builder builder = HttpRequest.newBuilder()
-                    .uri(getRecordsListUri(from, until, setSpec, startPosition))
-                    .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
-                    .GET();
+                .uri(getRecordsListUri(from, until, setSpec, startPosition))
+                .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
+                .GET();
             response = client.send(builder, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
@@ -238,8 +238,8 @@ public class NvaAdapter implements Adapter {
             List<OaiSet> oaiSetList = new ArrayList<>();
             oaiSetList.add(new OaiSet(ALL_SET_NAME, ALL_SET_NAME));
             oaiSetList.addAll(customerList.stream()
-                    .map(customer -> new OaiSet(customer.displayName, extractIdentifier(customer.id)))
-                    .collect(Collectors.toList()));
+                                  .map(customer -> new OaiSet(customer.displayName, extractIdentifier(customer.id)))
+                                  .collect(Collectors.toList()));
             return oaiSetList;
         } catch (JsonProcessingException e) {
             throw new InternalOaiException(e, HTTP_UNAVAILABLE);
@@ -265,10 +265,10 @@ public class NvaAdapter implements Adapter {
 
     @Override
     public RecordsList parseRecordsListResponse(String verb, String json, String metadataPrefix, String setSpec)
-            throws InternalOaiException {
+        throws InternalOaiException {
         try {
             PublicationSearchResponse publicationSearchResponse =
-                    mapper.readValue(json, PublicationSearchResponse.class);
+                mapper.readValue(json, PublicationSearchResponse.class);
             RecordsList records = new RecordsList(publicationSearchResponse.total);
             for (Publication publication : publicationSearchResponse.hits) {
                 records.add(createRecordFromPublication(publication, metadataPrefix));
@@ -284,11 +284,11 @@ public class NvaAdapter implements Adapter {
         setSpecs.add(ALL_SET_NAME);
         setSpecs.add(UriWrapper.fromUri(publication.getPublisher().getId()).getLastPathElement());
         return new Record(
-                createRecordContent(publication, metadataPrefix),
-                false,
-                getIdentifierPrefix() + publication.getIdentifier(),
-                Date.from(publication.getModifiedDate()),
-                setSpecs);
+            createRecordContent(publication, metadataPrefix),
+            false,
+            getIdentifierPrefix() + publication.getIdentifier(),
+            Date.from(publication.getModifiedDate()),
+            setSpecs);
     }
 
     private String createRecordContent(Publication publication, String metadataPrefix) {
@@ -306,38 +306,38 @@ public class NvaAdapter implements Adapter {
     private String createRecordContentOaiDc(Publication publication) {
         StringBuilder buffer = new StringBuilder();
         buffer.append(OAI_DC_HEADER)
-                .append("    <dc:title>").append(publication.getEntityDescription().getMainTitle())
-                .append("</dc:title>\n");
+            .append("    <dc:title>").append(publication.getEntityDescription().getMainTitle())
+            .append("</dc:title>\n");
         Optional.ofNullable(publication.getEntityDescription().getDescription()).ifPresent(description -> {
             buffer.append("    <dc:description>")
-                    .append(description)
-                    .append("</dc:description>\n");
+                .append(description)
+                .append("</dc:description>\n");
         });
         Optional.ofNullable(publication.getEntityDescription().getAbstract()).ifPresent(abstractTag -> {
             buffer.append("    <dc:description>")
-                    .append(abstractTag)
-                    .append("</dc:description>\n");
+                .append(abstractTag)
+                .append("</dc:description>\n");
         });
         buffer.append("    <dc:rights>").append(getLicenseAsText(publication))
-                .append("</dc:rights>\n")
-                .append("    <dc:rights>").append(getLicenseAsUri(publication))
-                .append("</dc:rights>\n")
-                .append("    <dc:type>")
+            .append("</dc:rights>\n")
+            .append("    <dc:rights>").append(getLicenseAsUri(publication))
+            .append("</dc:rights>\n")
+            .append("    <dc:type>")
             .append(publication.getEntityDescription().getReference().getPublicationInstance()
                         .getInstanceType()).append("</dc:type>\n");
         if (publication.getEntityDescription().getReference().getPublicationInstance().isPeerReviewed()) {
             buffer.append("    <dc:type>Peer reviewed</dc:type>\n");
         }
         buffer.append("    <dc:publisher>").append(publication.getPublisher().getId())
-                .append("</dc:publisher>\n")
-                .append("    <dc:date>").append(TimeUtils.date2String(Date.from(publication.getCreatedDate()),
-                        TimeUtils.FORMAT_ZULU_SHORT)).append("</dc:date>\n")
-                .append("    <dc:date>").append(TimeUtils.date2String(Date.from(publication.getPublishedDate()),
-                        TimeUtils.FORMAT_ZULU_SHORT)).append("</dc:date>\n")
-                .append("    <dc:date>").append(TimeUtils.date2String(Date.from(publication.getModifiedDate()),
-                        TimeUtils.FORMAT_ZULU_SHORT)).append("</dc:date>\n")
-                .append("    <dc:identifier>").append(publication.getIdentifier().toString())
-                .append("</dc:identifier>\n");
+            .append("</dc:publisher>\n")
+            .append("    <dc:date>").append(TimeUtils.date2String(Date.from(publication.getCreatedDate()),
+                                                                  TimeUtils.FORMAT_ZULU_SHORT)).append("</dc:date>\n")
+            .append("    <dc:date>").append(TimeUtils.date2String(Date.from(publication.getPublishedDate()),
+                                                                  TimeUtils.FORMAT_ZULU_SHORT)).append("</dc:date>\n")
+            .append("    <dc:date>").append(TimeUtils.date2String(Date.from(publication.getModifiedDate()),
+                                                                  TimeUtils.FORMAT_ZULU_SHORT)).append("</dc:date>\n")
+            .append("    <dc:identifier>").append(publication.getIdentifier().toString())
+            .append("</dc:identifier>\n");
         appendCreatorsDc(publication, buffer);
         buffer.append("</oai_dc:dc>\n");
         return buffer.toString();
@@ -347,46 +347,46 @@ public class NvaAdapter implements Adapter {
     private String createRecordContentQdc(Publication publication) {
         StringBuilder buffer = new StringBuilder();
         buffer.append(QDC_HEADER)
-                .append("    <dc:title>").append(publication.getEntityDescription().getMainTitle())
-                .append("</dc:title>\n");
+            .append("    <dc:title>").append(publication.getEntityDescription().getMainTitle())
+            .append("</dc:title>\n");
         Optional.ofNullable(publication.getEntityDescription().getDescription()).ifPresent(description -> {
             buffer.append("    <dc:description>")
-                    .append(description)
-                    .append("</dc:description>\n");
+                .append(description)
+                .append("</dc:description>\n");
         });
         Optional.ofNullable(publication.getEntityDescription().getAbstract()).ifPresent(abstractTag -> {
             buffer.append("    <dcterms:abstract>")
-                    .append(abstractTag)
-                    .append("</dcterms:abstract>\n");
+                .append(abstractTag)
+                .append("</dcterms:abstract>\n");
         });
         buffer.append(extractLanguageDcTag(publication))
-                .append("    <dc:rights>").append(getLicenseAsText(publication))
-                .append("</dc:rights>\n")
-                .append("    <dc:rights xsi:type=\"dcterms:URI\">").append(getLicenseAsUri(publication))
-                .append("</dc:rights>\n")
-                .append("    <dcterms:accessRights>").append(ACCESS_RIGHT_OPEN)
-                .append("</dcterms:accessRights>\n")
-                .append("    <dc:publisher>").append(publication.getPublisher().getId())
-                .append("</dc:publisher>\n")
-                .append("    <dc:type>")
+            .append("    <dc:rights>").append(getLicenseAsText(publication))
+            .append("</dc:rights>\n")
+            .append("    <dc:rights xsi:type=\"dcterms:URI\">").append(getLicenseAsUri(publication))
+            .append("</dc:rights>\n")
+            .append("    <dcterms:accessRights>").append(ACCESS_RIGHT_OPEN)
+            .append("</dcterms:accessRights>\n")
+            .append("    <dc:publisher>").append(publication.getPublisher().getId())
+            .append("</dc:publisher>\n")
+            .append("    <dc:type>")
             .append(publication.getEntityDescription().getReference().getPublicationInstance()
                         .getInstanceType()).append("</dc:type>\n");
         if (publication.getEntityDescription().getReference().getPublicationInstance().isPeerReviewed()) {
             buffer.append("    <dc:type>Peer reviewed</dc:type>\n");
         }
         buffer.append("    <dcterms:created>").append(TimeUtils.date2String(Date.from(publication.getCreatedDate()),
-                        TimeUtils.FORMAT_ZULU_SHORT))
-                .append("</dcterms:created>\n")
-                .append("    <dcterms:modified>").append(TimeUtils.date2String(Date.from(publication.getModifiedDate()),
-                        TimeUtils.FORMAT_ZULU_SHORT))
-                .append("</dcterms:modified>\n")
-                .append("    <dcterms:issued>").append(TimeUtils.date2String(Date.from(publication.getPublishedDate()),
-                        TimeUtils.FORMAT_ZULU_SHORT))
-                .append("</dcterms:issued>\n")
-                .append("    <dcterms:identifier xsi:type=\"dcterms:URI\">")
-                .append(publication.getIdentifier().toString()).append("</dcterms:identifier>\n")
-                .append("    <dcterms:identifier>").append(publication.getIdentifier().toString())
-                .append("</dcterms:identifier>\n");
+                                                                            TimeUtils.FORMAT_ZULU_SHORT))
+            .append("</dcterms:created>\n")
+            .append("    <dcterms:modified>").append(TimeUtils.date2String(Date.from(publication.getModifiedDate()),
+                                                                           TimeUtils.FORMAT_ZULU_SHORT))
+            .append("</dcterms:modified>\n")
+            .append("    <dcterms:issued>").append(TimeUtils.date2String(Date.from(publication.getPublishedDate()),
+                                                                         TimeUtils.FORMAT_ZULU_SHORT))
+            .append("</dcterms:issued>\n")
+            .append("    <dcterms:identifier xsi:type=\"dcterms:URI\">")
+            .append(publication.getIdentifier().toString()).append("</dcterms:identifier>\n")
+            .append("    <dcterms:identifier>").append(publication.getIdentifier().toString())
+            .append("</dcterms:identifier>\n");
         appendCreatorsDc(publication, buffer);
         appendContributorsDc(publication, buffer);
         buffer.append("</qdc:qualifieddc>\n");
@@ -397,20 +397,20 @@ public class NvaAdapter implements Adapter {
     private String createRecordContentOaiDatacite(Publication publication) {
         StringBuilder buffer = new StringBuilder();
         buffer.append(OAI_DATACITE_HEADER)
-                .append("    <datacite:titles>\n")
-                .append("        <datacite:title>")
-                .append(publication.getEntityDescription().getMainTitle())
-                .append("</datacite:title>\n")
-                .append("    </datacite:titles>\n");
+            .append("    <datacite:titles>\n")
+            .append("        <datacite:title>")
+            .append(publication.getEntityDescription().getMainTitle())
+            .append("</datacite:title>\n")
+            .append("    </datacite:titles>\n");
         extractDescriptionOaiDatacite(publication, buffer);
         buffer.append(extractLanguageDcTag(publication))
-                .append("    <dc:publisher>").append(publication.getPublisher().getId())
-                .append("</dc:publisher>\n")
-                .append("    <datacite:dates>\n")
-                .append("        <datacite:date dateType=\"Issued\">")
-                .append(TimeUtils.date2String(Date.from(publication.getPublishedDate()), TimeUtils.FORMAT_ZULU_SHORT))
-                .append("</datacite:date>\n")
-                .append("    </datacite:dates>\n");
+            .append("    <dc:publisher>").append(publication.getPublisher().getId())
+            .append("</dc:publisher>\n")
+            .append("    <datacite:dates>\n")
+            .append("        <datacite:date dateType=\"Issued\">")
+            .append(TimeUtils.date2String(Date.from(publication.getPublishedDate()), TimeUtils.FORMAT_ZULU_SHORT))
+            .append("</datacite:date>\n")
+            .append("    </datacite:dates>\n");
         appendCreatorsDatacite(publication, buffer);
         appendResourceTypeDatacite(publication, buffer);
         buffer.append("</oaire:resource>\n");
@@ -419,17 +419,17 @@ public class NvaAdapter implements Adapter {
 
     private void extractDescriptionOaiDatacite(Publication publication, StringBuilder buffer) {
         if (Optional.ofNullable(publication.getEntityDescription().getDescription()).isPresent()
-                || Optional.ofNullable(publication.getEntityDescription().getAbstract()).isPresent()) {
+            || Optional.ofNullable(publication.getEntityDescription().getAbstract()).isPresent()) {
             buffer.append("    <datacite:descriptions>\n ");
             Optional.ofNullable(publication.getEntityDescription().getDescription()).ifPresent(description -> {
                 buffer.append("    <datacite:description descriptionType=\"Other\">")
-                        .append(description)
-                        .append("</datacite:description>\n");
+                    .append(description)
+                    .append("</datacite:description>\n");
             });
             Optional.ofNullable(publication.getEntityDescription().getAbstract()).ifPresent(abstractTag -> {
                 buffer.append("    <datacite:description descriptionType=\"Abstract\">")
-                        .append(abstractTag)
-                        .append("</datacite:description>\n");
+                    .append(abstractTag)
+                    .append("</datacite:description>\n");
             });
             buffer.append("</datacite:descriptions>\n");
         }
@@ -442,18 +442,18 @@ public class NvaAdapter implements Adapter {
             UriWrapper languageUri = UriWrapper.fromUri(publication.getEntityDescription().getLanguage());
             String isoCodePathlet = languageUri.getParent().get().getLastPathElement();
             str.append("    <dc:language xsi:type=\"dcterms:").append(isoCodePathlet).append("\">")
-                    .append(languageUri.getLastPathElement())
-                    .append("</dc:language>\n");
+                .append(languageUri.getLastPathElement())
+                .append("</dc:language>\n");
         }
         return str.toString();
     }
 
     private String getLicenseAsText(Publication publication) {
         File file = publication.getFileSet()
-                .getFiles()
-                .stream()
-                .findFirst()
-                .get();
+            .getFiles()
+            .stream()
+            .findFirst()
+            .get();
         return file.getLicense().getIdentifier();
     }
 
@@ -466,55 +466,55 @@ public class NvaAdapter implements Adapter {
 
     private void appendResourceTypeDatacite(Publication publication, StringBuilder buffer) {
         String instanceType = Optional.of(publication).map(Publication::getEntityDescription)
-                .map(EntityDescription::getReference)
-                .map(Reference::getPublicationInstance)
-                .map(PublicationInstance::getInstanceType).orElse(EMPTY_STRING);
+            .map(EntityDescription::getReference)
+            .map(Reference::getPublicationInstance)
+            .map(PublicationInstance::getInstanceType).orElse(EMPTY_STRING);
         buffer.append("    <datacite:resourceType resourceTypeGeneral=\"")
-                .append(instanceType.isEmpty() ? "Other" : "Text")
-                .append("\">")
-                .append(instanceType)
-                .append("</datacite:resourceType>\n");
+            .append(instanceType.isEmpty() ? "Other" : "Text")
+            .append("\">")
+            .append(instanceType)
+            .append("</datacite:resourceType>\n");
     }
 
     private void appendCreatorsDc(Publication publication, StringBuilder buffer) {
         publication.getEntityDescription().getContributors().stream()
-                .filter(contributor -> "creator".equalsIgnoreCase(contributor.getRole().name()))
-                .map(contributor -> contributor.getIdentity().getName())
-                .forEach(contributorName -> {
-                    buffer.append("    <dc:creator>").append(contributorName).append("</dc:creator>\n");
-                });
+            .filter(contributor -> "creator".equalsIgnoreCase(contributor.getRole().name()))
+            .map(contributor -> contributor.getIdentity().getName())
+            .forEach(contributorName -> {
+                buffer.append("    <dc:creator>").append(contributorName).append("</dc:creator>\n");
+            });
     }
 
     @SuppressWarnings("PMD.ConsecutiveLiteralAppends")
     private void appendCreatorsDatacite(Publication publication, StringBuilder buffer) {
         buffer.append("    <datacite:creators>\n");
         publication.getEntityDescription().getContributors().stream()
-                .filter(contributor -> "creator".equalsIgnoreCase(contributor.getRole().name()))
-                .forEach(contributor -> {
-                    extractCreator(buffer, contributor);
-                });
+            .filter(contributor -> "creator".equalsIgnoreCase(contributor.getRole().name()))
+            .forEach(contributor -> {
+                extractCreator(buffer, contributor);
+            });
         buffer.append("    </datacite:creators>\n");
     }
 
     private void extractCreator(StringBuilder buffer, Contributor contributor) {
         buffer.append("        <datacite:creator>\n            <datacite:creatorName>")
-                .append(contributor.getIdentity().getName())
-                .append("</datacite:creatorName>\n");
+            .append(contributor.getIdentity().getName())
+            .append("</datacite:creatorName>\n");
         if (contributor.getIdentity().getOrcId() != null) {
             buffer.append("<datacite:nameIdentifier nameIdentifierScheme=\"ORCID\" schemeURI=\"https://orcid.org\">")
-                    .append(UriWrapper.fromUri(contributor.getIdentity().getOrcId()).getLastPathElement())
-                    .append("</datacite:nameIdentifier>");
+                .append(UriWrapper.fromUri(contributor.getIdentity().getOrcId()).getLastPathElement())
+                .append("</datacite:nameIdentifier>");
         }
         buffer.append("        </datacite:creator>\n");
     }
 
     private void appendContributorsDc(Publication publication, StringBuilder buffer) {
         publication.getEntityDescription().getContributors().stream()
-                .filter(contributor -> !"creator".equalsIgnoreCase(contributor.getRole().name()))
-                .map(contributor -> contributor.getIdentity().getName())
-                .forEach(contributorName -> {
-                    buffer.append("    <dc:contributor>").append(contributorName).append("</dc:contributor>\n");
-                });
+            .filter(contributor -> !"creator".equalsIgnoreCase(contributor.getRole().name()))
+            .map(contributor -> contributor.getIdentity().getName())
+            .forEach(contributorName -> {
+                buffer.append("    <dc:contributor>").append(contributorName).append("</dc:contributor>\n");
+            });
     }
 
     private static class Customers {

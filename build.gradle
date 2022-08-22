@@ -4,7 +4,7 @@ plugins {
     id 'pmd'
     id 'jacoco'
     id 'com.github.johnrengelman.shadow' version '5.2.0'
-    id "org.owasp.dependencycheck" version "7.1.1"
+    id "org.owasp.dependencycheck" version "7.1.2"
 }
 
 group 'no.sikt'
@@ -33,7 +33,7 @@ dependencies {
     implementation group: 'com.github.bibsysdev', name: 'auth', version: '1.25.2'
     implementation group: 'com.github.bibsysdev', name: 'core', version: '1.25.2'
     implementation group: 'com.github.bibsysdev', name: 'json', version: '1.25.2'
-    implementation group: 'com.github.bibsysdev', name: 'apigateway', version: '1.25.0'
+    implementation group: 'com.github.bibsysdev', name: 'apigateway', version: '1.25.2'
     implementation group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.1'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.3'
     implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.13.3'

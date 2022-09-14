@@ -31,7 +31,7 @@ dependencies {
     implementation group: 'com.github.bibsysdev', name: 'nva-datamodel-java', version: '0.18.0'
     implementation group: 'com.github.bibsysdev', name: 'identifiers', version: '1.25.3'
     implementation group: 'com.github.bibsysdev', name: 'auth', version: '1.25.3'
-    implementation group: 'com.github.bibsysdev', name: 'core', version: '1.25.2'
+    implementation group: 'com.github.bibsysdev', name: 'core', version: '1.25.6'
     implementation group: 'com.github.bibsysdev', name: 'json', version: '1.25.2'
     implementation group: 'com.github.bibsysdev', name: 'apigateway', version: '1.25.3'
     implementation group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.1'
